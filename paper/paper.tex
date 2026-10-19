@@ -1,0 +1,66 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{An Empirical Evaluation of Hash Table Collision Resolution Strategies: Tombstone Accumulation, Periodic Rebuilding, and Robin Hood Hashing in High-Churn Workloads}
+
+\author{
+\IEEEauthorblockN{Author 1, Author 2, Author 3, Author 4, Author 5, Author 6}
+\IEEEauthorblockA{\textit{Department of Computing Fundamentals, FPT University} \\
+Da Nang / Can Tho / Ho Chi Minh City / Ha Noi, Vietnam \\
+\{author1, author2, author3, author4, author5, author6\}@fpt.edu.vn}
+}
+
+\maketitle
+
+\begin{abstract}
+Hash tables are foundational data structures in transaction indexing systems with high turnover rates, where items are continuously inserted and deleted. While open addressing with Linear Probing is cache-friendly, the accumulation of tombstones degrades lookup latency, especially for unsuccessful queries, necessitating costly periodic table rebuilds. In this study, we empirically evaluate four collision resolution strategies across millions of operations in Java: Separate Chaining, Linear Probing with tombstones, Linear Probing with backward-shift deletion, and Robin Hood hashing (both with and without early-stopping). We address three research questions regarding load factor scaling, tombstone pollution dynamics, and mechanism decomposition in Robin Hood hashing. Our empirical findings demonstrate that...
+\end{abstract}
+
+\begin{IEEEkeywords}
+Hash table, Robin Hood hashing, linear probing, tombstone, backward shift, empirical benchmark.
+\end{IEEEkeywords}
+
+\section{Introduction}
+% Bối cảnh, câu hỏi chung, ba RQ và đóng góp của nghiên cứu
+
+\section{Background and Related Work}
+% Cơ sở của các thuật toán; ý tưởng cốt lõi theo [1], [2], [3], [4]
+
+\section{Methods}
+% Quy ước cài đặt, pseudocode, bảng ánh xạ cơ chế tới hàm
+
+\section{Experimental Setup}
+% Máy đo, JVM, tham số, dữ liệu, làm nóng, timeout
+
+\section{Results and Discussion}
+% V-A. RQ1: Separate Chaining vs Linear Probing
+% V-B. RQ2: Tombstone accumulation without rebuild
+% V-C. RQ3: Robin Hood mechanism ablation
+
+\section{Threats to Validity}
+% JIT, GC, bộ nhớ, giới hạn phần cứng
+
+\section{Conclusion}
+% Kết luận và khuyến nghị có điều kiện
+
+\section*{Acknowledgment}
+% Khai báo sử dụng AI theo mục 7.7
+
+\begin{thebibliography}{00}
+\bibitem{knuth} D. E. Knuth, \textit{The Art of Computer Programming, Vol. 3: Sorting and Searching}, 2nd ed. Reading, MA, USA: Addison-Wesley, 1998, \S6.4.
+\bibitem{peterson} W. W. Peterson, ``Addressing for random-access storage,'' \textit{IBM J. Res. Dev.}, vol. 1, no. 2, pp. 130--146, 1957.
+\bibitem{celis} P. Celis, P.-\AA. Larson, and J. I. Munro, ``Robin Hood hashing,'' in \textit{Proc. 26th Annu. Symp. Found. Comput. Sci. (FOCS)}, 1985, pp. 281--288.
+\bibitem{sedgewick} R. Sedgewick and K. Wayne, \textit{Algorithms}, 4th ed. Boston, MA, USA: Addison-Wesley, 2011, \S3.4.
+\end{thebibliography}
+
+\end{document}
