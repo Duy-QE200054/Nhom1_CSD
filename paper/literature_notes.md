@@ -43,3 +43,31 @@
   - Phân tích chi phí bộ nhớ của Separate Chaining: mỗi `Node` mang chi phí phụ về header đối tượng (16 bytes trên 64-bit JVM), con trỏ tham chiếu (8 bytes / 4 bytes Compressed OOPs), và phân mảnh bộ nhớ heap gây ra lỗi bộ nhớ đệm (cache miss).
   - Đưa ra giải thuật xóa Linear Probing bằng cách xóa khóa đích và chèn lại toàn bộ (rehash/re-insert) các khóa còn lại trong cùng cụm cho đến khi gặp ô trống. Cung cấp mốc đối chiếu công thức lý thuyết của Separate Chaining:
     $$SC_{hit} \approx 1 + \frac{\alpha}{2}, \quad SC_{miss} \approx \alpha$$
+
+---
+
+## 5. Phân Tích So Sánh & Quyết Định Lựa Chọn Cho Module `lp-backshift`: Knuth Algorithm R vs Sedgewick (Chèn Lại Cụm)
+
+> Căn cứ theo nhiệm vụ Cặp 3 (C3): Lựa chọn giữa **Knuth Algorithm R** và **Sedgewick (Re-insert cụm)** và ghi lại lý do để đưa vào bài báo khoa học (Paper IEEE).
+
+### 5.1. So Sánh Hai Giải Thuật Xóa Không Dùng Tombstone
+
+| Tiêu chí đánh giá | Knuth Algorithm R (§6.4) | Sedgewick & Wayne (§3.4) |
+|---|---|---|
+| **Cơ chế cốt lõi** | Quét đơn luồng (single-pass in-place), kiểm tra điều kiện xoay vòng modulo $M$ $((i \le j) ? (i < r \le j) : (i < r \lor r \le j))$, dịch trực tiếp phần tử thích hợp về lấp ô trống $i$. | Xóa ô đích, sau đó duyệt từng phần tử kế tiếp trong cụm, gỡ ra (`EMPTY`) rồi gọi lại hàm `put(k, v)` để chèn lại từ đầu. |
+| **Số lần duyệt & băm lại** | Duyệt đúng 1 lần qua cụm ($K$ bước). Mỗi phần tử chỉ tính lại băm gốc $r = h(k)$ đúng 1 lần để kiểm tra vị trí. | Duyệt cụm và gọi `put()`. Mỗi lần `put()` phải tính lại hàm băm và duyệt lại một đoạn chuỗi dò từ $h(k)$ đến vị trí mới. |
+| **Độ phức tạp thời gian** | $\mathcal{O}(K)$ với $K$ là độ dài cụm liên tục. | $\mathcal{O}(K^2)$ trong trường hợp xấu nhất nội cụm khi nhiều phần tử phải dò lại quãng đường dài. |
+| **Ghi bộ nhớ (Memory Writes)** | Tối thiểu: Chỉ ghi vào ô khi thực sự cần dịch chuyển ($i = j$). Các ô không thỏa điều kiện được giữ nguyên vị trí. | Tốn kém: Phải xóa ô cũ về `EMPTY`, sau đó ghi lại vào ô mới (ngay cả khi vị trí mới trùng vị trí cũ). |
+| **Ảnh hưởng Cache CPU** | Tuyệt vời: Duyệt tuần tự tuyến tính trên mảng phẳng, tận dụng tối đa cơ chế hardware prefetcher của CPU. | Kém hơn: Việc chèn lại nhảy cóc từ $h(k)$ gây phân tán truy cập bộ nhớ đệm. |
+
+### 5.2. Quyết Định Lựa Chọn Cho Paper IEEE & Báo Cáo
+**Nhóm quyết định chọn: Knuth Algorithm R** làm giải thuật chuẩn hóa cho module `lp-backshift`.
+
+**Các lý do khoa học đưa vào Paper (Mục III - Methods):**
+1. **Tính Tối Ưu về Hiệu Năng và Chi Phí Tính Toán**:
+   - Algorithm R đạt độ phức tạp tuyến tính nghiêm ngặt $\mathcal{O}(K)$ trên độ dài cụm, tránh được hiện tượng bão hòa chu kỳ CPU do gọi lặp hàm `put()` như Sedgewick.
+2. **Bảo Tồn Thứ Tự Dồn Cụm và Giảm Thiểu Thao Tác Ghi Bộ Nhớ (Cache-Friendly)**:
+   - Algorithm R chỉ di dời các phần tử vi phạm bất biến dò tuyến tính, giảm thiểu tối đa lưu lượng ghi bộ nhớ (memory bus write traffic) và tránh gây invalidation không cần thiết trên L1/L2 data cache của CPU.
+3. **Độ Chuẩn Xác Học Thuật Kinh Điển**:
+   - Giải thuật được chứng minh toán học chặt chẽ bởi Donald Knuth (1998), xử lý triệt để bài toán biên xoay vòng qua cuối mảng ($M - 1 \to 0$), hoàn toàn tương thích với mô hình phân tích lý thuyết của Đề tài 2.
+

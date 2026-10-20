@@ -1,31 +1,47 @@
 package hashtable.core;
 
 /**
- * Linear Probing với xóa dịch lùi (backshift deletion) theo kiểu Knuth Algorithm R.
+ * Cài đặt bảng băm Linear Probing với cơ chế xóa dịch lùi (lp-backshift) - Nhiệm vụ Cặp 3 (C3).
  *
- * Lý do chọn Knuth Algorithm R thay vì Sedgewick:
- * 1. Giữ nguyên cấu trúc dò tuyến tính, không cần đánh dấu tombstone.
- * 2. Dịch các phần tử phía sau về trái trong-place để lấp ô trống, đồng thời vẫn bảo toàn
- *    chuỗi dò hoạt động đúng sau khi xóa.
- * 3. Đây là cách tương thích tốt hơn với mục tiêu benchmark RQ3 khi cần so sánh trực tiếp
- *    với Robin Hood: cùng một mô hình dò tuyến tính, nhưng khác ở cơ chế hoán đổi DIB và
- *    dừng sớm.
+ * Thuật toán xóa: Knuth Algorithm R (The Art of Computer Programming, Vol. 3, §6.4).
+ *
+ * Lý do chọn Knuth Algorithm R thay vì Sedgewick (chèn lại cả cụm):
+ * 1. Hiệu năng tối ưu (Single-pass in-place):
+ *    - Knuth Algorithm R chỉ duyệt một vòng duy nhất O(K) dọc theo cụm đụng độ,
+ *      kiểm tra điều kiện vòng tròn modulo M và chỉ dịch chuyển các phần tử thực sự cần thiết
+ *      vào ô trống vừa mở ra.
+ *    - Ngược lại, Sedgewick xóa ô đích rồi gỡ từng phần tử phía sau ra chèn lại (re-insert)
+ *      bằng put(). Mỗi lần put() phải băm lại khóa và thực hiện vòng lặp dò tìm từ đầu,
+ *      dẫn đến độ phức tạp tiềm tàng O(K^2) trong cụm và lãng phí chu kỳ CPU.
+ * 2. Tối ưu bộ nhớ đệm (Cache & Write Locality):
+ *    - Algorithm R chỉ ghi trực tiếp (move) các phần tử cần di dời vào ô trống i,
+ *      giảm thiểu số lần ghi vào RAM và giữ trọn vẹn thứ tự dồn cụm tự nhiên.
+ * 3. Chuẩn mực học thuật:
+ *    - Hoàn toàn khớp với tài liệu tham khảo bắt buộc [1] Knuth TAOCP đã được phân công và trích dẫn.
  */
 public class LinearProbingBackshift implements HashTable {
-    private static final byte EMPTY = 0;
-    private static final byte OCCUPIED = 1;
 
-    private final int capacity;
-    private final int p;
-    private final int mask;
-    private final long[] keys;
-    private final int[] values;
-    private final byte[] state;
+    public static final byte EMPTY = 0;
+    public static final byte OCCUPIED = 1;
 
-    private int size;
-    private boolean probeCounting;
-    private long probeCount;
+    private final int capacity;       // M = 2^p
+    private final int p;              // p = log2(M)
+    private final int mask;           // M - 1
 
+    private final long[] keys;        // Mảng khóa nguyên thủy
+    private final int[] values;       // Mảng giá trị nguyên thủy
+    private final byte[] state;       // Trạng thái: EMPTY hoặc OCCUPIED
+
+    private int size;                 // Số lượng phần tử sống
+
+    private boolean probeCounting;    // Cờ bật/tắt đếm bước dò
+    private long probeCount;          // Tổng số bước dò tích lũy
+
+    /**
+     * Khởi tạo bảng Linear Probing Backshift với dung lượng capacity M = 2^p.
+     *
+     * @param capacity Dung lượng bảng (lũy thừa của 2 dương)
+     */
     public LinearProbingBackshift(int capacity) {
         if (capacity <= 0 || (capacity & (capacity - 1)) != 0) {
             throw new IllegalArgumentException("Capacity M phải là lũy thừa của 2 dương, nhận được: " + capacity);
@@ -33,95 +49,128 @@ public class LinearProbingBackshift implements HashTable {
         this.capacity = capacity;
         this.p = Integer.numberOfTrailingZeros(capacity);
         this.mask = capacity - 1;
+
         this.keys = new long[capacity];
         this.values = new int[capacity];
         this.state = new byte[capacity];
+
+        this.size = 0;
+        this.probeCounting = false;
+        this.probeCount = 0;
     }
 
     @Override
     public PutStatus put(long key, int value) {
-        validateKey(key);
-        int idx = FibonacciHash.hash(key, p);
+        int h = FibonacciHash.hash(key, p);
+        int idx = h;
+
         for (int step = 0; step < capacity; step++) {
             if (probeCounting) {
                 probeCount++;
             }
-            if (state[idx] == EMPTY) {
+
+            byte s = state[idx];
+            if (s == EMPTY) {
                 keys[idx] = key;
                 values[idx] = value;
                 state[idx] = OCCUPIED;
                 size++;
                 return PutStatus.INSERTED;
-            }
-            if (state[idx] == OCCUPIED && keys[idx] == key) {
+            } else if (keys[idx] == key) {
                 values[idx] = value;
                 return PutStatus.UPDATED;
             }
+
             idx = (idx + 1) & mask;
         }
+
         return PutStatus.TABLE_FULL;
     }
 
     @Override
     public GetResult get(long key) {
-        validateKey(key);
-        int idx = FibonacciHash.hash(key, p);
+        int h = FibonacciHash.hash(key, p);
+        int idx = h;
+
         for (int step = 0; step < capacity; step++) {
             if (probeCounting) {
                 probeCount++;
             }
-            if (state[idx] == EMPTY) {
+
+            byte s = state[idx];
+            if (s == EMPTY) {
                 return GetResult.NOT_FOUND;
-            }
-            if (state[idx] == OCCUPIED && keys[idx] == key) {
+            } else if (keys[idx] == key) {
                 return GetResult.of(values[idx]);
             }
+
             idx = (idx + 1) & mask;
         }
+
         return GetResult.NOT_FOUND;
     }
 
+    /**
+     * Xóa khóa sử dụng Knuth Algorithm R:
+     * Quét cụm đụng độ phía sau, chuyển phần tử thích hợp về lấp ô trống.
+     * Hoàn toàn không tạo ô TOMB.
+     */
     @Override
     public boolean remove(long key) {
-        validateKey(key);
-        int idx = FibonacciHash.hash(key, p);
+        int h = FibonacciHash.hash(key, p);
+        int idx = h;
+        int foundIdx = -1;
 
         for (int step = 0; step < capacity; step++) {
             if (probeCounting) {
                 probeCount++;
             }
-            if (state[idx] == EMPTY) {
+
+            byte s = state[idx];
+            if (s == EMPTY) {
                 return false;
+            } else if (keys[idx] == key) {
+                foundIdx = idx;
+                break;
             }
-            if (state[idx] == OCCUPIED && keys[idx] == key) {
-                int hole = idx;
-                int next = (idx + 1) & mask;
 
-                while (state[next] == OCCUPIED) {
-                    int nextHome = FibonacciHash.hash(keys[next], p);
-                    if (distanceFromHome(next, nextHome) == 0) {
-                        break;
-                    }
-                    keys[hole] = keys[next];
-                    values[hole] = values[next];
-                    state[hole] = OCCUPIED;
-
-                    state[next] = EMPTY;
-                    keys[next] = 0L;
-                    values[next] = 0;
-                    hole = next;
-                    next = (next + 1) & mask;
-                }
-
-                state[hole] = EMPTY;
-                keys[hole] = 0L;
-                values[hole] = 0;
-                size--;
-                return true;
-            }
             idx = (idx + 1) & mask;
         }
-        return false;
+
+        if (foundIdx == -1) {
+            return false;
+        }
+
+        // Áp dụng Knuth Algorithm R
+        int i = foundIdx; // Ô trống cần lấp
+        int j = i;
+
+        for (int step = 0; step < capacity; step++) {
+            j = (j + 1) & mask;
+            if (state[j] == EMPTY || j == foundIdx) {
+                break;
+            }
+
+            int r = FibonacciHash.hash(keys[j], p); // Home bucket của phần tử tại j
+
+            // Kiểm tra r có nằm trong khoảng xoay vòng (i, j] hay không
+            // Nếu r nằm trong (i, j], phần tử này KHÔNG được chuyển về i
+            boolean between = (i <= j) ? (i < r && r <= j) : (i < r || r <= j);
+            if (!between) {
+                keys[i] = keys[j];
+                values[i] = values[j];
+                state[i] = OCCUPIED;
+
+                i = j; // Ô j trở thành ô trống mới cần lấp
+            }
+        }
+
+        state[i] = EMPTY;
+        keys[i] = 0L;
+        values[i] = 0;
+        size--;
+
+        return true;
     }
 
     @Override
@@ -151,7 +200,7 @@ public class LinearProbingBackshift implements HashTable {
 
     @Override
     public int getTombstoneCount() {
-        return 0;
+        return 0; // Linear Probing Backshift không dùng ô TOMB
     }
 
     @Override
@@ -161,21 +210,44 @@ public class LinearProbingBackshift implements HashTable {
 
     @Override
     public double getAverageDIB() {
-        return -1.0;
+        if (size == 0) {
+            return 0.0;
+        }
+        long totalDIB = 0;
+        for (int i = 0; i < capacity; i++) {
+            if (state[i] == OCCUPIED) {
+                int h = FibonacciHash.hash(keys[i], p);
+                int dib = (i - h + capacity) & mask;
+                totalDIB += dib;
+            }
+        }
+        return (double) totalDIB / size;
     }
 
     @Override
     public int getMaxDIB() {
-        return -1;
-    }
-
-    private int distanceFromHome(int index, int home) {
-        return (index - home + capacity) & mask;
-    }
-
-    private static void validateKey(long key) {
-        if (key < 0) {
-            throw new IllegalArgumentException("Key phải không âm, nhận được: " + key);
+        int max = 0;
+        for (int i = 0; i < capacity; i++) {
+            if (state[i] == OCCUPIED) {
+                int h = FibonacciHash.hash(keys[i], p);
+                int dib = (i - h + capacity) & mask;
+                if (dib > max) {
+                    max = dib;
+                }
+            }
         }
+        return max;
+    }
+
+    public byte getStateAt(int index) {
+        return state[index];
+    }
+
+    public long getKeyAt(int index) {
+        return keys[index];
+    }
+
+    public int getValueAt(int index) {
+        return values[index];
     }
 }

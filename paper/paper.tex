@@ -34,10 +34,29 @@ Hash table, Robin Hood hashing, linear probing, tombstone, backward shift, empir
 % Bối cảnh, câu hỏi chung, ba RQ và đóng góp của nghiên cứu
 
 \section{Background and Related Work}
-% Cơ sở của các thuật toán; ý tưởng cốt lõi theo [1], [2], [3], [4]
+Open addressing with Linear Probing (LP), pioneered by Peterson \cite{peterson}, offers outstanding cache locality due to sequential array scans. However, deletion in open addressing cannot simply reset a slot to empty, as this severs the probe sequence of colliding items. The conventional approach introduces tombstones to mark deleted slots, but accumulated tombstones degrade search performance, particularly for unsuccessful lookups, requiring periodic rebuilding \cite{knuth}.
+
+To avoid tombstones entirely, Knuth \cite{knuth} introduced \textit{Algorithm R}, which scans the subsequent cluster and shifts qualifying elements backward into the vacated slot without rehashing. Alternatively, Sedgewick and Wayne \cite{sedgewick} proposed cluster re-insertion, where items trailing the deletion point are extracted and re-inserted via standard put operations. 
+
+Robin Hood hashing, proposed by Celis et al. \cite{celis}, equalizes probe sequence lengths using the Distance from Initial Bucket (DIB). When inserting a key whose current probe distance exceeds the DIB of the resident key, a swap occurs (``robbing the rich to give to the poor''). This property enables two critical features: (1) \textit{Early exit} during lookups, where a search terminates as soon as the search distance exceeds the slot's DIB, and (2) \textit{Backward-shift deletion}, which shifts elements with positive DIB backward by one position, eliminating tombstones entirely.
 
 \section{Methods}
-% Quy ước cài đặt, pseudocode, bảng ánh xạ cơ chế tới hàm
+\subsection{Collision Resolution Implementations}
+All hash tables implement a uniform \texttt{HashTable} interface operating on 64-bit keys using Fibonacci hashing $h(k) = (k \cdot \phi) \ggg (64 - p)$ for table capacity $M = 2^p$. We evaluate four primary architectures:
+\begin{itemize}
+    \item \textbf{Separate Chaining (\texttt{sc})}: Singly-linked list per bucket.
+    \item \textbf{Linear Probing Tombstone (\texttt{lp-tomb})}: Parallel primitive arrays (\texttt{long[] keys}, \texttt{int[] values}, \texttt{byte[] state}), tracking tombstones with periodic rebuild threshold $\tau \cdot M$.
+    \item \textbf{Linear Probing Backshift (\texttt{lp-backshift})}: In-place cluster shift using Knuth's Algorithm R upon deletion.
+    \item \textbf{Robin Hood Hashing (\texttt{rh} \& \texttt{rh-noearly})}: Full Robin Hood table tracking DIB per slot with displacement swaps and backward-shift deletion. The variant \texttt{rh-noearly} ablates the early-exit mechanism to isolate its performance contribution.
+\end{itemize}
+
+\subsection{Justification for Knuth Algorithm R in \texttt{lp-backshift}}
+Between Knuth Algorithm R \cite{knuth} and Sedgewick's cluster re-insertion \cite{sedgewick}, our study adopts \textbf{Knuth Algorithm R} based on three methodological justifications:
+\begin{enumerate}
+    \item \textit{Algorithmic Complexity}: Knuth Algorithm R executes in strict $\mathcal{O}(K)$ single-pass time over a cluster of length $K$. In contrast, Sedgewick's re-insertion requires re-hashing and repeated probe loops for each trailing element, leading to worst-case $\mathcal{O}(K^2)$ intra-cluster overhead.
+    \item \textit{Memory Bus Traffic \& Cache Locality}: Algorithm R strictly performs in-place element movements only when an item cyclically precedes the hole. Non-qualifying elements remain untouched, drastically minimizing cache line invalidations on modern CPU architectures.
+    \item \textit{Theoretical Consistency}: Knuth's exact circular modular invariant $((i \le j) ? (i < r \le j) : (i < r \lor r \le j))$ preserves the canonical linear probing cluster distribution without artificial displacement.
+\end{enumerate}
 
 \section{Experimental Setup}
 % Máy đo, JVM, tham số, dữ liệu, làm nóng, timeout
