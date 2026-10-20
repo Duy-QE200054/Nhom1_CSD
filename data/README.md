@@ -36,6 +36,13 @@ Theo quy định mục 6.8:
   - $10\%$ số khóa được chọn lọc đặc biệt sao cho giá trị băm $h(k) < \frac{M}{64}$.
   - $90\%$ số khóa còn lại được phân phối đều ngẫu nhiên trên toàn bộ khoảng băm $[0, M)$.
   - Tải $\alpha = 0.75$, đo ở $M = 2^{18}$ và $M = 2^{20}$ (chạy 1 lượt `repeat = 1`).
+  - Mã Java tương ứng là `RQ1DataGenerator.generateClusteredKeys(count, capacity, seed)`; thứ tự mảng giữ nhóm 10% khóa dồn cụm ở đầu để dễ xác minh.
+
+### 2.4. Mã nguồn Generator RQ1
+- `RQ1DataGenerator.generatePresentKeys(count, seed)` tạo khóa có mặt không trùng nhau.
+- `RQ1DataGenerator.generateAbsentKeys(count, seed, presentKeys)` tạo khóa truy vấn không trùng nhau và không giao với tập có mặt.
+- `RQ1DataGenerator.generateClusteredKeys(count, capacity, seed)` tạo phân phối dồn cụm theo quy tắc mục 2.3.
+- Các phương thức dùng `SplittableRandom(seed)` và `HashSet` để tái lập kết quả, loại trùng; thời gian sinh dữ liệu nằm ngoài vùng benchmark.
 
 ---
 
