@@ -7,6 +7,7 @@ public class TestRunner {
         System.out.println("=================================================\n");
 
         try {
+            C1SeparateChainingTest.runAllTests();
             LinearProbingTombstoneTest.runAllTests();
             System.out.println(">>> TẤT CẢ CÁC BÀI TEST ĐÃ HOÀN THÀNH XUẤT SẮC! <<<");
         } catch (Throwable t) {
