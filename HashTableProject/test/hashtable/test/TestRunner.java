@@ -9,6 +9,7 @@ public class TestRunner {
         try {
             C1SeparateChainingTest.runAllTests();
             LinearProbingTombstoneTest.runAllTests();
+            RobinHoodAndBackshiftTest.runAllTests();
             System.out.println(">>> TẤT CẢ CÁC BÀI TEST ĐÃ HOÀN THÀNH XUẤT SẮC! <<<");
         } catch (Throwable t) {
             System.err.println("!!! CÓ LỖI XẢY RA TRONG QUÁ TRÌNH CHẠY TEST !!!");
