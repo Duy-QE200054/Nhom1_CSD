@@ -79,6 +79,7 @@ java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ2 --algo lp-t
 ### RQ3: Robin Hood vs LP Backshift (M = 2^18, C = 65536, Tải 0.5)
 ```bash
 java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo rh --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo rh-noearly --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
 java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo lp-backshift --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
 ```
 

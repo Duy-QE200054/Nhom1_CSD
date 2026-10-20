@@ -25,6 +25,8 @@ public class BenchmarkRunner {
 
         // 2. Khởi tạo bảng băm theo thuật toán (chỉ dùng interface HashTable)
         HashTable table;
+        String variant = "base";
+        String csvAlgo = algo;
         switch (algo) {
             case "sc":
                 table = new SeparateChaining(m);
@@ -32,26 +34,45 @@ public class BenchmarkRunner {
             case "lp-tomb":
                 table = new LinearProbingTombstone(m, tau);
                 break;
+            case "lp-backshift":
+                table = new LinearProbingBackshift(m);
+                break;
+            case "rh":
+                table = new RobinHoodTable(m, true);
+                break;
+            case "rh-noearly":
+                table = new RobinHoodTable(m, false);
+                variant = "noearly";
+                csvAlgo = "rh";
+                break;
             default:
                 throw new IllegalArgumentException("Unsupported algorithm: " + algo);
         }
 
-        // 3. Sinh dữ liệu bằng RQ1DataGenerator có sẵn (C1 task 1)
+        // 3. Sinh dữ liệu và nạp vào bảng
         int n = (int) Math.round(alpha * m);
         long[] keys;
-        if ("clustered".equals(dataset)) {
-            int p = Integer.numberOfTrailingZeros(m);
-            keys = RQ1DataGenerator.generateClusteredKeys(n, m, seed);
+        if (c > 0) {
+            // Workload xóa - thêm liên tục (Churn) cho RQ2 & RQ3
+            RQ2Workload workload = new RQ2Workload(m, alpha, seed);
+            workload.populateInitialKeys(table);
+            workload.runChurnCycles(table, c);
+            keys = workload.getAliveKeysCopy();
+            n = keys.length;
         } else {
-            keys = RQ1DataGenerator.generatePresentKeys(n, seed);
+            // Workload RQ1 tiêu chuẩn
+            if ("clustered".equals(dataset)) {
+                keys = RQ1DataGenerator.generateClusteredKeys(n, m, seed);
+            } else {
+                keys = RQ1DataGenerator.generatePresentKeys(n, seed);
+            }
+            // Warmup JVM (chèn toàn bộ khóa trước khi đo)
+            for (long k : keys) {
+                table.put(k, 1);
+            }
         }
 
-        // 4. Warmup JVM (chèn toàn bộ khóa trước khi đo)
-        for (long k : keys) {
-            table.put(k, 1);
-        }
-
-        // 5. Đo đạc theo chế độ time hoặc count
+        // 4. Đo đạc theo chế độ time hoặc count
         long ops = keys.length;
         if ("count".equals(mode)) {
             // Lượt đếm bước dò
@@ -63,7 +84,7 @@ public class BenchmarkRunner {
             long totalProbes = table.getProbeCount();
             double avgProbes = ops > 0 ? (double) totalProbes / ops : 0.0;
 
-            printCsvRow(rq, algo, "base", dataset, n, m, alpha, c, tau, seed,
+            printCsvRow(rq, csvAlgo, variant, dataset, n, m, alpha, c, tau, seed,
                     computeSha256(keys), "1.0.0", 1,
                     "", heapBefore(), heapPeak(), avgProbes,
                     outputCheck(table, keys), "ok", "2g", "PC_LAB", "local");
@@ -75,7 +96,7 @@ public class BenchmarkRunner {
             }
             long elapsedMs = (System.nanoTime() - startNs) / 1_000_000;
 
-            printCsvRow(rq, algo, "base", dataset, n, m, alpha, c, tau, seed,
+            printCsvRow(rq, csvAlgo, variant, dataset, n, m, alpha, c, tau, seed,
                     computeSha256(keys), "1.0.0", 1,
                     elapsedMs, heapBefore(), heapPeak(), "",
                     outputCheck(table, keys), "ok", "2g", "PC_LAB", "local");
