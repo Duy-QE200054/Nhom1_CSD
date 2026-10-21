@@ -6,11 +6,15 @@ import hashtable.core.PutStatus;
 import hashtable.core.RQ1DataGenerator;
 import hashtable.core.SeparateChaining;
 
+<<<<<<< HEAD
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+=======
+import java.util.HashSet;
+>>>>>>> f54e3eb7395de11bf239a2518d5bbaad085a7baf
 import java.util.Set;
 import java.util.SplittableRandom;
 
@@ -25,6 +29,7 @@ public class C1SeparateChainingTest {
     private static final int CAPACITY = 16;
 
     public static void runAllTests() {
+<<<<<<< HEAD
         System.out.println("--- Bắt đầu 6 ca bắt buộc và Oracle cho Separate Chaining (Cặp 1 - C1) ---");
         testSeparateChainingRandomCollisions();
         testSeparateChainingRepeatedInsertDelete();
@@ -34,6 +39,9 @@ public class C1SeparateChainingTest {
         testSeparateChainingEmptyAndMissing();
 
         testOracle();
+=======
+        testSeparateChainingOperations();
+>>>>>>> f54e3eb7395de11bf239a2518d5bbaad085a7baf
         testGeneratorReproducibilityAndUniqueness();
         testAbsentKeys();
         testClusteredKeys();
@@ -185,6 +193,7 @@ public class C1SeparateChainingTest {
         System.out.println("PASSED");
     }
 
+<<<<<<< HEAD
     /**
      * Ca 6: Kiểm tra bảng rỗng, xóa khóa không tồn tại, đếm empty bucket.
      */
@@ -262,6 +271,8 @@ public class C1SeparateChainingTest {
         System.out.println("PASSED");
     }
 
+=======
+>>>>>>> f54e3eb7395de11bf239a2518d5bbaad085a7baf
     private static void testGeneratorReproducibilityAndUniqueness() {
         long[] firstRun = RQ1DataGenerator.generatePresentKeys(1_000, 42L);
         long[] secondRun = RQ1DataGenerator.generatePresentKeys(1_000, 42L);

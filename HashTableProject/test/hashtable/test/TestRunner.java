@@ -7,6 +7,7 @@ public class TestRunner {
         System.out.println("=================================================\n");
 
         try {
+            HashTableOracleTest.runAllTests();
             C1SeparateChainingTest.runAllTests();
             C2HashTableTest.runAllTests();
             LinearProbingTombstoneTest.runAllTests();
