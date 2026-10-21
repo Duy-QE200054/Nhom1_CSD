@@ -153,8 +153,6 @@ public class SeparateChaining implements HashTable {
     }
 
     private static void validateKey(long key) {
-        if (key < 0) {
-            throw new IllegalArgumentException("Key phải không âm, nhận được: " + key);
-        }
+        // Hỗ trợ tất cả các khóa long, bao gồm cả (long) s.hashCode() từ chuỗi ký tự Biến thể B
     }
 }

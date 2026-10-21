@@ -48,7 +48,7 @@ public class RQ2Workload {
      * Nạp N khóa ban đầu vào bảng.
      * Sử dụng chuỗi số ngẫu nhiên từ seed để sinh khóa duy nhất.
      */
-    public void populateInitialKeys(LinearProbingTombstone table) {
+    public void populateInitialKeys(HashTable table) {
         java.util.HashSet<Long> seen = new java.util.HashSet<>(initialN * 2);
         while (aliveCount < initialN) {
             long k = rng.nextLong(1, Long.MAX_VALUE);
@@ -63,13 +63,13 @@ public class RQ2Workload {
     /**
      * Chạy C chu kỳ xóa - thêm liên tục (Churn).
      * Tại mỗi chu kỳ:
-     * - Xóa 1 khóa sống ngẫu nhiên (chuyển thành TOMB).
-     * - Thêm 1 khóa mới hoàn toàn (có thể tái sử dụng TOMB đầu tiên hoặc chiếm ô EMPTY).
+     * - Xóa 1 khóa sống ngẫu nhiên (chuyển thành TOMB hoặc dịch lùi).
+     * - Thêm 1 khóa mới hoàn toàn.
      *
      * @param table Bảng đang thực nghiệm
      * @param cycles Số chu kỳ C (ví dụ: M/4, M/2, M, 2M, 4M)
      */
-    public void runChurnCycles(LinearProbingTombstone table, int cycles) {
+    public void runChurnCycles(HashTable table, int cycles) {
         java.util.HashSet<Long> seen = new java.util.HashSet<>();
         for (int i = 0; i < aliveCount; i++) {
             seen.add(aliveKeys[i]);
