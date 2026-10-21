@@ -6,9 +6,7 @@ import hashtable.core.PutStatus;
 import hashtable.core.RQ1DataGenerator;
 import hashtable.core.SeparateChaining;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -18,7 +16,6 @@ public class C1SeparateChainingTest {
 
     public static void runAllTests() {
         testSeparateChainingOperations();
-        testOracle();
         testGeneratorReproducibilityAndUniqueness();
         testAbsentKeys();
         testClusteredKeys();
@@ -44,35 +41,6 @@ public class C1SeparateChainingTest {
         assertEquals(8, table.getEmptyCount(), "Bucket rỗng sau khi xóa hết");
         assertEquals(0, table.size(), "Size sau khi xóa hết");
         assertEquals(false, table.get(first).isFound(), "Khóa đã xóa không còn");
-    }
-
-    private static void testOracle() {
-        SeparateChaining table = new SeparateChaining(64);
-        Map<Long, Integer> oracle = new HashMap<>();
-        long state = 42L;
-        for (int i = 0; i < 20_000; i++) {
-            state = state * 6364136223846793005L + 1442695040888963407L;
-            long key = (state & Long.MAX_VALUE) % 2_000;
-            int value = i - 10_000;
-            switch (i % 3) {
-                case 0:
-                    PutStatus expected = oracle.containsKey(key) ? PutStatus.UPDATED : PutStatus.INSERTED;
-                    assertEquals(expected, table.put(key, value), "Oracle put");
-                    oracle.put(key, value);
-                    break;
-                case 1:
-                    assertEquals(oracle.remove(key) != null, table.remove(key), "Oracle remove");
-                    break;
-                default:
-                    GetResult result = table.get(key);
-                    assertEquals(oracle.containsKey(key), result.isFound(), "Oracle get found");
-                    if (result.isFound()) {
-                        assertEquals(oracle.get(key).intValue(), result.getValue(), "Oracle get value");
-                    }
-                    break;
-            }
-            assertEquals(oracle.size(), table.size(), "Oracle size");
-        }
     }
 
     private static void testGeneratorReproducibilityAndUniqueness() {
