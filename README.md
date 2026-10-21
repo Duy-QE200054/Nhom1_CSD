@@ -58,6 +58,17 @@ Chạy bộ test kiểm tra tính đúng so khớp oracle `HashMap` và 6 ca tes
 cd HashTableProject
 ant test
 ```
+Oracle dùng chung chạy đúng 1.000.000 thao tác theo tỷ lệ 40% `put`, 40% `get`,
+20% `remove`, với `M = 2^12`; seed cố định giúp tái lập kết quả. Sáu ca hợp đồng
+được chạy cho từng factory đăng ký trong `HashTableOracleTest`. Hiện project đăng ký
+`sc`, `lp-tomb` không rebuild và `lp-tomb` rebuild (`tau = 0.25`). Các cài đặt
+`lp-backshift`, `rh` và `rh-noearly` có thể dùng cùng suite bằng cách đăng ký factory
+của chúng trong `runAllTests()`.
+
+Sáu ca hợp đồng lần lượt kiểm tra va chạm/cập nhật (M=16), xóa trong cụm va chạm,
+khóa và giá trị biên, get/remove khóa không tồn tại và remove lặp lại, cụm va chạm
+quấn vòng từ bucket cuối (M=16), và chuỗi thao tác hỗn hợp đối chiếu với `HashMap`.
+Khóa va chạm của ca 1 và ca 5 được tìm bằng thử ngẫu nhiên có seed cố định.
 
 ---
 
