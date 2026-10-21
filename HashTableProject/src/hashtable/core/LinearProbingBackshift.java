@@ -250,4 +250,31 @@ public class LinearProbingBackshift implements HashTable {
     public int getValueAt(int index) {
         return values[index];
     }
+
+    public void validateInvariants() {
+        int occupiedCount = 0;
+        for (int index = 0; index < capacity; index++) {
+            if (state[index] == EMPTY) {
+                continue;
+            }
+            if (state[index] != OCCUPIED) {
+                throw new IllegalStateException("Unknown slot state at index " + index);
+            }
+
+            occupiedCount++;
+            int home = FibonacciHash.hash(keys[index], p);
+            int cursor = home;
+            while (cursor != index) {
+                if (state[cursor] == EMPTY) {
+                    throw new IllegalStateException(
+                            "EMPTY slot at index " + cursor + " blocks key " + keys[index]);
+                }
+                cursor = (cursor + 1) & mask;
+            }
+        }
+        if (occupiedCount != size) {
+            throw new IllegalStateException(
+                    "Occupied slot count " + occupiedCount + " does not match size " + size);
+        }
+    }
 }

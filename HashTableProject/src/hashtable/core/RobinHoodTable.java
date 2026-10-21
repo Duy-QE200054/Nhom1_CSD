@@ -1,5 +1,8 @@
 package hashtable.core;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Cài đặt bảng băm Robin Hood (rh và rh-noearly) - Nhiệm vụ Cặp 3 (C3).
  *
@@ -315,5 +318,46 @@ public class RobinHoodTable implements HashTable {
 
     public int getDibAt(int index) {
         return dib[index];
+    }
+
+    public void validateInvariants() {
+        int occupiedCount = 0;
+        Set<Long> seenKeys = new HashSet<>();
+        for (int index = 0; index < capacity; index++) {
+            if (state[index] == EMPTY) {
+                if (dib[index] != 0) {
+                    throw new IllegalStateException("EMPTY slot has nonzero DIB at index " + index);
+                }
+                continue;
+            }
+            if (state[index] != OCCUPIED) {
+                throw new IllegalStateException("Unknown slot state at index " + index);
+            }
+
+            occupiedCount++;
+            long key = keys[index];
+            int home = FibonacciHash.hash(key, p);
+            int expectedDib = (index - home + capacity) & mask;
+            if (dib[index] != expectedDib) {
+                throw new IllegalStateException("Incorrect DIB for key " + key + " at index " + index
+                        + ": expected " + expectedDib + ", found " + dib[index]);
+            }
+            if (!seenKeys.add(key)) {
+                throw new IllegalStateException("Duplicate key " + key);
+            }
+
+            int cursor = home;
+            while (cursor != index) {
+                if (state[cursor] == EMPTY) {
+                    throw new IllegalStateException(
+                            "EMPTY slot at index " + cursor + " blocks key " + key);
+                }
+                cursor = (cursor + 1) & mask;
+            }
+        }
+        if (occupiedCount != size) {
+            throw new IllegalStateException(
+                    "Occupied slot count " + occupiedCount + " does not match size " + size);
+        }
     }
 }
