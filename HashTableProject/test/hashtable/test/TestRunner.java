@@ -8,6 +8,7 @@ public class TestRunner {
 
         try {
             C1SeparateChainingTest.runAllTests();
+            C2HashTableTest.runAllTests();
             LinearProbingTombstoneTest.runAllTests();
             RobinHoodAndBackshiftTest.runAllTests();
             LinearProbingBackshiftTest.runAllTests();

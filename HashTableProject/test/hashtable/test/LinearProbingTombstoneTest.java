@@ -71,6 +71,7 @@ public class LinearProbingTombstoneTest {
         assertEquals(PutStatus.INSERTED, table.put(100L, 10), "Chèn 100L");
         assertEquals(PutStatus.INSERTED, table.put(200L, 20), "Chèn 200L");
         assertEquals(2, table.size(), "Size sau 2 lần chèn");
+        table.validateInvariants();
 
         // Get khóa
         GetResult r1 = table.get(100L);
@@ -89,9 +90,11 @@ public class LinearProbingTombstoneTest {
         assertEquals(1, table.size(), "Size sau khi xóa 1");
         assertEquals(1, table.getTombstoneCount(), "Tombstone count phải là 1");
         assertTrue(!table.get(100L).isFound(), "Không còn tìm thấy 100L sau khi xóa");
+        table.validateInvariants();
 
         // Xóa lại khóa đã xóa
         assertTrue(!table.remove(100L), "Xóa lại 100L phải trả về false");
+        table.validateInvariants();
         System.out.println("PASSED");
     }
 
@@ -123,11 +126,13 @@ public class LinearProbingTombstoneTest {
         assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH), "k1 tại targetH");
         assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 1), "k2 tại targetH + 1");
         assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 2), "k3 tại targetH + 2");
+        table.validateInvariants();
 
         // Xóa k2 -> ô targetH + 1 trở thành TOMB
         table.remove(k2);
         assertEquals(LinearProbingTombstone.TOMB, table.getStateAt(targetH + 1), "Ô targetH + 1 phải là TOMB");
         assertEquals(1, table.getTombstoneCount(), "Tombstone count = 1");
+        table.validateInvariants();
 
         // Chèn khóa mới k4 (cũng băm về targetH):
         // Dò từ targetH (k1: occupied khác) -> targetH+1 (TOMB: nhớ firstTomb) -> targetH+2 (k3: occupied khác) -> targetH+3 (EMPTY: dừng dò).
@@ -137,11 +142,13 @@ public class LinearProbingTombstoneTest {
         assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 1), "targetH + 1 phải được tái sử dụng");
         assertEquals(k4, table.getKeyAt(targetH + 1), "Khóa tại targetH + 1 phải là k4");
         assertEquals(0, table.getTombstoneCount(), "Tombstone count phải giảm về 0");
+        table.validateInvariants();
 
         // Kiểm tra k3 vẫn tra cứu được bình thường
         GetResult rK3 = table.get(k3);
         assertTrue(rK3.isFound(), "k3 vẫn phải tìm thấy");
         assertEquals(3, rK3.getValue(), "Giá trị của k3");
+        table.validateInvariants();
         System.out.println("PASSED");
     }
 
@@ -353,12 +360,14 @@ public class LinearProbingTombstoneTest {
         // Chạy 20 chu kỳ churn tạo tombstones
         workload.runChurnCycles(table, 20);
         assertTrue(table.getTombstoneCount() > 0, "Bảng sau churn phải có tombstones");
+        table.validateInvariants();
 
         // Dựng bảng sạch đối chứng
         LinearProbingTombstone clean = workload.buildCleanTable(table);
         assertEquals(table.size(), clean.size(), "Cùng số lượng phần tử sống");
         assertEquals(0, clean.getTombstoneCount(), "Clean table không có tombstone");
         assertEquals(M - clean.size(), clean.getEmptyCount(), "Clean table có số ô EMPTY chuẩn");
+        clean.validateInvariants();
 
         // Kiểm tra mọi phần tử sống trong bảng gốc đều tồn tại trong clean table với cùng giá trị
         for (int i = 0; i < M; i++) {

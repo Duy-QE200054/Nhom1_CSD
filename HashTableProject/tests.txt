@@ -1,4 +1,5 @@
 C:\tmp\Nhom1_CSD\HashTableProject\test\hashtable\test\C1SeparateChainingTest.java
+C:\tmp\Nhom1_CSD\HashTableProject\test\hashtable\test\C2HashTableTest.java
 C:\tmp\Nhom1_CSD\HashTableProject\test\hashtable\test\LinearProbingBackshiftTest.java
 C:\tmp\Nhom1_CSD\HashTableProject\test\hashtable\test\LinearProbingTombstoneTest.java
 C:\tmp\Nhom1_CSD\HashTableProject\test\hashtable\test\RobinHoodAndBackshiftTest.java
