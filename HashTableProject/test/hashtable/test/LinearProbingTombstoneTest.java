@@ -35,6 +35,8 @@ public class LinearProbingTombstoneTest {
         testProbeCounting();
         testCleanTableCreation();
         testOracleWithHashMap(100_000, 42L);
+        testWorkloadBlockProfiling();
+        testMilestoneCMeasurementAndComparisonTable();
         System.out.println("--- TẤT CẢ CÁC BÀI TEST CỦA C2 ĐÃ VƯỢT QUA THÀNH CÔNG! ---\n");
     }
 
@@ -429,6 +431,71 @@ public class LinearProbingTombstoneTest {
 
             assertEquals(oracle.size(), table.size(), "Size phải luôn khớp với oracle tại bước " + op);
         }
+        System.out.println("PASSED");
+    }
+
+    /**
+     * 11. Kiểm tra Workload xóa-thêm O(1) và đo đạc theo từng khối (Block Profiling)
+     */
+    public static void testWorkloadBlockProfiling() {
+        System.out.print("[Test 11] Workload O(1) và Block Profiling từng khối 10^4 thao tác... ");
+        int M = 2048;
+        RQ2Workload workload = new RQ2Workload(M, 0.5, 77L);
+        LinearProbingTombstone table = new LinearProbingTombstone(M);
+
+        workload.populateInitialKeys(table);
+        assertEquals(1024, workload.getAliveCount(), "Khởi tạo đúng N = 1024");
+        assertEquals(1024, table.size(), "Bảng có đúng 1024 phần tử sống");
+
+        // Chạy 5000 chu kỳ churn với khối 2000 thao tác (1000 chu kỳ/khối)
+        java.util.List<RQ2Workload.BlockTiming> blocks =
+                workload.runChurnCyclesWithBlockProfiling(table, 5000, 2000, null);
+
+        assertTrue(blocks.size() >= 5, "Phải ghi nhận ít nhất 5 khối đo đạc");
+        for (RQ2Workload.BlockTiming b : blocks) {
+            assertTrue(b.elapsedMs >= 0.0, "Thời gian khối phải không âm");
+            assertTrue(b.tombstoneCount > 0, "Sau churn phải có tombstones");
+        }
+        table.validateInvariants();
+        System.out.println("PASSED");
+    }
+
+    /**
+     * 12. Kiểm tra đo đạc tại mốc C và Bảng đối chứng RQ2 (Clean Table)
+     */
+    public static void testMilestoneCMeasurementAndComparisonTable() {
+        System.out.print("[Test 12] Đo mốc C (10^4 hit, 10^4 miss) & Bảng đối chứng RQ2... ");
+        int M = 1024;
+        RQ2Workload workload = new RQ2Workload(M, 0.5, 999L);
+        LinearProbingTombstone table = new LinearProbingTombstone(M);
+
+        workload.populateInitialKeys(table);
+        int milestoneC = 600;
+        workload.runChurnCycles(table, milestoneC);
+
+        // Đo tại mốc C với 1,000 queries hit và 1,000 queries miss (ở test này dùng 1,000 để chạy nhanh)
+        RQ2Workload.MilestoneCMeasurement mHitMiss =
+                workload.measureAtMilestoneC(table, milestoneC, 1_000, 42L, "base");
+
+        assertEquals(1_000, mHitMiss.hitCount, "Số truy vấn hit đúng");
+        assertEquals(1_000, mHitMiss.missCount, "Số truy vấn miss đúng");
+        assertTrue(mHitMiss.hitAvgProbes >= 1.0, "Số lần dò hit >= 1.0");
+        assertTrue(mHitMiss.missAvgProbes >= 1.0, "Số lần dò miss >= 1.0");
+        assertTrue(mHitMiss.tombstoneCount > 0, "Số ô tombstone > 0");
+
+        // So sánh đối chứng với Clean Table
+        RQ2Workload.RQ2ComparisonResult comp =
+                workload.compareWithCleanTable(table, milestoneC, 1_000, 42L);
+
+        assertEquals(0, comp.cleanTableResult.tombstoneCount, "Clean Table có 0 tombstone");
+        assertEquals(table.size(), comp.cleanTableResult.aliveCount, "Clean Table có cùng số khóa sống");
+        // Bảng tích tụ Tombstone phải có số lần dò khi miss cao hơn hoặc bằng Clean Table
+        assertTrue(comp.tombTableResult.missAvgProbes >= comp.cleanTableResult.missAvgProbes,
+                "Bảng tích tụ tombstone phải có số lần dò miss >= Clean Table");
+
+        String markdown = comp.toMarkdownTable();
+        assertTrue(markdown.contains("BẢNG ĐỐI CHỨNG RQ2"), "Markdown phải chứa tiêu đề bảng đối chứng");
+        assertTrue(markdown.contains("KHỚP 100%"), "Checksum phải khớp 100%");
         System.out.println("PASSED");
     }
 }
