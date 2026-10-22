@@ -16,6 +16,7 @@ public class TestRunner {
         failures += runSuite("RobinHoodTableTest", RobinHoodTableTest::runAllTests);
         failures += runSuite("VariantBStringTest", VariantBStringTest::runAllTests);
         failures += runSuite("C3HashTableTest", C3HashTableTest::runAllTests);
+        failures += runSuite("BenchmarkRunnerTest", BenchmarkRunnerTest::runAllTests);
 
         if (failures == 0) {
             System.out.println(">>> TẤT CẢ CÁC BÀI TEST ĐÃ HOÀN THÀNH XUẤT SẮC! <<<");
