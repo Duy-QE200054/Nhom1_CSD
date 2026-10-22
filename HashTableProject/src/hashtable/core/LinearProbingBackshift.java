@@ -1,5 +1,8 @@
 package hashtable.core;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Cài đặt bảng băm Linear Probing với cơ chế xóa dịch lùi (lp-backshift) - Nhiệm vụ Cặp 3 (C3).
  *
@@ -249,5 +252,56 @@ public class LinearProbingBackshift implements HashTable {
 
     public int getValueAt(int index) {
         return values[index];
+    }
+
+    public int getDibAt(int index) {
+        if (state[index] != OCCUPIED) {
+            return 0;
+        }
+        int h = FibonacciHash.hash(keys[index], p);
+        return (index - h + capacity) & mask;
+    }
+
+    /**
+     * Kiểm tra bất biến cấu trúc:
+     * 1. Không có ô EMPTY nào chặn giữa ô băm gốc (home) và vị trí của khóa (index).
+     * 2. DIB tính được đúng và hợp lệ.
+     * 3. Số ô OCCUPIED khớp với size.
+     * 4. Không có khóa trùng lặp.
+     */
+    public void validateInvariants() {
+        int occupiedCount = 0;
+        Set<Long> seenKeys = new HashSet<>();
+        for (int index = 0; index < capacity; index++) {
+            if (state[index] == EMPTY) {
+                continue;
+            }
+            if (state[index] != OCCUPIED) {
+                throw new IllegalStateException("Trạng thái ô không xác định tại chỉ số " + index);
+            }
+
+            occupiedCount++;
+            long key = keys[index];
+            if (!seenKeys.add(key)) {
+                throw new IllegalStateException("Phát hiện khóa trùng lặp: " + key);
+            }
+            int home = FibonacciHash.hash(key, p);
+            int cursor = home;
+            while (cursor != index) {
+                if (state[cursor] == EMPTY) {
+                    throw new IllegalStateException(
+                            "Ô EMPTY tại chỉ số " + cursor + " chặn đường dò tới khóa " + key);
+                }
+                cursor = (cursor + 1) & mask;
+            }
+            int expectedDib = (index - home + capacity) & mask;
+            if (expectedDib < 0 || expectedDib >= capacity) {
+                throw new IllegalStateException("DIB không hợp lệ cho khóa " + key + ": " + expectedDib);
+            }
+        }
+        if (occupiedCount != size) {
+            throw new IllegalStateException(
+                    "Số ô chiếm dụng " + occupiedCount + " không khớp với size " + size);
+        }
     }
 }

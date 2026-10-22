@@ -1,5 +1,8 @@
 package hashtable.core;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Robin Hood hashing chuẩn (textbook-style): mỗi khóa lưu khoảng cách từ bucket gốc
  * (DIB = Distance from Initial Bucket). Khi chèn, khóa có DIB lớn hơn sẽ "ăn cắp" chỗ
@@ -258,10 +261,50 @@ public class RobinHood implements HashTable {
         return values[index];
     }
 
+    public void validateInvariants() {
+        int occupiedCount = 0;
+        Set<Long> seenKeys = new HashSet<>();
+        for (int index = 0; index < capacity; index++) {
+            if (state[index] == EMPTY) {
+                if (dibs[index] != 0) {
+                    throw new IllegalStateException("EMPTY slot has nonzero DIB at index " + index);
+                }
+                continue;
+            }
+            if (state[index] != OCCUPIED) {
+                throw new IllegalStateException("Unknown slot state at index " + index);
+            }
+
+            occupiedCount++;
+            long key = keys[index];
+            int home = FibonacciHash.hash(key, p);
+            int expectedDib = distanceFromHome(index, home);
+            if (dibs[index] != expectedDib) {
+                throw new IllegalStateException("Incorrect DIB for key " + key + " at index " + index
+                        + ": expected " + expectedDib + ", found " + dibs[index]);
+            }
+            if (!seenKeys.add(key)) {
+                throw new IllegalStateException("Duplicate key " + key);
+            }
+
+            int cursor = home;
+            while (cursor != index) {
+                if (state[cursor] == EMPTY) {
+                    throw new IllegalStateException(
+                            "EMPTY slot at index " + cursor + " blocks key " + key);
+                }
+                cursor = (cursor + 1) & mask;
+            }
+        }
+        if (occupiedCount != size) {
+            throw new IllegalStateException(
+                    "Occupied slot count " + occupiedCount + " does not match size " + size);
+        }
+    }
+
     protected static void validateKey(long key) {
         if (key < 0) {
             throw new IllegalArgumentException("Key phải không âm, nhận được: " + key);
         }
     }
 }
-

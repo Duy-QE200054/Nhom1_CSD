@@ -58,6 +58,17 @@ Chạy bộ test kiểm tra tính đúng so khớp oracle `HashMap` và 6 ca tes
 cd HashTableProject
 ant test
 ```
+Oracle dùng chung chạy đúng 1.000.000 thao tác theo tỷ lệ 40% `put`, 40% `get`,
+20% `remove`, với `M = 2^12`; seed cố định giúp tái lập kết quả. Sáu ca hợp đồng
+được chạy cho từng factory đăng ký trong `HashTableOracleTest`. Hiện project đăng ký
+`sc`, `lp-tomb` không rebuild và `lp-tomb` rebuild (`tau = 0.25`). Các cài đặt
+`lp-backshift`, `rh` và `rh-noearly` có thể dùng cùng suite bằng cách đăng ký factory
+của chúng trong `runAllTests()`.
+
+Sáu ca hợp đồng lần lượt kiểm tra va chạm/cập nhật (M=16), xóa trong cụm va chạm,
+khóa và giá trị biên, get/remove khóa không tồn tại và remove lặp lại, cụm va chạm
+quấn vòng từ bucket cuối (M=16), và chuỗi thao tác hỗn hợp đối chiếu với `HashMap`.
+Khóa va chạm của ca 1 và ca 5 được tìm bằng thử ngẫu nhiên có seed cố định.
 
 ---
 
@@ -83,7 +94,7 @@ java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo rh-n
 java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo lp-backshift --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
 ```
 
-*(Lưu ý: Có thể thêm cờ `--count` để chuyển sang lượt đếm số bước dò, hoặc cờ `--query miss` để kiểm tra tra cứu trượt)*.
+*(Lưu ý: Dùng `--count` hoặc `--mode count` để chạy lượt đếm riêng; `--mode time` là lượt đo thời gian; có thể thêm `--query miss` để kiểm tra tra cứu trượt).*
 
 ### Điều Phối Toàn Bộ Kịch Bản Đo RQ3 (Bench Runner)
 ```bash
@@ -116,8 +127,9 @@ Mỗi dòng trong file CSV tại `results/raw/` tương ứng với một lượ
 | `generator_version` | Phiên bản của bộ sinh dữ liệu (vd: `1.0.0`) |
 | `repeat` | Lần lặp (từ 1 đến 3) |
 | `elapsed_ms` | Thời gian chạy (ms), để trống nếu `timeout` hoặc lỗi |
-| `heap_before_bytes` | Lượng heap sử dụng trước khi đo (sau GC) |
-| `heap_peak_bytes` | Đỉnh heap đo được trong lượt chạy |
+| `build_ms` | Thời gian dựng và nạp dữ liệu vào bảng, tách riêng khỏi thời gian truy vấn |
+| `heap_before_bytes` | Lượng heap sử dụng sau GC, trước khi dựng bảng |
+| `heap_peak_bytes` | Tổng high-water mark của các heap memory pool trong lượt chạy |
 | `ops_count` | Số lần dò/thao tác trung bình (chỉ có giá trị ở lượt `--count`) |
 | `output_check` | Tổng kiểm tra checksum kết quả tra cứu (chống DCE) |
 | `status` | Trạng thái: `ok`, `timeout`, `crash`, `oom`, `wrong` |
