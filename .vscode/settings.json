@@ -1,0 +1,7 @@
+{
+    "java.project.sourcePaths": [
+        "HashTableProject/src",
+        "HashTableProject/test"
+    ],
+    "java.project.outputPath": "HashTableProject/build/vscode-classes"
+}

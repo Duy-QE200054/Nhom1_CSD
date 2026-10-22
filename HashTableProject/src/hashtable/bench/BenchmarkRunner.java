@@ -6,6 +6,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -48,6 +51,7 @@ public class BenchmarkRunner {
         int repeat = Integer.parseInt(getArg(args, "--repeat", "1"));
         String machineId = getArg(args, "--machine-id", "PC_LAB");
         String gitCommit = getArg(args, "--git-commit", "local");
+        String xmx = getArg(args, "--xmx", "2g");
         int blockSize = Integer.parseInt(getArg(args, "--block-size", "10000"));
         String blockLogFile = getArg(args, "--block-log", null);
         boolean compareClean = hasFlag(args, "--compare-clean");
@@ -159,7 +163,7 @@ public class BenchmarkRunner {
             printCsvRow(rq, csvAlgo, variant, dataset, n, m, alpha, c, tau, seed,
                     computeSha256(keys), "1.0.0", repeat,
                     "", heapBefore(), heapPeak(), avgProbes,
-                    outputCheck(table, keys), "ok", "2g", machineId, gitCommit);
+                    outputCheck(table, keys), "ok", xmx, machineId, gitCommit);
         } else {
             // Lượt đo thời gian: elapsed_ms có giá trị, ops_count để trống
             long startNs = System.nanoTime();
@@ -171,7 +175,7 @@ public class BenchmarkRunner {
             printCsvRow(rq, csvAlgo, variant, dataset, n, m, alpha, c, tau, seed,
                     computeSha256(keys), "1.0.0", repeat,
                     elapsedMs, heapBefore(), heapPeak(), "",
-                    outputCheck(table, keys), "ok", "2g", machineId, gitCommit);
+                    outputCheck(table, keys), "ok", xmx, machineId, gitCommit);
         }
 
         if (!csvOnly) {
@@ -194,6 +198,45 @@ public class BenchmarkRunner {
             if (flag.equals(a)) return true;
         }
         return false;
+    }
+
+    static String failureRow(String[] args, String status) {
+        String rq = getArg(args, "--rq", "RQ1");
+        String algo = getArg(args, "--algo", "sc");
+        String variant = getArg(args, "--variant", "base");
+        if ("rh-noearly".equals(algo)) {
+            algo = "rh";
+            variant = "noearly";
+        }
+        String dataset = getArg(args, "--dataset", "uniform");
+        String m = getArg(args, "--m", "262144");
+        String alpha = getArg(args, "--alpha", "0.75");
+        String c = getArg(args, "--c", "0");
+        String tau = getArg(args, "--tau", "Infinity");
+        if ("Infinity".equalsIgnoreCase(tau) || "-Infinity".equalsIgnoreCase(tau)) {
+            tau = "inf";
+        }
+        String seed = getArg(args, "--seed", "42");
+        String repeat = getArg(args, "--repeat", "1");
+        String xmx = getArg(args, "--xmx", "2g");
+        String runId = "RUN_" + rq + "_" + algo.toUpperCase() + "_"
+                + (variant.equals("base") ? "" : variant.toUpperCase() + "_") + repeat;
+
+        return String.join(",",
+                runId, rq, algo, variant, dataset, "",
+                "M=" + m + ";alpha=" + alpha + ";c=" + c + ";tau=" + tau,
+                seed, "", "1.0.0", repeat, "", "", "", "", "", status, xmx,
+                getArg(args, "--machine-id", "PC_LAB"),
+                getArg(args, "--git-commit", "local"));
+    }
+
+    static void appendCsvLine(String outputFile, String line) throws IOException {
+        File file = new File(outputFile);
+        boolean needHeader = !file.exists() || file.length() == 0;
+        String content = (needHeader ? CSV_HEADER + System.lineSeparator() : "")
+                + line + System.lineSeparator();
+        Files.write(file.toPath(), content.getBytes(StandardCharsets.UTF_8),
+                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
     /** Ước lượng heap sử dụng sau GC */
