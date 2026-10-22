@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  *
  * jobs.txt: mỗi dòng là tham số của BenchmarkRunner cho MỘT mốc (dòng trống và dòng bắt đầu bằng # bị bỏ qua):
  *   --rq RQ1 --algo sc --m 262144 --alpha 0.75 --mode time --repeat 1
- *   --rq RQ1 --algo lp-tomb --m 262144 --alpha 0.90 --mode count --repeat 1
+ *   --rq RQ1 --algo lp-tomb --m 262144 --alpha 0.90 --count --repeat 1
  *
  * Tùy chọn: --cp <classpath> (mặc định: classpath của wrapper), --java <đường dẫn java>.
  * Wrapper tự thêm --out, --csv-only, --xmx vào mỗi job nếu job chưa có.
