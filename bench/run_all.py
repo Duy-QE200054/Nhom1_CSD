@@ -65,7 +65,7 @@ def run_single_benchmark(jar_path, args, timeout_sec=60):
         print(f"[TIMEOUT] Process exceeded {timeout_sec}s! Destroying JVM process.")
         return -1, "timeout"
 
-def run_rq3_benchmarks(jar_path, output_csv, quick=False, timeout_sec=60):
+def run_rq3_benchmarks(jar_path, output_csv, quick=False, timeout_sec=60, custom_seeds=None, custom_cycles=None, repeats_count=None):
     """
     Kịch bản đo thực nghiệm RQ3 (Nhiệm vụ Cặp 3 - C3):
     - Đánh giá bóc tách cơ chế của Robin Hood Hashing:
@@ -88,16 +88,17 @@ def run_rq3_benchmarks(jar_path, output_csv, quick=False, timeout_sec=60):
 
     if quick:
         print("[MODE] Quick Trial Mode (1 seed, 1 repeat, C=65536)")
-        seeds = [42]
-        churn_cycles = [65536]
+        seeds = custom_seeds or [42]
+        churn_cycles = custom_cycles or [65536]
         repeats = [1]
         queries = ["hit", "miss"]
     else:
-        print("[MODE] Full Empirical Matrix Mode (3 seeds, 3 repeats, 3 churn cycles)")
-        seeds = [42, 1337, 20261019]
-        churn_cycles = [65536, 131072, 262144]
-        repeats = [1, 2, 3]
+        seeds = custom_seeds or [42, 1337, 20261019]
+        churn_cycles = custom_cycles or [65536, 131072, 262144]
+        rep_count = repeats_count or 3
+        repeats = list(range(1, rep_count + 1))
         queries = ["hit", "miss"]
+        print(f"[MODE] Matrix Mode ({len(seeds)} seeds, {len(repeats)} repeats, {len(churn_cycles)} churn cycles)")
 
     total_configs = len(churn_cycles) * len(seeds) * len(repeats) * len(algos) * 2 * len(queries)
     current = 0
@@ -184,10 +185,17 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=str, default=None, help="Đường dẫn file CSV kết quả xuất ra")
     parser.add_argument("--timeout", type=int, default=60, help="Giới hạn thời gian (giây) cho mỗi tiến trình JVM")
 
+    parser.add_argument("--seeds", type=str, default=None, help="Danh sách seeds phân cách bởi dấu phẩy, vd: 42,1337,20261019")
+    parser.add_argument("--cycles", type=str, default=None, help="Danh sách chu kỳ churn phân cách bởi dấu phẩy, vd: 65536,131072,262144")
+    parser.add_argument("--repeats", type=int, default=None, help="Số lần lặp (repeat count, mặc định: 3)")
+
     args = parser.parse_args()
 
     jar_path = args.jar or get_default_jar_path()
     output_path = args.output or get_default_results_path()
+
+    custom_seeds = [int(s.strip()) for s in args.seeds.split(",")] if args.seeds else None
+    custom_cycles = [int(c.strip()) for c in args.cycles.split(",")] if args.cycles else None
 
     if not os.path.exists(jar_path):
         print(f"[ERROR] Không tìm thấy file jar tại: {jar_path}")
@@ -195,6 +203,13 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.rq == "RQ3" or args.rq == "ALL":
-        run_rq3_benchmarks(jar_path, output_path, quick=args.quick, timeout_sec=args.timeout)
+        run_rq3_benchmarks(
+            jar_path, output_path,
+            quick=args.quick,
+            timeout_sec=args.timeout,
+            custom_seeds=custom_seeds,
+            custom_cycles=custom_cycles,
+            repeats_count=args.repeats
+        )
     else:
         print(f"Nhiệm vụ của Cặp 3 (C3) tập trung vào RQ3. Hãy sử dụng cờ '--rq RQ3'.")
