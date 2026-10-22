@@ -83,7 +83,19 @@ java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo rh-n
 java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo lp-backshift --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
 ```
 
-*(Lưu ý: Có thể thêm cờ `--count` để chuyển sang lượt đếm số bước dò)*.
+*(Lưu ý: Có thể thêm cờ `--count` để chuyển sang lượt đếm số bước dò, hoặc cờ `--query miss` để kiểm tra tra cứu trượt)*.
+
+### Điều Phối Toàn Bộ Kịch Bản Đo RQ3 (Bench Runner)
+```bash
+python bench/run_all.py --rq RQ3
+```
+*(Thêm cờ `--quick` để chạy thử nghiệm nhanh 12 cấu hình trong vài giây).*
+
+### Tái Tạo Biểu Đồ Cho Bài Báo IEEE (Figures Generator)
+```bash
+python bench/plot_figures.py
+```
+Ảnh đồ thị chất lượng cao được lưu tại: `results/figures/`.
 
 ---
 
