@@ -94,7 +94,7 @@ java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo rh-n
 java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo lp-backshift --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
 ```
 
-*(Lưu ý: Có thể thêm cờ `--count` để chuyển sang lượt đếm số bước dò)*.
+*(Dùng `--count` hoặc `--mode count` để chạy lượt đếm riêng; `--mode time` là lượt đo thời gian.)*
 
 ---
 
@@ -115,8 +115,9 @@ Mỗi dòng trong file CSV tại `results/raw/` tương ứng với một lượ
 | `generator_version` | Phiên bản của bộ sinh dữ liệu (vd: `1.0.0`) |
 | `repeat` | Lần lặp (từ 1 đến 3) |
 | `elapsed_ms` | Thời gian chạy (ms), để trống nếu `timeout` hoặc lỗi |
-| `heap_before_bytes` | Lượng heap sử dụng trước khi đo (sau GC) |
-| `heap_peak_bytes` | Đỉnh heap đo được trong lượt chạy |
+| `build_ms` | Thời gian dựng và nạp dữ liệu vào bảng, tách riêng khỏi thời gian truy vấn |
+| `heap_before_bytes` | Lượng heap sử dụng sau GC, trước khi dựng bảng |
+| `heap_peak_bytes` | Tổng high-water mark của các heap memory pool trong lượt chạy |
 | `ops_count` | Số lần dò/thao tác trung bình (chỉ có giá trị ở lượt `--count`) |
 | `output_check` | Tổng kiểm tra checksum kết quả tra cứu (chống DCE) |
 | `status` | Trạng thái: `ok`, `timeout`, `crash`, `oom`, `wrong` |
