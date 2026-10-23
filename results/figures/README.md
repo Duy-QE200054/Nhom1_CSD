@@ -2,6 +2,14 @@
 
 Thư mục lưu trữ toàn bộ các hình ảnh đồ thị phục vụ bài báo khoa học theo mẫu IEEE, được sinh tự động từ script `bench/plot_figures.py` theo đúng quy định tại mục 7.5 của Đề tài 2 - CSD201 FA26.
 
+Có thể gom các CSV trong thư mục dữ liệu rồi vẽ lại toàn bộ hình bằng:
+
+```powershell
+python bench\plot_figures.py --input-dir results\raw --outdir results\figures
+```
+
+Script ghi các dòng CSV vào `results\raw\rq3_merged.csv` trước khi vẽ. Nếu chỉ muốn gom một số file cụ thể, dùng `--csv file1.csv file2.csv`; có thể chỉ định nơi lưu file gom bằng `--merge-output`.
+
 ---
 
 ## Danh Sách Các Biểu Đồ RQ3 (Nhiệm vụ Cặp 3 - C3)
@@ -33,4 +41,3 @@ Thư mục lưu trữ toàn bộ các hình ảnh đồ thị phục vụ bài b
   3. **Dừng sớm khi tra cứu (Early Exit)**: Giảm $30.2\%$ số bước dò trên các truy vấn vắng mặt (Miss), mang lại lợi thế quyết định trong các hệ thống chỉ mục giao dịch thực tế nơi truy vấn trượt chiếm ưu thế.
 - **Nguồn dữ liệu**: `results/raw/rq3_results.csv`
 - **Script tạo**: `bench/plot_figures.py`
-
