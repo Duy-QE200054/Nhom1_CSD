@@ -49,9 +49,14 @@ public class RQ2Workload {
         public final int emptyCount;
         public final double tombRatio;
         public final double emptyRatio;
+        public final double averageDIB;
+        public final int maxDIB;
+        public final long rebuildCount;
+        public final long rebuildsInBlock;
 
         public BlockTiming(int blockIndex, int opsCount, int startCycle, int endCycle,
-                           long elapsedNs, int tombstoneCount, int emptyCount, int capacity) {
+                           long elapsedNs, int tombstoneCount, int emptyCount, int capacity,
+                           double averageDIB, int maxDIB, long rebuildCount, long rebuildsInBlock) {
             this.blockIndex = blockIndex;
             this.opsCount = opsCount;
             this.startCycle = startCycle;
@@ -62,13 +67,18 @@ public class RQ2Workload {
             this.emptyCount = emptyCount;
             this.tombRatio = (double) tombstoneCount / capacity;
             this.emptyRatio = (double) emptyCount / capacity;
+            this.averageDIB = averageDIB;
+            this.maxDIB = maxDIB;
+            this.rebuildCount = rebuildCount;
+            this.rebuildsInBlock = rebuildsInBlock;
         }
 
         @Override
         public String toString() {
-            return String.format("Block #%3d (cycles %6d..%6d, %5d ops): %7.2f ms | TOMB: %6d (%.2f%%) | EMPTY: %6d (%.2f%%)",
+            return String.format("Block #%3d (cycles %6d..%6d, %5d ops): %7.2f ms | TOMB: %6d (%.2f%%) | EMPTY: %6d (%.2f%%) | DIB avg/max: %.3f/%d | Rebuilds: %d (+%d)",
                     blockIndex, startCycle, endCycle, opsCount, elapsedMs,
-                    tombstoneCount, tombRatio * 100.0, emptyCount, emptyRatio * 100.0);
+                    tombstoneCount, tombRatio * 100.0, emptyCount, emptyRatio * 100.0,
+                    averageDIB, maxDIB, rebuildCount, rebuildsInBlock);
         }
     }
 
@@ -84,6 +94,9 @@ public class RQ2Workload {
         public final int emptyCount;
         public final double tombRatio;
         public final double emptyRatio;
+        public final double averageDIB;
+        public final int maxDIB;
+        public final long rebuildCount;
 
         // 10^4 truy vấn có mặt (hit)
         public final int hitCount;
@@ -99,6 +112,7 @@ public class RQ2Workload {
 
         public MilestoneCMeasurement(int milestoneC, String variant, int capacity, int aliveCount,
                                      int tombstoneCount, int emptyCount,
+                                     double averageDIB, int maxDIB, long rebuildCount,
                                      int hitCount, double hitElapsedMs, double hitAvgProbes, long hitChecksum,
                                      int missCount, double missElapsedMs, double missAvgProbes, long missChecksum) {
             this.milestoneC = milestoneC;
@@ -109,6 +123,9 @@ public class RQ2Workload {
             this.emptyCount = emptyCount;
             this.tombRatio = (double) tombstoneCount / capacity;
             this.emptyRatio = (double) emptyCount / capacity;
+            this.averageDIB = averageDIB;
+            this.maxDIB = maxDIB;
+            this.rebuildCount = rebuildCount;
             this.hitCount = hitCount;
             this.hitElapsedMs = hitElapsedMs;
             this.hitAvgProbes = hitAvgProbes;
@@ -150,6 +167,13 @@ public class RQ2Workload {
                     tombTableResult.emptyCount, tombTableResult.emptyRatio * 100.0,
                     cleanTableResult.emptyCount, cleanTableResult.emptyRatio * 100.0,
                     cleanTableResult.emptyCount > 0 ? (double) tombTableResult.emptyCount / cleanTableResult.emptyCount : 0.0));
+            sb.append(String.format("| DIB trung bình | %.3f | %.3f | %.2fx |\n",
+                    tombTableResult.averageDIB, cleanTableResult.averageDIB,
+                    cleanTableResult.averageDIB > 0 ? tombTableResult.averageDIB / cleanTableResult.averageDIB : 1.0));
+            sb.append(String.format("| DIB lớn nhất | %d | %d | - |\n",
+                    tombTableResult.maxDIB, cleanTableResult.maxDIB));
+            sb.append(String.format("| Số lần rebuild tích lũy | %d | %d | - |\n",
+                    tombTableResult.rebuildCount, cleanTableResult.rebuildCount));
             sb.append(String.format("| Số lần dò TB Có mặt (Hit probes) | **%.3f** | **%.3f** | **%.2fx** |\n",
                     tombTableResult.hitAvgProbes, cleanTableResult.hitAvgProbes,
                     cleanTableResult.hitAvgProbes > 0 ? tombTableResult.hitAvgProbes / cleanTableResult.hitAvgProbes : 1.0));
@@ -239,6 +263,7 @@ public class RQ2Workload {
         int currentBlockStartCycle = 1;
         long blockStartNs = System.nanoTime();
         int opsInCurrentBlock = 0;
+        long previousRebuildCount = getRebuildCount(table);
 
         for (int c = 0; c < cycles; c++) {
             if (aliveCount == 0) {
@@ -270,11 +295,15 @@ public class RQ2Workload {
             if (opsInCurrentBlock >= effectiveBlockSize || c == cycles - 1) {
                 long elapsedNs = System.nanoTime() - blockStartNs;
                 blockIndex++;
+                long rebuildCount = getRebuildCount(table);
                 BlockTiming timing = new BlockTiming(
                         blockIndex, opsInCurrentBlock, currentBlockStartCycle, c + 1,
-                        elapsedNs, table.getTombstoneCount(), table.getEmptyCount(), table.capacity()
+                        elapsedNs, table.getTombstoneCount(), table.getEmptyCount(), table.capacity(),
+                        getAverageDIB(table), getMaxDIB(table), rebuildCount,
+                        rebuildCount < 0 ? -1 : rebuildCount - previousRebuildCount
                 );
                 blocks.add(timing);
+                previousRebuildCount = rebuildCount;
 
                 if (logWriter != null) {
                     logWriter.println(timing);
@@ -371,9 +400,13 @@ public class RQ2Workload {
         double missAvgProbes = (double) missTotalProbes / qCount;
         table.enableProbeCounting(false);
 
+        double averageDIB = getAverageDIB(table);
+        int maxDIB = getMaxDIB(table);
+        long rebuildCount = getRebuildCount(table);
         return new MilestoneCMeasurement(
                 milestoneC, variant, table.capacity(), table.size(),
                 table.getTombstoneCount(), table.getEmptyCount(),
+                averageDIB, maxDIB, rebuildCount,
                 qCount, hitElapsedMs, hitAvgProbes, hitChecksum,
                 qCount, missElapsedMs, missAvgProbes, missChecksum
         );
@@ -412,6 +445,27 @@ public class RQ2Workload {
         long[] copy = new long[aliveCount];
         System.arraycopy(aliveKeys, 0, copy, 0, aliveCount);
         return copy;
+    }
+
+    private static double getAverageDIB(HashTable table) {
+        if (table instanceof LinearProbingTombstone) {
+            return ((LinearProbingTombstone) table).computeActualAverageDIB();
+        }
+        return table.getAverageDIB();
+    }
+
+    private static int getMaxDIB(HashTable table) {
+        if (table instanceof LinearProbingTombstone) {
+            return ((LinearProbingTombstone) table).computeActualMaxDIB();
+        }
+        return table.getMaxDIB();
+    }
+
+    private static long getRebuildCount(HashTable table) {
+        if (table instanceof LinearProbingTombstone) {
+            return ((LinearProbingTombstone) table).getRebuildCount();
+        }
+        return -1;
     }
 
     private void ensureCapacity(int minCap) {

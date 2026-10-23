@@ -14,6 +14,7 @@ Yêu cầu theo mục 7.5 của Quy định chung Đề tài 2 CSD201:
 import os
 import sys
 import csv
+import glob
 from collections import defaultdict
 import argparse
 
@@ -48,24 +49,72 @@ def parse_params(params_str):
             res[k.strip().lower()] = v.strip().lower()
     return res
 
-def load_data(csv_path):
-    """Đọc dữ liệu từ file CSV chuẩn schema 20 cột"""
-    if not os.path.exists(csv_path):
-        print(f"[ERROR] Không tìm thấy file CSV tại: {csv_path}")
-        return []
-
+def load_data(csv_paths):
+    """Đọc dữ liệu từ một hoặc nhiều file CSV chuẩn."""
+    if isinstance(csv_paths, str):
+        csv_paths = [csv_paths]
     rows = []
-    with open(csv_path, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            if r.get("status") == "ok":
-                params = parse_params(r.get("params", ""))
-                r["parsed_c"] = int(params.get("c", 0))
-                r["parsed_query"] = params.get("query", "hit")
-                r["parsed_m"] = int(params.get("m", 262144))
-                r["parsed_alpha"] = float(params.get("alpha", 0.50))
-                rows.append(r)
+    expected_header = None
+    for csv_path in csv_paths:
+        if not os.path.isfile(csv_path):
+            raise FileNotFoundError(f"Không tìm thấy file CSV: {csv_path}")
+        with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
+            reader = csv.DictReader(f)
+            if not reader.fieldnames:
+                raise ValueError(f"CSV không có header: {csv_path}")
+            missing_columns = {"rq", "status", "params", "algorithm"} - set(reader.fieldnames)
+            if missing_columns:
+                raise ValueError(f"Thiếu cột bắt buộc {sorted(missing_columns)}: {csv_path}")
+            if expected_header is None:
+                expected_header = reader.fieldnames
+            elif reader.fieldnames != expected_header:
+                raise ValueError(f"Schema CSV không khớp: {csv_path}")
+            for r in reader:
+                if None in r:
+                    raise ValueError(f"Dòng CSV có số cột thừa: {csv_path}")
+                if r.get("rq") == "RQ3" and r.get("status") == "ok":
+                    params = parse_params(r.get("params", ""))
+                    r["parsed_c"] = int(params.get("c", 0))
+                    r["parsed_query"] = params.get("query", "hit")
+                    r["parsed_m"] = int(params.get("m", 262144))
+                    r["parsed_alpha"] = float(params.get("alpha", 0.50))
+                    rows.append(r)
     return rows
+
+def merge_csv_files(csv_paths, output_path):
+    """Gom các CSV cùng schema vào một file, chỉ ghi header một lần."""
+    output_abs = os.path.abspath(output_path)
+    input_abs = [os.path.abspath(path) for path in csv_paths]
+    if output_abs in input_abs:
+        raise ValueError("File CSV đầu ra không được trùng file CSV đầu vào.")
+
+    expected_header = None
+    total_rows = 0
+    output_dir = os.path.dirname(output_abs)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
+    with open(output_abs, "w", encoding="utf-8", newline="") as out_file:
+        writer = None
+        for csv_path in csv_paths:
+            with open(csv_path, "r", encoding="utf-8-sig", newline="") as in_file:
+                reader = csv.DictReader(in_file)
+                if not reader.fieldnames:
+                    raise ValueError(f"CSV không có header: {csv_path}")
+                if expected_header is None:
+                    expected_header = reader.fieldnames
+                    writer = csv.DictWriter(out_file, fieldnames=expected_header)
+                    writer.writeheader()
+                elif reader.fieldnames != expected_header:
+                    raise ValueError(f"Schema CSV không khớp: {csv_path}")
+                for row in reader:
+                    if None in row:
+                        raise ValueError(f"Dòng CSV có số cột thừa: {csv_path}")
+                    writer.writerow(row)
+                    total_rows += 1
+    if expected_header is None:
+        raise ValueError("Không có file CSV hợp lệ để gom.")
+    return total_rows
 
 def plot_rq3_probes_vs_churn(rows, out_dir, csv_rel_path="results/raw/rq3_results.csv"):
     """
@@ -306,11 +355,40 @@ def plot_rq3_mechanism_ablation(rows, out_dir, csv_rel_path="results/raw/rq3_res
 
 def main():
     parser = argparse.ArgumentParser(description="Plot figures for IEEE Paper (CSD201 FA26)")
-    parser.add_argument("--csv", type=str, default=None, help="Đường dẫn file CSV dữ liệu thô")
+    sources = parser.add_mutually_exclusive_group()
+    sources.add_argument("--csv", nargs="+", help="Một hoặc nhiều file CSV dữ liệu thô")
+    sources.add_argument("--input-dir", help="Gom mọi file .csv trong thư mục này và các thư mục con")
+    parser.add_argument("--merge-output", help="Đường dẫn file CSV đầu ra sau khi gom")
     parser.add_argument("--outdir", type=str, default=None, help="Thư mục xuất ảnh đồ thị")
     args = parser.parse_args()
 
-    csv_path = args.csv or get_default_csv_path()
+    if args.csv:
+        csv_paths = args.csv
+    elif args.input_dir:
+        if not os.path.isdir(args.input_dir):
+            parser.error(f"Thư mục CSV không tồn tại: {args.input_dir}")
+        csv_paths = sorted(glob.glob(os.path.join(args.input_dir, "**", "*.csv"), recursive=True))
+    else:
+        csv_paths = [get_default_csv_path()]
+
+    merge_output = args.merge_output
+    should_merge = bool(args.input_dir or len(csv_paths) > 1 or merge_output)
+    if should_merge:
+        if merge_output is None:
+            base_dir = os.path.dirname(os.path.abspath(csv_paths[0])) if csv_paths else os.path.dirname(get_default_csv_path())
+            merge_output = os.path.join(base_dir, "rq3_merged.csv")
+        merge_abs = os.path.abspath(merge_output)
+        csv_paths = [path for path in csv_paths if os.path.abspath(path) != merge_abs]
+        if not csv_paths:
+            parser.error("Không có CSV đầu vào để gom.")
+        try:
+            merged_count = merge_csv_files(csv_paths, merge_output)
+        except (OSError, ValueError, csv.Error) as error:
+            print(f"[ERROR] Không thể gom CSV: {error}")
+            sys.exit(1)
+        print(f"Đã gom {len(csv_paths)} file / {merged_count} dòng vào: {merge_output}")
+        csv_paths = [merge_output]
+
     out_dir = args.outdir or get_default_figures_dir()
 
     os.makedirs(out_dir, exist_ok=True)
@@ -318,18 +396,22 @@ def main():
     print("========================================================")
     print("      FIGURE GENERATOR FOR IEEE PAPER (Cặp 3 - C3)     ")
     print("========================================================")
-    print(f"File CSV nguồn: {csv_path}")
+    print(f"File CSV nguồn: {', '.join(csv_paths)}")
     print(f"Thư mục xuất ảnh: {out_dir}\n")
 
-    rows = load_data(csv_path)
+    try:
+        rows = load_data(csv_paths)
+    except (OSError, ValueError, csv.Error) as error:
+        print(f"[ERROR] Không thể đọc CSV: {error}")
+        sys.exit(1)
     if not rows:
-        print(f"[ERROR] Không có dữ liệu trong file CSV: {csv_path}")
+        print(f"[ERROR] Không có dữ liệu hợp lệ trong file CSV: {', '.join(csv_paths)}")
         print("Hãy chạy script bench/run_all.py để đo đạc và tạo file CSV trước.")
         sys.exit(1)
 
     print(f"Đã đọc thành công {len(rows)} bản ghi đo thực nghiệm.\n")
 
-    csv_rel = os.path.relpath(csv_path, os.path.join(out_dir, "..", ".."))
+    csv_rel = ", ".join(os.path.relpath(path, os.path.join(out_dir, "..", "..")) for path in csv_paths)
 
     plot_rq3_probes_vs_churn(rows, out_dir, csv_rel_path=csv_rel)
     plot_rq3_lookup_latency(rows, out_dir, csv_rel_path=csv_rel)
