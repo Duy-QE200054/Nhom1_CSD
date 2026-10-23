@@ -441,7 +441,7 @@ public class LinearProbingTombstoneTest {
         System.out.print("[Test 11] Workload O(1) và Block Profiling từng khối 10^4 thao tác... ");
         int M = 2048;
         RQ2Workload workload = new RQ2Workload(M, 0.5, 77L);
-        LinearProbingTombstone table = new LinearProbingTombstone(M);
+        LinearProbingTombstone table = new LinearProbingTombstone(M, 0.05);
 
         workload.populateInitialKeys(table);
         assertEquals(1024, workload.getAliveCount(), "Khởi tạo đúng N = 1024");
@@ -452,10 +452,22 @@ public class LinearProbingTombstoneTest {
                 workload.runChurnCyclesWithBlockProfiling(table, 5000, 2000, null);
 
         assertTrue(blocks.size() >= 5, "Phải ghi nhận ít nhất 5 khối đo đạc");
+        long reportedRebuilds = 0;
         for (RQ2Workload.BlockTiming b : blocks) {
             assertTrue(b.elapsedMs >= 0.0, "Thời gian khối phải không âm");
             assertTrue(b.tombstoneCount > 0, "Sau churn phải có tombstones");
+            assertTrue(b.averageDIB >= 0.0, "DIB trung bình của khối phải được đo");
+            assertTrue(b.maxDIB >= 0, "DIB lớn nhất của khối phải được đo");
+            assertTrue(b.rebuildCount >= 0, "Số lần rebuild tích lũy của khối phải được đo");
+            assertTrue(b.rebuildsInBlock >= 0, "Số rebuild trong khối phải được đo");
+            reportedRebuilds += b.rebuildsInBlock;
         }
+        assertTrue(table.getRebuildCount() > 0, "Workload phải ghi nhận được rebuild thực tế");
+        assertEquals(table.getRebuildCount(), reportedRebuilds, "Tổng rebuild theo khối phải khớp bảng");
+        RQ2Workload.BlockTiming lastBlock = blocks.get(blocks.size() - 1);
+        assertTrue(Math.abs(lastBlock.averageDIB - table.computeActualAverageDIB()) < 1e-12,
+                "DIB trung bình khối cuối phải khớp bảng");
+        assertEquals(table.computeActualMaxDIB(), lastBlock.maxDIB, "DIB lớn nhất khối cuối phải khớp bảng");
         table.validateInvariants();
         System.out.println("PASSED");
     }
@@ -482,6 +494,9 @@ public class LinearProbingTombstoneTest {
         assertTrue(mHitMiss.hitAvgProbes >= 1.0, "Số lần dò hit >= 1.0");
         assertTrue(mHitMiss.missAvgProbes >= 1.0, "Số lần dò miss >= 1.0");
         assertTrue(mHitMiss.tombstoneCount > 0, "Số ô tombstone > 0");
+        assertTrue(mHitMiss.averageDIB >= 0.0, "Phải đo DIB trung bình ở mốc C");
+        assertTrue(mHitMiss.maxDIB >= 0, "Phải đo DIB lớn nhất ở mốc C");
+        assertEquals(table.getRebuildCount(), mHitMiss.rebuildCount, "Số lần rebuild ở mốc C phải chính xác");
 
         // So sánh đối chứng với Clean Table
         RQ2Workload.RQ2ComparisonResult comp =
@@ -489,12 +504,17 @@ public class LinearProbingTombstoneTest {
 
         assertEquals(0, comp.cleanTableResult.tombstoneCount, "Clean Table có 0 tombstone");
         assertEquals(table.size(), comp.cleanTableResult.aliveCount, "Clean Table có cùng số khóa sống");
+        assertTrue(comp.cleanTableResult.averageDIB >= 0.0, "Clean Table phải có thống kê DIB");
+        assertEquals(0, comp.cleanTableResult.rebuildCount, "Clean Table không có rebuild tự động");
         // Bảng tích tụ Tombstone phải có số lần dò khi miss cao hơn hoặc bằng Clean Table
         assertTrue(comp.tombTableResult.missAvgProbes >= comp.cleanTableResult.missAvgProbes,
                 "Bảng tích tụ tombstone phải có số lần dò miss >= Clean Table");
 
         String markdown = comp.toMarkdownTable();
         assertTrue(markdown.contains("BẢNG ĐỐI CHỨNG RQ2"), "Markdown phải chứa tiêu đề bảng đối chứng");
+        assertTrue(markdown.contains("DIB trung bình"), "Markdown phải có DIB trung bình");
+        assertTrue(markdown.contains("DIB lớn nhất"), "Markdown phải có DIB lớn nhất");
+        assertTrue(markdown.contains("Số lần rebuild tích lũy"), "Markdown phải có thống kê rebuild");
         assertTrue(markdown.contains("KHỚP 100%"), "Checksum phải khớp 100%");
         System.out.println("PASSED");
     }
