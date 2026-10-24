@@ -28,7 +28,8 @@ Script ghi các dòng CSV vào `results\raw\rq3_merged.csv` trước khi vẽ. N
 thành bộ hình riêng trong `results/figures/rq3_20261024/`. Bộ hình mở rộng
 bao gồm `lp-tomb` ($\tau=0.2$), `lp-backshift`, `rh`, và `rh-noearly`, tại các
 mốc $C \in \{0, M/4, M/2, M, 2M, 4M\}$; nhãn dung lượng bảng được lấy trực tiếp
-từ CSV đầu vào.
+từ CSV đầu vào. Hình probes dùng trung bình ba seed; hình latency dùng median
+ba seed tại từng checkpoint để giảm ảnh hưởng của một mẫu thời gian ngoại lệ.
 
 Sau khi hoàn tất dữ liệu, tái tạo hình bằng:
 
