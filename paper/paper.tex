@@ -167,21 +167,30 @@ seed. The workload then performs $C$ churn cycles. Each cycle selects one
 currently live key for deletion and inserts a new key not used earlier in the
 workload. This keeps the live-key count approximately constant while exposing
 the deletion policy to repeated updates. The same capacity, load factor,
-seed, and cycle count are used when comparing \texttt{lp-backshift},
-\texttt{rh}, and \texttt{rh-noearly}.
+seed, and cycle count are used when comparing \texttt{lp-tomb},
+\texttt{lp-backshift}, \texttt{rh}, and \texttt{rh-noearly}. The tombstone
+table uses a rebuild threshold $\tau=0.2$; the other implementations do not
+use tombstones or rebuilding.
 
-After the churn phase, the measured lookup pass queries the keys that remain
-live in the table. These are successful lookups; the RQ3 pass therefore
-measures lookup behavior on present keys rather than a mixed hit/miss ratio.
-Table construction and churn happen before the timed lookup pass. Timing and
-probe counting are collected in separate runs: the time mode measures elapsed
-lookup time, while the count mode enables the shared probe counter and reports
-the average probes per queried key. The runner also emits the input checksum
-and output check so that corresponding runs can be compared for input and
-lookup consistency.
+After the churn phase, the benchmark runs separate hit and miss query passes.
+The hit pass queries all live keys; the miss pass uses generated keys absent
+from the live set. Table construction and churn happen before lookup timing.
+Timing and probe counting are collected in separate JVM runs: time mode
+measures elapsed lookup time, while count mode reports average probes per
+query. The runner emits an input checksum and output check for reproducibility
+and result validation.
 
 \section{Experimental Setup}
-% Máy đo, JVM, tham số, dữ liệu, làm nóng, timeout
+The October 24 RQ3 campaign uses a fixed table capacity
+$M=2^{20}=1,048,576$ and initial live load $\alpha=0.50$
+($N=524,288$). Churn checkpoints are
+$C\in\{0, M/4, M/2, M, 2M, 4M\}$. Each algorithm/checkpoint combination is
+run with seeds $42$, $1337$, and $20261019$; each seed is measured once.
+For every checkpoint and seed, the runner records both hit and miss probes
+and lookup time in separate JVM processes. Each process uses a 2 GB maximum
+heap and a 60-second timeout. The benchmark records table/workload build time
+separately from lookup time and retains timeout or crash status rather than
+presenting failed runs as measurements.
 
 \section{Results and Discussion}
 % V-A. RQ1: Separate Chaining vs Linear Probing
