@@ -45,12 +45,12 @@ không nối dữ liệu vào CSV lịch sử có schema cũ.
 Lệnh tái lập từ thư mục gốc repository:
 
 ```powershell
-python bench\run_all.py --rq RQ3 --m 1048576 --cycles 0,262144,524288,1048576,2097152,4194304 --algorithms lp-tomb,lp-backshift,rh,rh-noearly --tau 0.2 --seeds 42,1337,20261019 --repeats 1 --git-commit <benchmark-commit> --output results\raw\rq3_20261024.csv
+python bench\run_all.py --rq RQ3 --m 1048576 --cycles 0,262144,524288,1048576,2097152,4194304 --algorithms lp-tomb,lp-backshift,rh,rh-noearly --tau 0.2 --seeds 42,1337,20261019 --repeats 1 --git-commit cb1b9df --output results\raw\rq3_20261024.csv
 ```
 
 Mỗi lần chạy JVM độc lập có giới hạn 60 giây. Timeout và crash được lưu thành
 dòng có `status` tương ứng, không được tính như kết quả thành công. Với
-`lp-backshift`, `rh`, và `rh-noearly`, `tau=Infinity` trong params vì các thuật
+`lp-backshift`, `rh`, và `rh-noearly`, `tau=inf` trong params vì các thuật
 toán này không có rebuild; chỉ `lp-tomb` dùng ngưỡng rebuild 0.2. Mỗi dòng có
 `build_ms` tách riêng với thời gian tra cứu và `run_id` duy nhất theo thuật
 toán, mốc, seed, query và mode.
