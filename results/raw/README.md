@@ -58,3 +58,11 @@ dòng có `status` tương ứng, không được tính như kết quả thành 
 toán này không có rebuild; chỉ `lp-tomb` dùng ngưỡng rebuild 0.2. Mỗi dòng có
 `build_ms` tách riêng với thời gian tra cứu và `run_id` duy nhất theo thuật
 toán, mốc, seed, query và mode.
+
+Để xem số đo mà không phải đọc các mã máy và mã chạy, dùng
+[`rq3_20261024_readable.csv`](./rq3_20261024_readable.csv). Bảng này được tạo
+từ 288 dòng thô, ghép count/time thành một dòng cho mỗi thuật toán, mốc churn,
+seed và loại truy vấn; giữ nguyên từng seed, số probe, latency, build time và
+trạng thái. Cấu hình đo của campaign: Windows 11 Pro, Intel Core i5-11500H,
+RAM 32 GB, Java 24.0.2, heap tối đa 2 GB. CSV thô vẫn giữ `machine_id` để
+tương thích schema và truy vết; đây là nhãn máy `PC_LAB_01`, không phải số đo.
