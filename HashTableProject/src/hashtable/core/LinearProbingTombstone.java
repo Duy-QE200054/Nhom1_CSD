@@ -1,5 +1,8 @@
 package hashtable.core;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Cài đặt bảng băm Linear Probing sử dụng Tombstone và Rebuild định kỳ (lp-tomb).
  * Phục vụ Đề tài 2 - CSD201 FA26 (Nhiệm vụ Cặp 2 - C2).
@@ -373,5 +376,75 @@ public class LinearProbingTombstone implements HashTable {
 
     public int getValueAt(int index) {
         return values[index];
+    }
+
+    public int getDibAt(int index) {
+        if (state[index] != OCCUPIED) {
+            return 0;
+        }
+        int h = FibonacciHash.hash(keys[index], p);
+        return (index - h + capacity) & mask;
+    }
+
+    /**
+     * Kiểm tra bất biến cấu trúc của bảng băm Linear Probing Tombstone:
+     * 1. Với mọi ô OCCUPIED lưu khóa k tại chỉ số index, truy vết từ ô băm gốc home = h(k)
+     *    đến index, KHÔNG ĐƯỢC có ô nào mang trạng thái EMPTY chặn ở giữa (chỉ có thể là OCCUPIED hoặc TOMB).
+     * 2. Khoảng cách DIB tính được phải đúng và nằm trong khoảng [0, capacity - 1].
+     * 3. Số ô OCCUPIED phải khớp đúng với size.
+     * 4. Số ô TOMB phải khớp đúng với tombstoneCount.
+     * 5. Số ô EMPTY phải khớp đúng với emptyCount.
+     * 6. Không có khóa trùng lặp.
+     */
+    public void validateInvariants() {
+        int occupiedCount = 0;
+        int tombCount = 0;
+        Set<Long> seenKeys = new HashSet<>();
+        for (int index = 0; index < capacity; index++) {
+            if (state[index] == EMPTY) {
+                continue;
+            }
+            if (state[index] == TOMB) {
+                tombCount++;
+                continue;
+            }
+            if (state[index] != OCCUPIED) {
+                throw new IllegalStateException("Trạng thái ô không hợp lệ tại chỉ số " + index + ": " + state[index]);
+            }
+
+            occupiedCount++;
+            long key = keys[index];
+            if (!seenKeys.add(key)) {
+                throw new IllegalStateException("Phát hiện khóa trùng lặp trong bảng: " + key);
+            }
+            int home = FibonacciHash.hash(key, p);
+            int cursor = home;
+            // Bất biến cấu trúc: Không được có ô EMPTY nào nằm giữa ô băm gốc (home) và vị trí khóa (index)
+            while (cursor != index) {
+                if (state[cursor] == EMPTY) {
+                    throw new IllegalStateException(
+                            "Ô EMPTY tại chỉ số " + cursor + " chặn đường dò tới khóa " + key + " tại ô " + index + " (home=" + home + ")");
+                }
+                cursor = (cursor + 1) & mask;
+            }
+            // Kiểm tra DIB đúng
+            int expectedDib = (index - home + capacity) & mask;
+            if (expectedDib < 0 || expectedDib >= capacity) {
+                throw new IllegalStateException("DIB không hợp lệ cho khóa " + key + ": " + expectedDib);
+            }
+        }
+        if (occupiedCount != size) {
+            throw new IllegalStateException(
+                    "Số ô OCCUPIED (" + occupiedCount + ") không khớp với size (" + size + ")");
+        }
+        if (tombCount != tombstoneCount) {
+            throw new IllegalStateException(
+                    "Số ô TOMB thực tế (" + tombCount + ") không khớp với tombstoneCount (" + tombstoneCount + ")");
+        }
+        if (capacity - occupiedCount - tombCount != getEmptyCount()) {
+            throw new IllegalStateException(
+                    "Số ô EMPTY thực tế (" + (capacity - occupiedCount - tombCount)
+                            + ") không khớp với emptyCount (" + getEmptyCount() + ")");
+        }
     }
 }
