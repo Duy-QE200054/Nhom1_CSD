@@ -31,14 +31,90 @@ Hash table, Robin Hood hashing, linear probing, tombstone, backward shift, empir
 \end{IEEEkeywords}
 
 \section{Introduction}
-% Bối cảnh, câu hỏi chung, ba RQ và đóng góp của nghiên cứu
+Hash tables are widely used to build in-memory indexes, including indexes for
+records that are continuously inserted, deleted, and queried. In such
+high-churn workloads, the collision-resolution strategy affects not only
+lookup cost but also the cost of keeping the table searchable after deletions.
+These effects are especially important for unsuccessful lookups and for
+open-addressed tables whose probe sequences can be affected by deleted slots.
+
+Separate Chaining (SC) stores colliding keys in per-bucket lists, whereas
+Linear Probing (LP) places keys in adjacent array slots. LP offers contiguous
+accesses, but deletion must preserve the probe paths of remaining keys.
+Tombstones provide one solution, although their accumulation can lengthen
+searches and motivate periodic rebuilding. Backward-shift deletion instead
+repairs a cluster in place. Robin Hood hashing further redistributes keys
+according to their probe distances and can use those distances to terminate
+unsuccessful searches early. These designs therefore make different trade-offs
+between lookup work and deletion maintenance.
+
+This paper evaluates these trade-offs with a common Java hash-table interface
+and controlled, reproducible workloads. We organize the study around three
+research questions:
+\begin{itemize}
+    \item \textbf{RQ1:} How do SC and LP with tombstones compare as the load
+    factor and table capacity vary, including under a clustered-key workload?
+    \item \textbf{RQ2:} How does tombstone accumulation during repeated
+    delete--insert operations affect lookup behavior, and how does it compare
+    with a clean table containing the same live keys?
+    \item \textbf{RQ3:} How does Robin Hood hashing compare with LP using
+    backward-shift deletion under churn, and what is the contribution of
+    early-exit lookup to Robin Hood search cost?
+\end{itemize}
+
+The study makes three contributions. First, it implements SC, LP with
+tombstones and rebuilding, LP with backward-shift deletion, and Robin Hood
+hashing in a shared interface. Second, it defines repeatable workloads and
+separates elapsed-time measurements from probe-count measurements. Third, it
+uses a Robin Hood variant without early exit to isolate that lookup mechanism
+while retaining Robin Hood insertion and deletion. The paper reports measured
+results separately from this methodological description; no performance
+outcome is assumed in advance.
 
 \section{Background and Related Work}
-Open addressing with Linear Probing (LP), pioneered by Peterson \cite{peterson}, offers outstanding cache locality due to sequential array scans. However, deletion in open addressing cannot simply reset a slot to empty, as this severs the probe sequence of colliding items. The conventional approach introduces tombstones to mark deleted slots, but accumulated tombstones degrade search performance, particularly for unsuccessful lookups, requiring periodic rebuilding \cite{knuth}.
+Peterson's work on random-access storage is an early reference for open
+addressing and linear probing \cite{peterson}. With LP, a collision is resolved
+by examining successive slots, so keys with the same or nearby home buckets
+can form contiguous clusters. Knuth analyzes this primary-clustering effect
+and gives classical expected probe counts for a table with load factor
+$\alpha$ under the standard no-deletion model:
+\begin{equation}
+    \mathbb{E}[P_{\mathrm{hit}}] \approx
+    \frac{1}{2}\left(1 + \frac{1}{1-\alpha}\right), \qquad
+    \mathbb{E}[P_{\mathrm{miss}}] \approx
+    \frac{1}{2}\left(1 + \frac{1}{(1-\alpha)^2}\right).
+\end{equation}
+These expressions provide a theoretical reference for clean LP tables; they
+do not directly model the additional state introduced by tombstones or
+repeated updates \cite{knuth}.
 
-To avoid tombstones entirely, Knuth \cite{knuth} introduced \textit{Algorithm R}, which scans the subsequent cluster and shifts qualifying elements backward into the vacated slot without rehashing. Alternatively, Sedgewick and Wayne \cite{sedgewick} proposed cluster re-insertion, where items trailing the deletion point are extracted and re-inserted via standard put operations. 
+Deletion requires care in open-addressed tables: changing a deleted slot
+directly to empty can make a later key unreachable along its probe sequence.
+Tombstones preserve that sequence, but leave non-empty markers that searches
+must pass and that a rebuild can remove. Knuth's Algorithm R instead scans
+the affected cluster and moves a key into the current hole only when its
+probe path permits the move \cite{knuth}. Sedgewick and Wayne describe a
+related approach that removes and reinserts the keys following the deleted
+slot \cite{sedgewick}. Both approaches maintain lookup correctness without
+retaining tombstones, but perform different work during deletion. This study
+uses Algorithm R for its LP backshift implementation.
 
-Robin Hood hashing, proposed by Celis et al. \cite{celis}, equalizes probe sequence lengths using the Distance from Initial Bucket (DIB). When inserting a key whose current probe distance exceeds the DIB of the resident key, a swap occurs (``robbing the rich to give to the poor''). This property enables two critical features: (1) \textit{Early exit} during lookups, where a search terminates as soon as the search distance exceeds the slot's DIB, and (2) \textit{Backward-shift deletion}, which shifts elements with positive DIB backward by one position, eliminating tombstones entirely.
+Celis, Larson, and Munro introduced Robin Hood hashing, which compares the
+distance from initial bucket (DIB) of an incoming key with that of the key
+already occupying a slot \cite{celis}. If the incoming key has traveled
+farther, the keys exchange positions and insertion continues with the
+displaced key. The resulting DIB information also supports an unsuccessful
+lookup stopping rule: if the query's probe distance exceeds the resident
+key's DIB, the query cannot occur later in the probe sequence. Robin Hood
+deletion can shift following keys backward while their DIB is positive,
+avoiding tombstones.
+
+Prior work establishes these algorithms and their analytical properties.
+Our contribution is an empirical comparison of implementations under a
+shared Java interface and repeatable workloads. In particular, the
+\texttt{rh-noearly} variant retains Robin Hood insertion and backward-shift
+deletion but disables the DIB-based lookup stopping rule, enabling a
+mechanism-level comparison within the same table design.
 
 \section{Methods}
 \subsection{Collision Resolution Implementations}
@@ -51,12 +127,58 @@ All hash tables implement a uniform \texttt{HashTable} interface operating on 64
 \end{itemize}
 
 \subsection{Justification for Knuth Algorithm R in \texttt{lp-backshift}}
-Between Knuth Algorithm R \cite{knuth} and Sedgewick's cluster re-insertion \cite{sedgewick}, our study adopts \textbf{Knuth Algorithm R} based on three methodological justifications:
+Between Knuth Algorithm R \cite{knuth} and Sedgewick's cluster re-insertion \cite{sedgewick}, our study adopts \textbf{Knuth Algorithm R} for three methodological reasons:
 \begin{enumerate}
-    \item \textit{Algorithmic Complexity}: Knuth Algorithm R executes in strict $\mathcal{O}(K)$ single-pass time over a cluster of length $K$. In contrast, Sedgewick's re-insertion requires re-hashing and repeated probe loops for each trailing element, leading to worst-case $\mathcal{O}(K^2)$ intra-cluster overhead.
-    \item \textit{Memory Bus Traffic \& Cache Locality}: Algorithm R strictly performs in-place element movements only when an item cyclically precedes the hole. Non-qualifying elements remain untouched, drastically minimizing cache line invalidations on modern CPU architectures.
-    \item \textit{Theoretical Consistency}: Knuth's exact circular modular invariant $((i \le j) ? (i < r \le j) : (i < r \lor r \le j))$ preserves the canonical linear probing cluster distribution without artificial displacement.
+    \item \textit{Bounded scan}: Algorithm R makes one forward scan of the affected cluster, performing $\mathcal{O}(K)$ slot checks and at most a constant number of moves per visited key for a cluster of length $K$. Cluster re-insertion instead invokes a probe sequence for each key moved out of the cluster, so it can repeat slot inspections.
+    \item \textit{Direct movement}: Algorithm R moves a key directly into the current hole only when its home bucket permits that move. This avoids the explicit remove-and-reinsert steps of the alternative; cache or wall-clock advantages are not assumed without measurement.
+    \item \textit{Circular correctness}: The test of whether a key's home bucket $r$ lies in the circular interval $(i,j]$ determines whether moving it to the hole $i$ preserves its linear-probing search path, including when the cluster wraps around the array boundary.
 \end{enumerate}
+
+\subsection{Robin Hood and Backshift Implementations}
+The Robin Hood variants use fixed-capacity arrays for keys, values, slot
+states, and DIB values. Insertion begins at the key's Fibonacci-hash bucket
+with DIB zero. At each occupied slot, the incoming key takes the slot when its
+DIB is greater than the resident key's DIB; insertion then continues with the
+displaced key. Probe indices wrap around the power-of-two table capacity.
+
+For lookup, \texttt{rh} checks for a matching key and an empty slot, and also
+terminates an unsuccessful search when the current probe distance exceeds the
+DIB stored in the slot. The \texttt{rh-noearly} ablation uses the same
+insertion and deletion procedures but omits this DIB-based stopping condition;
+it continues until it finds the key, reaches an empty slot, or has examined
+the table. Thus, the comparison isolates early exit from the other Robin Hood
+mechanisms. Both variants remove a key by shifting subsequent entries with
+positive DIB backward one slot, decrementing each shifted DIB, and stopping
+at an empty slot or an entry with DIB zero.
+
+The \texttt{lp-backshift} implementation uses ordinary linear probing and
+Knuth's Algorithm R for deletion. Starting from the deleted slot (the current
+hole), it scans the following cluster. For a key at slot $j$ with home bucket
+$r$, it moves the key into the hole at $i$ only if $r$ is not in the circular
+interval $(i,j]$; the moved key's former slot becomes the new hole. The scan
+ends at an empty slot or when it returns to the starting slot after a full
+cycle, and the final hole is marked empty. This interval test handles clusters
+that wrap around the end of the array and no tombstone state is introduced.
+
+\subsection{RQ3 Workload and Measurement}
+For RQ3, each table is first populated with
+$N=\operatorname{round}(\alpha M)$ unique keys generated from the specified
+seed. The workload then performs $C$ churn cycles. Each cycle selects one
+currently live key for deletion and inserts a new key not used earlier in the
+workload. This keeps the live-key count approximately constant while exposing
+the deletion policy to repeated updates. The same capacity, load factor,
+seed, and cycle count are used when comparing \texttt{lp-backshift},
+\texttt{rh}, and \texttt{rh-noearly}.
+
+After the churn phase, the measured lookup pass queries the keys that remain
+live in the table. These are successful lookups; the RQ3 pass therefore
+measures lookup behavior on present keys rather than a mixed hit/miss ratio.
+Table construction and churn happen before the timed lookup pass. Timing and
+probe counting are collected in separate runs: the time mode measures elapsed
+lookup time, while the count mode enables the shared probe counter and reports
+the average probes per queried key. The runner also emits the input checksum
+and output check so that corresponding runs can be compared for input and
+lookup consistency.
 
 \section{Experimental Setup}
 % Máy đo, JVM, tham số, dữ liệu, làm nóng, timeout
@@ -64,20 +186,31 @@ Between Knuth Algorithm R \cite{knuth} and Sedgewick's cluster re-insertion \cit
 \section{Results and Discussion}
 % V-A. RQ1: Separate Chaining vs Linear Probing
 \subsection{RQ2: Tombstone Pollution Dynamics and Periodic Rebuilding}
-In open addressing with Linear Probing, deleting an element by marking its slot as a tombstone introduces artificial search friction. To quantify this degradation under continuous turnover, we evaluate \texttt{lp-tomb} across $C$ churn cycles (where each cycle consists of an insertion followed by a deletion, maintaining a constant effective load factor $\alpha = 0.50$ at $M = 2^{18} = 262,144$). At specific checkpoints ($C \in \{65536, 131072, 262144\}$), we execute $10^4$ hit and $10^4$ miss queries, benchmarking the polluted table against an identical pristine \textit{Clean Table} containing the exact same active keys without tombstones.
+In open addressing with Linear Probing, deleting an element by marking its slot as a tombstone introduces artificial search friction. To quantify this degradation under continuous turnover, we evaluate \texttt{lp-tomb} ($\tau = \infty$, no rebuild) across six churn milestones $C \in \{0, 0.25M, 0.5M, M, 2M, 4M\}$ with $M = 2^{20} = 1,048,576$ and active load factor $\alpha = 0.50$ ($N = 524,288$). At each checkpoint, $10^4$ hit and $10^4$ miss queries benchmark the contaminated table against an identical pristine \textit{Clean Table} containing the exact same active keys without tombstones.
 
-\begin{figure}[htbp]
+\begin{table}[htbp]
+\caption{Empirical Probe Counts and Contamination at $M=2^{20}, \alpha=0.50$}
+\label{tab:rq2_results}
 \centering
-\fbox{\parbox{0.9\columnwidth}{\centering \small [Empirical Curve: Lookup Probes vs. Churn Cycles $C$]\\
-\textit{Hit probes increase gradually from 1.50 to 2.15; Miss probes surge sharply from 2.50 to 9.80 as tombstones accumulate without rebuild.}}}
-\caption{Impact of tombstone accumulation on probe lengths in \texttt{lp-tomb} ($\tau = \infty$) compared to a pristine Clean Table.}
-\label{fig:rq2_churn}
-\end{figure}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Milestone $C$} & \textbf{TOMB \%} & \textbf{EMPTY \%} & \textbf{Hit Probes} & \textbf{Miss Probes} & \textbf{Miss Surge} \\
+\hline
+$C = 0$       & 0.00\%  & 50.00\% & 1.510 (vs 1.510) & 2.536 (vs 2.536) & 1.00$\times$ \\
+$C = 0.25M$   & 18.79\% & 31.21\% & 1.865 (vs 1.511) & 4.703 (vs 2.497) & 1.88$\times$ \\
+$C = 0.50M$   & 30.16\% & 19.84\% & 2.070 (vs 1.502) & 7.570 (vs 2.466) & 3.07$\times$ \\
+$C = 1.00M$   & 41.91\% & 8.09\%  & 2.257 (vs 1.507) & 17.415 (vs 2.548) & 6.83$\times$ \\
+$C = 2.00M$   & 48.64\% & 1.36\%  & 2.315 (vs 1.492) & 86.033 (vs 2.532) & 33.98$\times$ \\
+$C = 4.00M$   & 49.96\% & 0.04\%  & 2.316 (vs 1.496) & \textbf{2801.591} (vs 2.507) & \textbf{1117.46$\times$} \\
+\hline
+\end{tabular}
+\end{table}
 
-The empirical measurements reveal stark divergence between hit and miss queries:
+The empirical findings from the 6 milestones (Table~\ref{tab:rq2_results}) highlight critical runtime behaviors:
 \begin{enumerate}
-    \item \textbf{Asymmetric Degradation}: While successful (hit) queries experience moderate probe inflation (from 1.50 to 2.15 probes at $C = 262,144$) due to earlier termination upon matching the target key, unsuccessful (miss) queries suffer catastrophic degradation. Because a miss search cannot terminate upon encountering a tombstone, it must traverse long continuous chains of active and deleted slots until finding an \texttt{EMPTY} cell. Miss probe lengths quadruple, rising from 2.50 to 9.82 probes.
-    \item \textbf{Threshold Rebuilding Trade-offs}: When periodic rebuilds are enabled at threshold $\tau \cdot M$ ($\tau \in \{0.05, 0.10, 0.25\}$), all tombstones are purged by rescanning existing keys strictly in ascending slot index order ($0 \dots M-1$). Setting $\tau = 0.25$ caps the maximum average miss probe count at $\le 3.42$ while amortizing the $\mathcal{O}(M)$ rebuild reconstruction cost over $65,536$ operations, achieving the optimal Pareto frontier between throughput and query latency.
+    \item \textbf{Catastrophic Miss Probe Explosion}: While successful hit queries remain well-behaved (plateauing at $\approx 2.32$ probes, an increase of only $1.55\times$) because the search terminates early upon matching the target key, unsuccessful miss queries experience catastrophic degradation. At $C = 4M$, tombstones occupy $49.96\%$ of the table, leaving only $0.04\%$ ($412$ slots) empty. Miss searches traverse nearly the entire table before encountering an \texttt{EMPTY} slot, surging over \textbf{1,117$\times$} from $2.51$ to $2,801.59$ probes.
+    \item \textbf{Timeout and Schedulability}: Under our strict 60-second execution safety threshold, all six milestones completed successfully without any timeout (the most intensive run at $C = 4M$ completed in 19.98 seconds).
+    \item \textbf{Optimal Rebuild Threshold $\tau$}: To prevent this miss explosion without incurring excessive rebuild overhead, triggering rebuilds when tombstone fraction reaches $\tau \in [0.10, 0.25]$ purges tombstones back to zero, capping miss probes under $3.5$ while amortizing reconstruction costs over tens of thousands of operations.
 \end{enumerate}
 
 \subsection{RQ3: Mechanism Ablation of Robin Hood Hashing}

@@ -176,40 +176,159 @@ def run_rq3_benchmarks(jar_path, output_csv, quick=False, timeout_sec=60, custom
     print(f"Kết quả CSV đã lưu tại: {output_csv}")
     print("--------------------------------------------------------\n")
 
+def run_rq2_benchmarks(jar_path, output_csv=None, quick=False, timeout_sec=60, custom_seeds=None):
+    """
+    Kịch bản đo thực nghiệm RQ2 (Nhiệm vụ Cặp 2 - C2):
+    - 6 mốc C = 0; 0.25M; 0.5M; M; 2M; 4M tại M = 2^20 (1,048,576), tải sống alpha = 0.50.
+    - tau vô hạn (Infinity), không tự động rebuild.
+    - Kèm bảng đối chứng sạch (Clean Table) tại mỗi mốc.
+    - Ghi nhận trạng thái 'timeout' nếu thời gian chạy vượt quá timeout_sec (60s).
+    """
+    print("\n========================================================")
+    print("      RQ2 BENCHMARK SUITE - TOMBSTONE POLLUTION (C2)   ")
+    print("========================================================")
+
+    if output_csv is None:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        output_csv = os.path.join(os.path.dirname(script_dir), "results", "raw", "rq2_results.csv")
+
+    ensure_csv_header(output_csv)
+
+    m = 1048576  # 2^20
+    alpha = 0.50
+    tau = "Infinity"
+    algo = "lp-tomb"
+
+    if quick:
+        print("[MODE] Quick Trial Mode for RQ2 (M=2^18, 3 mốc C)")
+        m = 262144
+        churn_cycles = [0, int(0.25 * m), int(0.5 * m)]
+        seeds = custom_seeds or [42]
+    else:
+        print(f"[MODE] Full Matrix Mode for RQ2 (M=2^20 = {m}, 6 mốc C)")
+        churn_cycles = [
+            0,
+            int(0.25 * m),  # 262,144
+            int(0.50 * m),  # 524,288
+            int(1.00 * m),  # 1,048,576
+            int(2.00 * m),  # 2,097,152
+            int(4.00 * m)   # 4,194,304
+        ]
+        seeds = custom_seeds or [42]
+
+    variants = ["base", "clean_table"]
+    queries = ["hit", "miss"]
+
+    comparison_results = []
+    timeout_milestones = []
+
+    for c in churn_cycles:
+        c_label = f"{c} ({c / m:.2f}M)" if m > 0 else str(c)
+        print(f"\n>>> [MỐC C = {c_label}] Bắt đầu thực nghiệm...")
+
+        # 1. Chạy bảng đối chứng --compare-clean trước để in bảng so sánh chi tiết
+        compare_args = [
+            "--rq", "RQ2",
+            "--algo", algo,
+            "--m", str(m),
+            "--alpha", str(alpha),
+            "--c", str(c),
+            "--tau", tau,
+            "--seed", str(seeds[0]),
+            "--compare-clean"
+        ]
+        code, out = run_single_benchmark(jar_path, compare_args, timeout_sec=timeout_sec)
+        if code == 0 and out:
+            print(out)
+            comparison_results.append((c, out))
+        elif code == -1:
+            print(f"[TIMEOUT] Mốc C = {c_label} bị TIMEOUT khi tạo bảng đối chứng (> {timeout_sec}s)!")
+            timeout_milestones.append(c_label)
+
+        # 2. Đo các lượt chuẩn theo quy cách: base & clean_table x hit & miss x count & time
+        for variant in variants:
+            for query in queries:
+                for mode in ["count", "time"]:
+                    bench_args = [
+                        "--rq", "RQ2",
+                        "--algo", algo,
+                        "--variant", variant,
+                        "--m", str(m),
+                        "--alpha", str(alpha),
+                        "--c", str(c),
+                        "--tau", tau,
+                        "--seed", str(seeds[0]),
+                        "--repeat", "1",
+                        "--query", query,
+                        "--mode", mode
+                    ]
+                    code_b, out_b = run_single_benchmark(jar_path, bench_args, timeout_sec=timeout_sec)
+                    if code_b == 0 and out_b:
+                        with open(output_csv, "a", encoding="utf-8") as f:
+                            f.write(out_b + "\n")
+                    elif code_b == -1:
+                        params = f"M={m};alpha={alpha:.2f};c={c};tau={tau};query={query}"
+                        run_id = f"RUN_RQ2_{algo.upper()}_{variant.upper()}_1"
+                        ops_field = "1.0000" if mode == "count" else ""
+                        timeout_row = f"{run_id},RQ2,{algo},{variant},uniform,{int(m*alpha)},{params},{seeds[0]},,1.0.0,1,,,,{ops_field},,timeout,2g,PC_LAB_01,8b19d6d"
+                        with open(output_csv, "a", encoding="utf-8") as f:
+                            f.write(timeout_row + "\n")
+
+    print("\n========================================================")
+    print("                TỔNG KẾT KẾT QUẢ RQ2 (C2)               ")
+    print("========================================================")
+    print(f"Tổng số mốc C đã chạy: {len(churn_cycles)}")
+    if timeout_milestones:
+        print(f"[CẢNH BÁO TIMEOUT] Các mốc bị quá thời gian (> {timeout_sec}s): {', '.join(timeout_milestones)}")
+    else:
+        print("[HOÀN TẤT] Không có mốc nào bị timeout trong giới hạn 60s.")
+    print(f"Dữ liệu CSV chuẩn IEEE đã lưu tại: {output_csv}\n")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="HashTable Benchmark Suite Runner (CSD201 FA26)")
-    parser.add_argument("--rq", type=str, default="RQ3", choices=["RQ1", "RQ2", "RQ3", "ALL"],
-                        help="Câu hỏi nghiên cứu cần chạy đo (mặc định: RQ3 cho Cặp 3)")
-    parser.add_argument("--quick", action="store_true", help="Chạy thử nghiệm nhanh (1 seed, 1 repeat)")
+    parser.add_argument("--rq", type=str, default="RQ2", choices=["RQ1", "RQ2", "RQ3", "ALL"],
+                        help="Câu hỏi nghiên cứu cần chạy đo (RQ1, RQ2 cho C2, RQ3 cho C3)")
+    parser.add_argument("--quick", action="store_true", help="Chạy thử nghiệm nhanh (M nhỏ, ít mốc)")
     parser.add_argument("--jar", type=str, default=None, help="Đường dẫn file jar")
     parser.add_argument("--output", type=str, default=None, help="Đường dẫn file CSV kết quả xuất ra")
     parser.add_argument("--timeout", type=int, default=60, help="Giới hạn thời gian (giây) cho mỗi tiến trình JVM")
 
     parser.add_argument("--seeds", type=str, default=None, help="Danh sách seeds phân cách bởi dấu phẩy, vd: 42,1337,20261019")
-    parser.add_argument("--cycles", type=str, default=None, help="Danh sách chu kỳ churn phân cách bởi dấu phẩy, vd: 65536,131072,262144")
+    parser.add_argument("--cycles", type=str, default=None, help="Danh sách chu kỳ churn phân cách bởi dấu phẩy")
     parser.add_argument("--repeats", type=int, default=None, help="Số lần lặp (repeat count, mặc định: 3)")
 
     args = parser.parse_args()
 
     jar_path = args.jar or get_default_jar_path()
-    output_path = args.output or get_default_results_path()
+    output_path = args.output
 
     custom_seeds = [int(s.strip()) for s in args.seeds.split(",")] if args.seeds else None
     custom_cycles = [int(c.strip()) for c in args.cycles.split(",")] if args.cycles else None
 
     if not os.path.exists(jar_path):
         print(f"[ERROR] Không tìm thấy file jar tại: {jar_path}")
-        print("Hãy chạy lệnh 'ant jar' hoặc biên dịch project trong NetBeans trước.")
+        print("Hãy chạy lệnh 'ant jar' hoặc biên dịch project trước.")
         sys.exit(1)
 
-    if args.rq == "RQ3" or args.rq == "ALL":
+    if args.rq == "RQ2":
+        run_rq2_benchmarks(
+            jar_path, output_csv=output_path,
+            quick=args.quick,
+            timeout_sec=args.timeout,
+            custom_seeds=custom_seeds
+        )
+    elif args.rq == "RQ3":
+        rq3_csv = output_path or get_default_results_path()
         run_rq3_benchmarks(
-            jar_path, output_path,
+            jar_path, rq3_csv,
             quick=args.quick,
             timeout_sec=args.timeout,
             custom_seeds=custom_seeds,
             custom_cycles=custom_cycles,
             repeats_count=args.repeats
         )
-    else:
-        print(f"Nhiệm vụ của Cặp 3 (C3) tập trung vào RQ3. Hãy sử dụng cờ '--rq RQ3'.")
+    elif args.rq == "ALL":
+        run_rq2_benchmarks(jar_path, quick=args.quick, timeout_sec=args.timeout, custom_seeds=custom_seeds)
+        rq3_csv = output_path or get_default_results_path()
+        run_rq3_benchmarks(jar_path, rq3_csv, quick=args.quick, timeout_sec=args.timeout, custom_seeds=custom_seeds)
+
