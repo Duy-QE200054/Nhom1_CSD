@@ -32,3 +32,25 @@ run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version
 - **Tổng kiểm tra đầu ra (`output_check`)**: Tích lũy giá trị tra cứu trong vòng lặp đo để triệt tiêu tối ưu hóa loại bỏ mã chết (Dead Code Elimination - DCE) của HotSpot JIT.
 - **Trạng thái (`status`)**: Toàn bộ các lượt đo đều đạt `ok` và hoàn thành dưới ngưỡng timeout 60 giây.
 
+## 3. RQ3 Campaign ngày 24/10/2026 (C3)
+
+Campaign mở rộng so sánh bốn cấu hình tại $M=2^{20}$, $\alpha=0.50$:
+`lp-tomb` với $\tau=0.2$, `lp-backshift`, `rh`, và `rh-noearly`.
+Các mốc churn là $C \in \{0, M/4, M/2, M, 2M, 4M\}$.
+Mỗi cấu hình dùng ba seed chuẩn (`42`, `1337`, `20261019`), một repeat,
+hai loại truy vấn (`hit`, `miss`) và hai chế độ đo (`count`, `time`).
+`run_all.py` ghi lại từng lượt vào [rq3_20261024.csv](./rq3_20261024.csv),
+không nối dữ liệu vào CSV lịch sử có schema cũ.
+
+Lệnh tái lập từ thư mục gốc repository:
+
+```powershell
+python bench\run_all.py --rq RQ3 --m 1048576 --cycles 0,262144,524288,1048576,2097152,4194304 --algorithms lp-tomb,lp-backshift,rh,rh-noearly --tau 0.2 --seeds 42,1337,20261019 --repeats 1 --git-commit <benchmark-commit> --output results\raw\rq3_20261024.csv
+```
+
+Mỗi lần chạy JVM độc lập có giới hạn 60 giây. Timeout và crash được lưu thành
+dòng có `status` tương ứng, không được tính như kết quả thành công. Với
+`lp-backshift`, `rh`, và `rh-noearly`, `tau=Infinity` trong params vì các thuật
+toán này không có rebuild; chỉ `lp-tomb` dùng ngưỡng rebuild 0.2. Mỗi dòng có
+`build_ms` tách riêng với thời gian tra cứu và `run_id` duy nhất theo thuật
+toán, mốc, seed, query và mode.
