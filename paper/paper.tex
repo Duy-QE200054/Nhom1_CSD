@@ -214,44 +214,95 @@ The empirical measurements reveal stark divergence between hit and miss queries:
 \end{enumerate}
 
 \subsection{RQ3: Mechanism Ablation of Robin Hood Hashing}
-To rigorously disentangle the performance advantages of Robin Hood hashing, we empirically decompose the algorithm into its three constitutive primitives under identical churn conditions ($M = 262144, \alpha = 0.50, C \in \{65536, 131072, 262144\}$):
+The October 24 campaign compares \texttt{lp-tomb} ($\tau=0.2$),
+\texttt{lp-backshift}, \texttt{rh-noearly}, and \texttt{rh} at
+$M=2^{20}$, $\alpha=0.50$, and
+$C\in\{0,M/4,M/2,M,2M,4M\}$. For every checkpoint, three seeds are used,
+with one run per seed for each query and measurement mode. Table~\ref{tab:rq3_results}
+reports the largest churn checkpoint ($C=4M$): probe counts are means over
+the three seeds, and lookup times are medians of the three per-seed runs.
 \begin{enumerate}
-    \item \textbf{Backward-shift deletion} (\texttt{lp-backshift} vs. \texttt{lp-tomb}): eliminating tombstones entirely without periodic rebuilds.
-    \item \textbf{DIB-based displacement swapping} (\texttt{rh-noearly} vs. \texttt{lp-backshift}): equalizing probe sequence lengths to reduce probe variance.
-    \item \textbf{Early-exit lookup termination} (\texttt{rh} vs. \texttt{rh-noearly}): terminating unsuccessful searches immediately when the probe distance of the query exceeds the DIB of the resident slot ($DIB_{cur} > DIB_{slot}$).
+    \item \textbf{Deletion policy}: compare tombstone-based LP with rebuilding against LP and Robin Hood backward-shift deletion.
+    \item \textbf{DIB-based insertion}: compare \texttt{rh-noearly} with \texttt{lp-backshift} while disabling Robin Hood's DIB-based lookup termination.
+    \item \textbf{Early-exit lookup}: compare \texttt{rh} with \texttt{rh-noearly} on unsuccessful queries.
 \end{enumerate}
+Figures~\ref{fig:rq3_probes_20261024} and \ref{fig:rq3_latency_20261024} show
+the probe-count and lookup-time trends across the six checkpoints;
+Fig.~\ref{fig:rq3_ablation_20261024} summarizes mean probes across checkpoints.
 
 \begin{table}[htbp]
-\caption{Empirical Probe Counts and Latency across Churn ($M=2^{18}, \alpha=0.50$)}
+\caption{RQ3 results at $C=4M$ ($M=2^{20}$, $\alpha=0.50$). Probe means and median lookup time over three seeds.}
 \label{tab:rq3_results}
 \centering
 \begin{tabular}{|l|c|c|c|c|}
 \hline
-\textbf{Algorithm} & \textbf{Hit Probes} & \textbf{Miss Probes} & \textbf{Hit Latency} & \textbf{Miss Latency} \\
+\textbf{Algorithm} & \textbf{Hit probes} & \textbf{Miss probes} & \textbf{Hit (ms)} & \textbf{Miss (ms)} \\
 \hline
-\texttt{lp-backshift} & 1.497 & 2.487 & 15.8 ms & 10.7 ms \\
-\texttt{rh-noearly}   & 1.497 & 2.487 & 14.5 ms & 10.5 ms \\
-\texttt{rh} (Full)    & 1.497 & \textbf{1.745} & 14.8 ms & \textbf{11.1 ms} \\
+\texttt{lp-tomb} ($\tau=0.2$) & 1.804 & 4.220 & 83.89 & 35.14 \\
+\texttt{lp-backshift} & 1.501 & 2.499 & 69.40 & 29.44 \\
+\texttt{rh-noearly} & 1.501 & 2.499 & 50.01 & 32.82 \\
+\texttt{rh} & 1.501 & \textbf{1.751} & 47.17 & 38.81 \\
 \hline
 \end{tabular}
 \end{table}
 
-Our empirical findings (summarized in Table~\ref{tab:rq3_results} and illustrated in Fig.~1--3) reveal several key insights:
-\begin{itemize}
-    \item \textit{Invariant Preservation via Backward Shift}: In both \texttt{lp-backshift} and \texttt{rh}, backward-shift deletion completely prevents tombstone pollution ($0$ tombstones maintained throughout $C = 262144$ churn cycles). Hit lookup probes remain strictly constant at $\approx 1.50$, matching the theoretical expectation $\frac{1}{2}(1 + \frac{1}{1-\alpha})$ for pristine linear probing.
-    \item \textit{Early-Exit Advantage on Unsuccessful Queries}: While DIB swapping alone (\texttt{rh-noearly}) does not alter the mean probe count on hit queries compared to \texttt{lp-backshift}, enabling early exit (\texttt{rh}) cuts the average miss probe count from $2.487$ to $1.745$---a substantial \textbf{29.8\%--30.2\% reduction} in probe operations.
-    \item \textit{Variance Reduction and Predictability}: Robin Hood hashing eliminates long lookup tails, bounding maximum probe lengths within $O(\log \log n)$, which translates to predictable real-time tail latencies without GC or rebuild pauses.
-\end{itemize}
+At $C=0$, the three variants without Robin Hood early exit begin with the same
+mean miss count (2.499 probes); \texttt{rh} already averages 1.750 probes
+because its early-exit rule is active. \texttt{lp-tomb} with rebuilding then
+shows a non-monotone miss-probe trend across churn checkpoints, reaching 4.220
+at $4M$. At that
+checkpoint, \texttt{lp-backshift} and \texttt{rh-noearly} both average 2.499
+miss probes, while \texttt{rh} averages 1.751. Thus, early exit reduces mean
+miss probes by approximately 30.0\% relative to \texttt{rh-noearly} for this
+workload. Hit probes remain close to 1.501 for the three non-tombstone
+implementations; the \texttt{lp-tomb} mean is 1.804.
+
+The lookup-time medians do not follow probe counts uniformly: for example,
+\texttt{rh} has fewer miss probes but a higher miss-time median than
+\texttt{rh-noearly} in this campaign. With one repeat per seed, these timing
+results are descriptive and do not establish a latency advantage. Likewise,
+the experiment records mean probes rather than probe-length variance or tail
+latency, so it does not support conclusions about those quantities.
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{../results/figures/rq3_20261024/fig_rq3_probes_vs_churn.png}
+\caption{Mean hit and miss probes by churn checkpoint for the four RQ3 implementations.}
+\label{fig:rq3_probes_20261024}
+\end{figure*}
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=0.90\textwidth]{../results/figures/rq3_20261024/fig_rq3_lookup_latency.png}
+\caption{Lookup-time measurements across RQ3 churn checkpoints. Each point summarizes three per-seed runs.}
+\label{fig:rq3_latency_20261024}
+\end{figure*}
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=0.62\textwidth]{../results/figures/rq3_20261024/fig_rq3_mechanism_ablation.png}
+\caption{Mean probes averaged across the RQ3 churn checkpoints and seeds.}
+\label{fig:rq3_ablation_20261024}
+\end{figure*}
 
 \section{Threats to Validity}
-% JIT, GC, bộ nhớ, giới hạn phần cứng
+For the October 24 RQ3 campaign, each seed contributes one timing run per
+configuration. The three-seed median limits the influence of one extreme
+sample but is not a substitute for repeated timing runs; the non-monotone
+lookup-time measurements at some churn checkpoints show that elapsed time is
+sensitive to runtime and system conditions. The probe-count comparison is
+more directly tied to the algorithms, but it does not capture cache misses,
+garbage-collection effects, or rebuild cost during the measured lookup pass.
+The lookup timing excludes table construction and churn, which are recorded
+separately as build time. These results therefore characterize lookup cost
+after the specified workload, not end-to-end workload throughput.
 
 \section{Conclusion}
 This empirical study systematically evaluates collision resolution strategies in open-addressing and chained hash tables under high-churn transactional workloads. By comparing Separate Chaining, Linear Probing with tombstones, Linear Probing with Knuth Algorithm R backshift deletion, and Robin Hood hashing, we provide concrete engineering recommendations:
 \begin{itemize}
     \item For static or append-mostly workloads with moderate load factors ($\alpha \le 0.50$), standard Linear Probing remains ideal due to minimal memory overhead and sequential hardware cache prefetching.
     \item For dynamic workloads with continuous deletions, tombstone accumulation rapidly degrades lookup performance unless costly periodic rebuilds are executed. Knuth's Algorithm R (\texttt{lp-backshift}) effectively eliminates tombstones with strict $O(K)$ cluster relocation overhead.
-    \item For high-churn transaction indexing where absent/miss queries are frequent (e.g., membership verification and deduplication), Robin Hood hashing with early exit provides the optimal combination of zero tombstones, low variance, and up to $30\%$ fewer probe operations.
+    \item In the measured RQ3 workload, Robin Hood hashing with early exit reduced mean unsuccessful-lookup probes by about $30\%$ relative to \texttt{rh-noearly}; the timing samples did not show a corresponding miss-latency advantage. The probe experiment does not measure variance or tail latency, so those benefits require separate evaluation.
 \end{itemize}
 
 \section*{Acknowledgment}
