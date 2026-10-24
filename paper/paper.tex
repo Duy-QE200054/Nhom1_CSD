@@ -72,11 +72,49 @@ results separately from this methodological description; no performance
 outcome is assumed in advance.
 
 \section{Background and Related Work}
-Open addressing with Linear Probing (LP), pioneered by Peterson \cite{peterson}, offers outstanding cache locality due to sequential array scans. However, deletion in open addressing cannot simply reset a slot to empty, as this severs the probe sequence of colliding items. The conventional approach introduces tombstones to mark deleted slots, but accumulated tombstones degrade search performance, particularly for unsuccessful lookups, requiring periodic rebuilding \cite{knuth}.
+Peterson's work on random-access storage is an early reference for open
+addressing and linear probing \cite{peterson}. With LP, a collision is resolved
+by examining successive slots, so keys with the same or nearby home buckets
+can form contiguous clusters. Knuth analyzes this primary-clustering effect
+and gives classical expected probe counts for a table with load factor
+$\alpha$ under the standard no-deletion model:
+\begin{equation}
+    \mathbb{E}[P_{\mathrm{hit}}] \approx
+    \frac{1}{2}\left(1 + \frac{1}{1-\alpha}\right), \qquad
+    \mathbb{E}[P_{\mathrm{miss}}] \approx
+    \frac{1}{2}\left(1 + \frac{1}{(1-\alpha)^2}\right).
+\end{equation}
+These expressions provide a theoretical reference for clean LP tables; they
+do not directly model the additional state introduced by tombstones or
+repeated updates \cite{knuth}.
 
-To avoid tombstones entirely, Knuth \cite{knuth} introduced \textit{Algorithm R}, which scans the subsequent cluster and shifts qualifying elements backward into the vacated slot without rehashing. Alternatively, Sedgewick and Wayne \cite{sedgewick} proposed cluster re-insertion, where items trailing the deletion point are extracted and re-inserted via standard put operations. 
+Deletion requires care in open-addressed tables: changing a deleted slot
+directly to empty can make a later key unreachable along its probe sequence.
+Tombstones preserve that sequence, but leave non-empty markers that searches
+must pass and that a rebuild can remove. Knuth's Algorithm R instead scans
+the affected cluster and moves a key into the current hole only when its
+probe path permits the move \cite{knuth}. Sedgewick and Wayne describe a
+related approach that removes and reinserts the keys following the deleted
+slot \cite{sedgewick}. Both approaches maintain lookup correctness without
+retaining tombstones, but perform different work during deletion. This study
+uses Algorithm R for its LP backshift implementation.
 
-Robin Hood hashing, proposed by Celis et al. \cite{celis}, equalizes probe sequence lengths using the Distance from Initial Bucket (DIB). When inserting a key whose current probe distance exceeds the DIB of the resident key, a swap occurs (``robbing the rich to give to the poor''). This property enables two critical features: (1) \textit{Early exit} during lookups, where a search terminates as soon as the search distance exceeds the slot's DIB, and (2) \textit{Backward-shift deletion}, which shifts elements with positive DIB backward by one position, eliminating tombstones entirely.
+Celis, Larson, and Munro introduced Robin Hood hashing, which compares the
+distance from initial bucket (DIB) of an incoming key with that of the key
+already occupying a slot \cite{celis}. If the incoming key has traveled
+farther, the keys exchange positions and insertion continues with the
+displaced key. The resulting DIB information also supports an unsuccessful
+lookup stopping rule: if the query's probe distance exceeds the resident
+key's DIB, the query cannot occur later in the probe sequence. Robin Hood
+deletion can shift following keys backward while their DIB is positive,
+avoiding tombstones.
+
+Prior work establishes these algorithms and their analytical properties.
+Our contribution is an empirical comparison of implementations under a
+shared Java interface and repeatable workloads. In particular, the
+\texttt{rh-noearly} variant retains Robin Hood insertion and backward-shift
+deletion but disables the DIB-based lookup stopping rule, enabling a
+mechanism-level comparison within the same table design.
 
 \section{Methods}
 \subsection{Collision Resolution Implementations}
