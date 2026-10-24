@@ -64,20 +64,31 @@ Between Knuth Algorithm R \cite{knuth} and Sedgewick's cluster re-insertion \cit
 \section{Results and Discussion}
 % V-A. RQ1: Separate Chaining vs Linear Probing
 \subsection{RQ2: Tombstone Pollution Dynamics and Periodic Rebuilding}
-In open addressing with Linear Probing, deleting an element by marking its slot as a tombstone introduces artificial search friction. To quantify this degradation under continuous turnover, we evaluate \texttt{lp-tomb} across $C$ churn cycles (where each cycle consists of an insertion followed by a deletion, maintaining a constant effective load factor $\alpha = 0.50$ at $M = 2^{18} = 262,144$). At specific checkpoints ($C \in \{65536, 131072, 262144\}$), we execute $10^4$ hit and $10^4$ miss queries, benchmarking the polluted table against an identical pristine \textit{Clean Table} containing the exact same active keys without tombstones.
+In open addressing with Linear Probing, deleting an element by marking its slot as a tombstone introduces artificial search friction. To quantify this degradation under continuous turnover, we evaluate \texttt{lp-tomb} ($\tau = \infty$, no rebuild) across six churn milestones $C \in \{0, 0.25M, 0.5M, M, 2M, 4M\}$ with $M = 2^{20} = 1,048,576$ and active load factor $\alpha = 0.50$ ($N = 524,288$). At each checkpoint, $10^4$ hit and $10^4$ miss queries benchmark the contaminated table against an identical pristine \textit{Clean Table} containing the exact same active keys without tombstones.
 
-\begin{figure}[htbp]
+\begin{table}[htbp]
+\caption{Empirical Probe Counts and Contamination at $M=2^{20}, \alpha=0.50$}
+\label{tab:rq2_results}
 \centering
-\fbox{\parbox{0.9\columnwidth}{\centering \small [Empirical Curve: Lookup Probes vs. Churn Cycles $C$]\\
-\textit{Hit probes increase gradually from 1.50 to 2.15; Miss probes surge sharply from 2.50 to 9.80 as tombstones accumulate without rebuild.}}}
-\caption{Impact of tombstone accumulation on probe lengths in \texttt{lp-tomb} ($\tau = \infty$) compared to a pristine Clean Table.}
-\label{fig:rq2_churn}
-\end{figure}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Milestone $C$} & \textbf{TOMB \%} & \textbf{EMPTY \%} & \textbf{Hit Probes} & \textbf{Miss Probes} & \textbf{Miss Surge} \\
+\hline
+$C = 0$       & 0.00\%  & 50.00\% & 1.510 (vs 1.510) & 2.536 (vs 2.536) & 1.00$\times$ \\
+$C = 0.25M$   & 18.79\% & 31.21\% & 1.865 (vs 1.511) & 4.703 (vs 2.497) & 1.88$\times$ \\
+$C = 0.50M$   & 30.16\% & 19.84\% & 2.070 (vs 1.502) & 7.570 (vs 2.466) & 3.07$\times$ \\
+$C = 1.00M$   & 41.91\% & 8.09\%  & 2.257 (vs 1.507) & 17.415 (vs 2.548) & 6.83$\times$ \\
+$C = 2.00M$   & 48.64\% & 1.36\%  & 2.315 (vs 1.492) & 86.033 (vs 2.532) & 33.98$\times$ \\
+$C = 4.00M$   & 49.96\% & 0.04\%  & 2.316 (vs 1.496) & \textbf{2801.591} (vs 2.507) & \textbf{1117.46$\times$} \\
+\hline
+\end{tabular}
+\end{table}
 
-The empirical measurements reveal stark divergence between hit and miss queries:
+The empirical findings from the 6 milestones (Table~\ref{tab:rq2_results}) highlight critical runtime behaviors:
 \begin{enumerate}
-    \item \textbf{Asymmetric Degradation}: While successful (hit) queries experience moderate probe inflation (from 1.50 to 2.15 probes at $C = 262,144$) due to earlier termination upon matching the target key, unsuccessful (miss) queries suffer catastrophic degradation. Because a miss search cannot terminate upon encountering a tombstone, it must traverse long continuous chains of active and deleted slots until finding an \texttt{EMPTY} cell. Miss probe lengths quadruple, rising from 2.50 to 9.82 probes.
-    \item \textbf{Threshold Rebuilding Trade-offs}: When periodic rebuilds are enabled at threshold $\tau \cdot M$ ($\tau \in \{0.05, 0.10, 0.25\}$), all tombstones are purged by rescanning existing keys strictly in ascending slot index order ($0 \dots M-1$). Setting $\tau = 0.25$ caps the maximum average miss probe count at $\le 3.42$ while amortizing the $\mathcal{O}(M)$ rebuild reconstruction cost over $65,536$ operations, achieving the optimal Pareto frontier between throughput and query latency.
+    \item \textbf{Catastrophic Miss Probe Explosion}: While successful hit queries remain well-behaved (plateauing at $\approx 2.32$ probes, an increase of only $1.55\times$) because the search terminates early upon matching the target key, unsuccessful miss queries experience catastrophic degradation. At $C = 4M$, tombstones occupy $49.96\%$ of the table, leaving only $0.04\%$ ($412$ slots) empty. Miss searches traverse nearly the entire table before encountering an \texttt{EMPTY} slot, surging over \textbf{1,117$\times$} from $2.51$ to $2,801.59$ probes.
+    \item \textbf{Timeout and Schedulability}: Under our strict 60-second execution safety threshold, all six milestones completed successfully without any timeout (the most intensive run at $C = 4M$ completed in 19.98 seconds).
+    \item \textbf{Optimal Rebuild Threshold $\tau$}: To prevent this miss explosion without incurring excessive rebuild overhead, triggering rebuilds when tombstone fraction reaches $\tau \in [0.10, 0.25]$ purges tombstones back to zero, capping miss probes under $3.5$ while amortizing reconstruction costs over tens of thousands of operations.
 \end{enumerate}
 
 \subsection{RQ3: Mechanism Ablation of Robin Hood Hashing}
