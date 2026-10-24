@@ -22,6 +22,20 @@ Script ghi các dòng CSV vào `results\raw\rq3_merged.csv` trước khi vẽ. N
 - **Nguồn dữ liệu**: `results/raw/rq3_results.csv`
 - **Script tạo**: `bench/plot_figures.py`
 
+## Campaign mở rộng ngày 24/10/2026
+
+Để giữ nguyên các hình lịch sử bên trên, kết quả đo tại $M=2^{20}$ được vẽ
+thành bộ hình riêng trong `results/figures/rq3_20261024/`. Bộ hình mở rộng
+bao gồm `lp-tomb` ($\tau=0.2$), `lp-backshift`, `rh`, và `rh-noearly`, tại các
+mốc $C \in \{0, M/4, M/2, M, 2M, 4M\}$; nhãn dung lượng bảng được lấy trực tiếp
+từ CSV đầu vào.
+
+Sau khi hoàn tất dữ liệu, tái tạo hình bằng:
+
+```powershell
+python bench\plot_figures.py --csv results\raw\rq3_20261024.csv --outdir results\figures\rq3_20261024
+```
+
 ---
 
 ### 2. `fig_rq3_lookup_latency.png`
