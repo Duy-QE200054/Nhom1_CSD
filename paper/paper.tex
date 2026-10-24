@@ -127,11 +127,11 @@ All hash tables implement a uniform \texttt{HashTable} interface operating on 64
 \end{itemize}
 
 \subsection{Justification for Knuth Algorithm R in \texttt{lp-backshift}}
-Between Knuth Algorithm R \cite{knuth} and Sedgewick's cluster re-insertion \cite{sedgewick}, our study adopts \textbf{Knuth Algorithm R} based on three methodological justifications:
+Between Knuth Algorithm R \cite{knuth} and Sedgewick's cluster re-insertion \cite{sedgewick}, our study adopts \textbf{Knuth Algorithm R} for three methodological reasons:
 \begin{enumerate}
-    \item \textit{Algorithmic Complexity}: Knuth Algorithm R executes in strict $\mathcal{O}(K)$ single-pass time over a cluster of length $K$. In contrast, Sedgewick's re-insertion requires re-hashing and repeated probe loops for each trailing element, leading to worst-case $\mathcal{O}(K^2)$ intra-cluster overhead.
-    \item \textit{Memory Bus Traffic \& Cache Locality}: Algorithm R strictly performs in-place element movements only when an item cyclically precedes the hole. Non-qualifying elements remain untouched, drastically minimizing cache line invalidations on modern CPU architectures.
-    \item \textit{Theoretical Consistency}: Knuth's exact circular modular invariant $((i \le j) ? (i < r \le j) : (i < r \lor r \le j))$ preserves the canonical linear probing cluster distribution without artificial displacement.
+    \item \textit{Bounded scan}: Algorithm R makes one forward scan of the affected cluster, performing $\mathcal{O}(K)$ slot checks and at most a constant number of moves per visited key for a cluster of length $K$. Cluster re-insertion instead invokes a probe sequence for each key moved out of the cluster, so it can repeat slot inspections.
+    \item \textit{Direct movement}: Algorithm R moves a key directly into the current hole only when its home bucket permits that move. This avoids the explicit remove-and-reinsert steps of the alternative; cache or wall-clock advantages are not assumed without measurement.
+    \item \textit{Circular correctness}: The test of whether a key's home bucket $r$ lies in the circular interval $(i,j]$ determines whether moving it to the hole $i$ preserves its linear-probing search path, including when the cluster wraps around the array boundary.
 \end{enumerate}
 
 \subsection{Robin Hood and Backshift Implementations}
@@ -156,9 +156,9 @@ Knuth's Algorithm R for deletion. Starting from the deleted slot (the current
 hole), it scans the following cluster. For a key at slot $j$ with home bucket
 $r$, it moves the key into the hole at $i$ only if $r$ is not in the circular
 interval $(i,j]$; the moved key's former slot becomes the new hole. The scan
-ends at an empty slot, and the final hole is marked empty. This interval test
-handles clusters that wrap around the end of the array and no tombstone state
-is introduced.
+ends at an empty slot or when it returns to the starting slot after a full
+cycle, and the final hole is marked empty. This interval test handles clusters
+that wrap around the end of the array and no tombstone state is introduced.
 
 \subsection{RQ3 Workload and Measurement}
 For RQ3, each table is first populated with
