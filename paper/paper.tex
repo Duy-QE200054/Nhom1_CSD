@@ -160,6 +160,26 @@ ends at an empty slot, and the final hole is marked empty. This interval test
 handles clusters that wrap around the end of the array and no tombstone state
 is introduced.
 
+\subsection{RQ3 Workload and Measurement}
+For RQ3, each table is first populated with
+$N=\operatorname{round}(\alpha M)$ unique keys generated from the specified
+seed. The workload then performs $C$ churn cycles. Each cycle selects one
+currently live key for deletion and inserts a new key not used earlier in the
+workload. This keeps the live-key count approximately constant while exposing
+the deletion policy to repeated updates. The same capacity, load factor,
+seed, and cycle count are used when comparing \texttt{lp-backshift},
+\texttt{rh}, and \texttt{rh-noearly}.
+
+After the churn phase, the measured lookup pass queries the keys that remain
+live in the table. These are successful lookups; the RQ3 pass therefore
+measures lookup behavior on present keys rather than a mixed hit/miss ratio.
+Table construction and churn happen before the timed lookup pass. Timing and
+probe counting are collected in separate runs: the time mode measures elapsed
+lookup time, while the count mode enables the shared probe counter and reports
+the average probes per queried key. The runner also emits the input checksum
+and output check so that corresponding runs can be compared for input and
+lookup consistency.
+
 \section{Experimental Setup}
 % Máy đo, JVM, tham số, dữ liệu, làm nóng, timeout
 
