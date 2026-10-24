@@ -31,7 +31,45 @@ Hash table, Robin Hood hashing, linear probing, tombstone, backward shift, empir
 \end{IEEEkeywords}
 
 \section{Introduction}
-% Bối cảnh, câu hỏi chung, ba RQ và đóng góp của nghiên cứu
+Hash tables are widely used to build in-memory indexes, including indexes for
+records that are continuously inserted, deleted, and queried. In such
+high-churn workloads, the collision-resolution strategy affects not only
+lookup cost but also the cost of keeping the table searchable after deletions.
+These effects are especially important for unsuccessful lookups and for
+open-addressed tables whose probe sequences can be affected by deleted slots.
+
+Separate Chaining (SC) stores colliding keys in per-bucket lists, whereas
+Linear Probing (LP) places keys in adjacent array slots. LP offers contiguous
+accesses, but deletion must preserve the probe paths of remaining keys.
+Tombstones provide one solution, although their accumulation can lengthen
+searches and motivate periodic rebuilding. Backward-shift deletion instead
+repairs a cluster in place. Robin Hood hashing further redistributes keys
+according to their probe distances and can use those distances to terminate
+unsuccessful searches early. These designs therefore make different trade-offs
+between lookup work and deletion maintenance.
+
+This paper evaluates these trade-offs with a common Java hash-table interface
+and controlled, reproducible workloads. We organize the study around three
+research questions:
+\begin{itemize}
+    \item \textbf{RQ1:} How do SC and LP with tombstones compare as the load
+    factor and table capacity vary, including under a clustered-key workload?
+    \item \textbf{RQ2:} How does tombstone accumulation during repeated
+    delete--insert operations affect lookup behavior, and how does it compare
+    with a clean table containing the same live keys?
+    \item \textbf{RQ3:} How does Robin Hood hashing compare with LP using
+    backward-shift deletion under churn, and what is the contribution of
+    early-exit lookup to Robin Hood search cost?
+\end{itemize}
+
+The study makes three contributions. First, it implements SC, LP with
+tombstones and rebuilding, LP with backward-shift deletion, and Robin Hood
+hashing in a shared interface. Second, it defines repeatable workloads and
+separates elapsed-time measurements from probe-count measurements. Third, it
+uses a Robin Hood variant without early exit to isolate that lookup mechanism
+while retaining Robin Hood insertion and deletion. The paper reports measured
+results separately from this methodological description; no performance
+outcome is assumed in advance.
 
 \section{Background and Related Work}
 Open addressing with Linear Probing (LP), pioneered by Peterson \cite{peterson}, offers outstanding cache locality due to sequential array scans. However, deletion in open addressing cannot simply reset a slot to empty, as this severs the probe sequence of colliding items. The conventional approach introduces tombstones to mark deleted slots, but accumulated tombstones degrade search performance, particularly for unsuccessful lookups, requiring periodic rebuilding \cite{knuth}.
