@@ -181,7 +181,9 @@ query. The runner emits an input checksum and output check for reproducibility
 and result validation.
 
 \section{Experimental Setup}
-The October 24 RQ3 campaign uses a fixed table capacity
+The measurements were run on an 11th Gen Intel Core i5-11500H (2.90 GHz)
+system with 32 GB RAM and Windows 11 Pro, using a 64-bit HotSpot JVM
+(Java 24.0.2) with a 2 GB maximum heap. The October 24 RQ3 campaign uses a fixed table capacity
 $M=2^{20}=1,048,576$ and initial live load $\alpha=0.50$
 ($N=524,288$). Churn checkpoints are
 $C\in\{0, M/4, M/2, M, 2M, 4M\}$. Each algorithm/checkpoint combination is
