@@ -134,6 +134,32 @@ Between Knuth Algorithm R \cite{knuth} and Sedgewick's cluster re-insertion \cit
     \item \textit{Theoretical Consistency}: Knuth's exact circular modular invariant $((i \le j) ? (i < r \le j) : (i < r \lor r \le j))$ preserves the canonical linear probing cluster distribution without artificial displacement.
 \end{enumerate}
 
+\subsection{Robin Hood and Backshift Implementations}
+The Robin Hood variants use fixed-capacity arrays for keys, values, slot
+states, and DIB values. Insertion begins at the key's Fibonacci-hash bucket
+with DIB zero. At each occupied slot, the incoming key takes the slot when its
+DIB is greater than the resident key's DIB; insertion then continues with the
+displaced key. Probe indices wrap around the power-of-two table capacity.
+
+For lookup, \texttt{rh} checks for a matching key and an empty slot, and also
+terminates an unsuccessful search when the current probe distance exceeds the
+DIB stored in the slot. The \texttt{rh-noearly} ablation uses the same
+insertion and deletion procedures but omits this DIB-based stopping condition;
+it continues until it finds the key, reaches an empty slot, or has examined
+the table. Thus, the comparison isolates early exit from the other Robin Hood
+mechanisms. Both variants remove a key by shifting subsequent entries with
+positive DIB backward one slot, decrementing each shifted DIB, and stopping
+at an empty slot or an entry with DIB zero.
+
+The \texttt{lp-backshift} implementation uses ordinary linear probing and
+Knuth's Algorithm R for deletion. Starting from the deleted slot (the current
+hole), it scans the following cluster. For a key at slot $j$ with home bucket
+$r$, it moves the key into the hole at $i$ only if $r$ is not in the circular
+interval $(i,j]$; the moved key's former slot becomes the new hole. The scan
+ends at an empty slot, and the final hole is marked empty. This interval test
+handles clusters that wrap around the end of the array and no tombstone state
+is introduced.
+
 \section{Experimental Setup}
 % Máy đo, JVM, tham số, dữ liệu, làm nóng, timeout
 
