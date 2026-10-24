@@ -12,6 +12,7 @@ import sys
 import subprocess
 import time
 import argparse
+import math
 
 # Đảm bảo UTF-8 trên Windows console
 if sys.platform == "win32":
@@ -300,8 +301,8 @@ if __name__ == "__main__":
     unsupported_algorithms = set(algorithms) - supported_algorithms
     if unsupported_algorithms:
         parser.error(f"unsupported RQ3 algorithms: {', '.join(sorted(unsupported_algorithms))}")
-    if args.tau <= 0 or args.tau > 1:
-        parser.error("--tau must be in (0, 1]")
+    if not (0 < args.tau <= 1 or (math.isinf(args.tau) and args.tau > 0)):
+        parser.error("--tau must be in (0, 1] or Infinity")
 
     if not os.path.exists(jar_path):
         print(f"[ERROR] Không tìm thấy file jar tại: {jar_path}")
