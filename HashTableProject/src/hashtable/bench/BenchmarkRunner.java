@@ -71,7 +71,8 @@ public class BenchmarkRunner {
         int n = (int) Math.round(alpha * m);
         RQ2Workload workload = null;
         long[] keys = null;
-        if (c > 0) {
+        boolean isRQ2 = (c > 0) || "RQ2".equalsIgnoreCase(rq) || compareClean;
+        if (isRQ2) {
             workload = new RQ2Workload(m, alpha, seed);
         } else {
             if ("clustered".equals(dataset)) {
@@ -90,7 +91,7 @@ public class BenchmarkRunner {
         String variant = "rh-noearly".equals(algo) ? "noearly" : requestedVariant;
         String csvAlgo = "rh-noearly".equals(algo) ? "rh" : algo;
 
-        if (c > 0) {
+        if (isRQ2) {
             workload.populateInitialKeys(table);
             buildNs = System.nanoTime() - buildStartNs;
             // Mở file ghi log khối nếu được yêu cầu
