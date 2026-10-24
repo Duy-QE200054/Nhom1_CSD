@@ -22,7 +22,7 @@ Thư mục lưu trữ toàn bộ các file CSV kết quả đo thực nghiệm t
 
 ---
 
-## 2. Chuẩn Schema 20 Cột (Bảng 4)
+## 2. Schema 20 Cột Của File RQ3 Lịch Sử
 Tất cả các dòng dữ liệu đều tuân thủ nghiêm ngặt 20 cột:
 ```csv
 run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version,repeat,elapsed_ms,heap_before_bytes,heap_peak_bytes,ops_count,output_check,status,xmx,machine_id,git_commit
@@ -31,6 +31,10 @@ run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version
 - **Mã hash đầu vào (`input_sha256`)**: SHA-256 mảng byte Big-Endian của các khóa nạp vào bảng, đảm bảo đối chiếu công bằng giữa các thuật toán.
 - **Tổng kiểm tra đầu ra (`output_check`)**: Tích lũy giá trị tra cứu trong vòng lặp đo để triệt tiêu tối ưu hóa loại bỏ mã chết (Dead Code Elimination - DCE) của HotSpot JIT.
 - **Trạng thái (`status`)**: Toàn bộ các lượt đo đều đạt `ok` và hoàn thành dưới ngưỡng timeout 60 giây.
+
+File `rq3_results.csv` giữ nguyên schema lịch sử này. Campaign mới có thêm cột
+`build_ms`, vì vậy được lưu riêng theo schema 21 cột ở mục 3; không trộn hai
+định dạng CSV trong cùng một file.
 
 ## 3. RQ3 Campaign ngày 24/10/2026 (C3)
 
