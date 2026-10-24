@@ -15,6 +15,7 @@ import os
 import sys
 import csv
 import glob
+import statistics
 from collections import defaultdict
 import argparse
 
@@ -216,7 +217,7 @@ def plot_rq3_probes_vs_churn(rows, out_dir, csv_rel_path="results/raw/rq3_result
 
 def plot_rq3_lookup_latency(rows, out_dir, csv_rel_path="results/raw/rq3_results.csv"):
     """
-    Hình 2: Thời gian tra cứu (Lookup Latency ms) theo chu kỳ churn C
+    Hình 2: Median lookup latency across seeds by churn cycle.
     """
     grouped = defaultdict(list)
     for r in rows:
@@ -259,7 +260,7 @@ def plot_rq3_lookup_latency(rows, out_dir, csv_rel_path="results/raw/rq3_results
             vals = grouped.get((algo, variant, q, c), [])
             if vals:
                 x_vals.append(c)
-                y_vals.append(sum(vals) / len(vals))
+                y_vals.append(statistics.median(vals))
         if x_vals:
             ax.plot(x_vals, y_vals, label=style["label"], color=style["color"],
                     marker=style["marker"], linestyle=style["ls"], linewidth=2, markersize=8)
