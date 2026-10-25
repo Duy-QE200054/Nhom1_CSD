@@ -58,3 +58,18 @@ dòng có `status` tương ứng, không được tính như kết quả thành 
 toán này không có rebuild; chỉ `lp-tomb` dùng ngưỡng rebuild 0.2. Mỗi dòng có
 `build_ms` tách riêng với thời gian tra cứu và `run_id` duy nhất theo thuật
 toán, mốc, seed, query và mode.
+
+## 4. RQ3 Campaign tải sống cao ngày 25/10/2026 (C3 - Stress Test)
+
+Chiến dịch hoàn tất dữ liệu ngày 25/10 thực hiện đo đạc 4 cấu hình tại tải sống cao $\alpha=0.80$ ($N=838861, M=2^{20}=1048576$), ngưỡng rebuild $\tau=0.10$ cho `lp-tomb` theo đúng đề bài:
+- 4 thuật toán: `lp-tomb` ($\tau=0.10$), `lp-backshift`, `rh`, `rh-noearly`.
+- 6 mốc churn: $C \in \{0, 262144, 524288, 1048576, 2097152, 4194304\}$ ($0, 0.25M, 0.5M, M, 2M, 4M$).
+- 3 hạt giống: `42, 1337, 20261019`, 1 repeat, 2 query (`hit, miss`), 2 mode (`count, time`).
+- Toàn bộ 288/288 lượt chạy đạt trạng thái `ok`, kiểm tra chéo `output_check` khớp chính xác 100% giữa tất cả các thuật toán cùng seed và mốc churn.
+- Kết quả lưu tại [rq3_20261025.csv](./rq3_20261025.csv). Bản sao lưu nguyên gốc đạt mốc M5 được lưu tại [rq3_results_backup_20261025.csv](./rq3_results_backup_20261025.csv).
+
+Lệnh tái lập từ thư mục gốc repository:
+
+```powershell
+python bench\run_all.py --rq RQ3 --m 1048576 --alpha 0.80 --cycles 0,262144,524288,1048576,2097152,4194304 --algorithms lp-tomb,lp-backshift,rh,rh-noearly --tau 0.1 --seeds 42,1337,20261019 --repeats 1 --output results\raw\rq3_20261025.csv
+```
