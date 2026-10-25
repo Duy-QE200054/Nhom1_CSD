@@ -24,7 +24,7 @@ Script ghi các dòng CSV vào `results\raw\rq3_merged.csv` trước khi vẽ. N
 
 ## Campaign mở rộng ngày 24/10/2026
 
-Để giữ nguyên các hình lịch sử bên trên, kết quả đo tại $M=2^{20}$ được vẽ
+Để giữ nguyên các hình lịch sử bên trên, kết quả đo tại $M=2^{20}, \alpha=0.50$ được vẽ
 thành bộ hình riêng trong `results/figures/rq3_20261024/`. Bộ hình mở rộng
 bao gồm `lp-tomb` ($\tau=0.2$), `lp-backshift`, `rh`, và `rh-noearly`, tại các
 mốc $C \in \{0, M/4, M/2, M, 2M, 4M\}$; nhãn dung lượng bảng được lấy trực tiếp
@@ -35,6 +35,23 @@ Sau khi hoàn tất dữ liệu, tái tạo hình bằng:
 
 ```powershell
 python bench\plot_figures.py --csv results\raw\rq3_20261024.csv --outdir results\figures\rq3_20261024
+```
+
+---
+
+## Campaign tải sống cao ngày 25/10/2026 ($\alpha = 0.80$)
+
+Chiến dịch đo đạc ngày 25/10 tập trung vào chế độ chịu tải cao (stress test) tại $\alpha = 0.80$ ($N = 838861, M = 2^{20} = 1048576$), ngưỡng rebuild $\tau = 0.10$ cho `lp-tomb` theo đúng đặc tả của Đề tài 2.
+
+Toàn bộ biểu đồ độ phân giải cao được sinh vào thư mục `results/figures/rq3_20261025/`:
+- `fig_rq3_probes_vs_churn.png`: Đồ thị diễn tiến số bước dò trung bình (Hit và Miss) qua 6 mốc churn $C \in \{0, 262144, 524288, 1048576, 2097152, 4194304\}$. Kết quả cho thấy `lp-tomb` có số bước dò tra cứu trượt tăng vọt lên $>20$ bước dò do cụm tombstone dày đặc dù rebuild tại $\tau=0.10$. Ngược lại, `rh` duy trì số bước dò miss cực kỳ thấp ($\approx 3.40$ bước dò).
+- `fig_rq3_lookup_latency.png`: Độ trễ tra cứu trung vị (ms) qua các mốc churn.
+- `fig_rq3_mechanism_ablation.png`: Biểu đồ cột bóc tách 3 cơ chế tại tải sống cao $\alpha = 0.80$. Cơ chế Early Exit giúp `rh` giảm tới **73.8% số bước dò miss** so với `lp-backshift` / `rh-noearly` (từ $12.98$ xuống $3.40$), và giảm tới **83.7%** so với `lp-tomb` ($20.84$).
+
+Lệnh tái tạo biểu đồ ngày 25/10:
+
+```powershell
+python bench\plot_figures.py --csv results\raw\rq3_20261025.csv --outdir results\figures\rq3_20261025
 ```
 
 ---
