@@ -52,6 +52,32 @@ def ensure_csv_header(file_path):
             "benchmark rows with a different schema."
         )
 
+import shutil
+
+def find_java():
+    """Tự động phát hiện phiên bản Java 11+ phù hợp với HashTableProject.jar."""
+    candidates = []
+    if "JAVA_HOME" in os.environ:
+        candidates.append(os.path.join(os.environ["JAVA_HOME"], "bin", "java.exe"))
+        candidates.append(os.path.join(os.environ["JAVA_HOME"], "bin", "java"))
+    for root in [r"C:\Program Files\Java", r"C:\Program Files (x86)\Java"]:
+        if os.path.isdir(root):
+            for d in sorted(os.listdir(root), reverse=True):
+                candidates.append(os.path.join(root, d, "bin", "java.exe"))
+    candidates.append(shutil.which("java") or "java")
+    for c in candidates:
+        if c and (os.path.exists(c) or c == "java"):
+            try:
+                res = subprocess.run([c, "-version"], capture_output=True, text=True, timeout=5)
+                out = res.stderr or res.stdout
+                if "1.8" not in out and any(v in out for v in ["11", "17", "21", "24", "25"]):
+                    return c
+            except Exception:
+                pass
+    return "java"
+
+JAVA_EXEC = find_java()
+
 def run_single_benchmark(jar_path, args, timeout_sec=60):
     repository_root = get_repository_root()
     jar_argument = jar_path
@@ -60,7 +86,7 @@ def run_single_benchmark(jar_path, args, timeout_sec=60):
             jar_argument = os.path.relpath(jar_path, repository_root)
     except ValueError:
         pass
-    cmd = ["java", "-Xmx2g", "-jar", jar_argument] + args
+    cmd = [JAVA_EXEC, "-Xmx2g", "-jar", jar_argument] + args
     print(f"[RUNNING] {' '.join(cmd)}")
     try:
         proc = subprocess.run(
@@ -95,8 +121,9 @@ def run_rq3_benchmarks(
     custom_cycles=None,
     repeats_count=None,
     table_capacity=262144,
+    alpha=0.50,
     algorithms=None,
-    tombstone_tau=float("inf"),
+    tombstone_tau=None,
     git_commit="local",
 ):
     """
@@ -106,8 +133,8 @@ def run_rq3_benchmarks(
       2) Hoán đổi theo DIB (DIB swapping): rh-noearly vs lp-backshift.
       3) Cơ chế dừng sớm (Early exit): rh vs rh-noearly (đặc biệt rõ ở truy vấn miss).
     - Cấu hình:
-      M = table_capacity, alpha = 0.50
-      C in [65536, 131072, 262144] (M/4, M/2, M)
+      M = table_capacity, alpha = alpha
+      C in [65536, 131072, 262144] (hoặc các mốc churn custom)
     """
     print("\n========================================================")
     print("      RQ3 BENCHMARK SUITE - ROBIN HOOD MECHANISM       ")
@@ -116,8 +143,12 @@ def run_rq3_benchmarks(
     ensure_csv_header(output_csv)
 
     m = table_capacity
-    alpha = 0.50
     algos = algorithms or ["rh", "rh-noearly", "lp-backshift"]
+
+    if tombstone_tau is None or math.isinf(tombstone_tau):
+        effective_tau = 0.10 if abs(alpha - 0.80) < 0.05 else 0.20
+    else:
+        effective_tau = tombstone_tau
 
     if quick:
         print("[MODE] Quick Trial Mode (1 seed, 1 repeat, C=65536)")
@@ -146,7 +177,7 @@ def run_rq3_benchmarks(
             for rep in repeats:
                 for algo in algos:
                     for query in queries:
-                        tau = tombstone_tau if algo == "lp-tomb" else float("inf")
+                        tau = effective_tau if algo == "lp-tomb" else float("inf")
                         tau_arg = "Infinity" if tau == float("inf") else str(tau)
                         # 1. Lượt đo số bước dò (ops_count)
                         current += 1
@@ -386,10 +417,11 @@ if __name__ == "__main__":
     parser.add_argument("--cycles", type=str, default=None, help="Danh sách chu kỳ churn phân cách bởi dấu phẩy")
     parser.add_argument("--repeats", type=int, default=None, help="Số lần lặp (repeat count, mặc định: 3)")
     parser.add_argument("--m", type=int, default=262144, help="Dung lượng bảng M (lũy thừa của 2)")
+    parser.add_argument("--alpha", type=float, default=0.50, help="Hệ số tải alpha (mặc định: 0.50, chiến dịch 25/10: 0.80)")
     parser.add_argument("--algorithms", type=str, default="rh,rh-noearly,lp-backshift",
                         help="Thuật toán phân cách bởi dấu phẩy")
-    parser.add_argument("--tau", type=float, default=float("inf"),
-                        help="Ngưỡng rebuild cho lp-tomb")
+    parser.add_argument("--tau", type=float, default=None,
+                        help="Ngưỡng rebuild cho lp-tomb (mặc định: 0.1 cho alpha=0.8, 0.2 cho alpha=0.5)")
     parser.add_argument("--git-commit", type=str, default="local",
                         help="Mã commit của mã nguồn benchmark")
 
@@ -403,13 +435,15 @@ if __name__ == "__main__":
     algorithms = [algo.strip() for algo in args.algorithms.split(",") if algo.strip()]
     if args.m <= 0 or args.m & (args.m - 1):
         parser.error("--m must be a positive power of two")
+    if not (0 < args.alpha < 1.0):
+        parser.error("--alpha must be strictly between 0 and 1")
     if not algorithms:
         parser.error("--algorithms must contain at least one algorithm")
     supported_algorithms = {"lp-tomb", "lp-backshift", "rh", "rh-noearly"}
     unsupported_algorithms = set(algorithms) - supported_algorithms
     if unsupported_algorithms:
         parser.error(f"unsupported RQ3 algorithms: {', '.join(sorted(unsupported_algorithms))}")
-    if not (0 < args.tau <= 1 or (math.isinf(args.tau) and args.tau > 0)):
+    if args.tau is not None and not (0 < args.tau <= 1 or (math.isinf(args.tau) and args.tau > 0)):
         parser.error("--tau must be in (0, 1] or Infinity")
 
     if not os.path.exists(jar_path):
@@ -434,6 +468,7 @@ if __name__ == "__main__":
             custom_cycles=custom_cycles,
             repeats_count=args.repeats,
             table_capacity=args.m,
+            alpha=args.alpha,
             algorithms=algorithms,
             tombstone_tau=args.tau,
             git_commit=args.git_commit,
@@ -441,4 +476,4 @@ if __name__ == "__main__":
     elif args.rq == "ALL":
         run_rq2_benchmarks(jar_path, quick=args.quick, timeout_sec=args.timeout, custom_seeds=custom_seeds)
         rq3_csv = output_path or get_default_results_path()
-        run_rq3_benchmarks(jar_path, rq3_csv, quick=args.quick, timeout_sec=args.timeout, custom_seeds=custom_seeds)
+        run_rq3_benchmarks(jar_path, rq3_csv, quick=args.quick, timeout_sec=args.timeout, custom_seeds=custom_seeds, alpha=args.alpha)
