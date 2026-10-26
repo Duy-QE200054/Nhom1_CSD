@@ -68,8 +68,30 @@ Chiến dịch hoàn tất dữ liệu ngày 25/10 thực hiện đo đạc 4 c�
 - Toàn bộ 288/288 lượt chạy đạt trạng thái `ok`, kiểm tra chéo `output_check` khớp chính xác 100% giữa tất cả các thuật toán cùng seed và mốc churn.
 - Kết quả lưu tại [rq3_20261025.csv](./rq3_20261025.csv). Bản sao lưu nguyên gốc đạt mốc M5 được lưu tại [rq3_results_backup_20261025.csv](./rq3_results_backup_20261025.csv).
 
-Lệnh tái lập từ thư mục gốc repository:
 
-```powershell
-python bench\run_all.py --rq RQ3 --m 1048576 --alpha 0.80 --cycles 0,262144,524288,1048576,2097152,4194304 --algorithms lp-tomb,lp-backshift,rh,rh-noearly --tau 0.1 --seeds 42,1337,20261019 --repeats 1 --output results\raw\rq3_20261025.csv
-```
+## 5. Dữ Liệu RQ2: Tích Tụ Tombstone & Clean Table (Cặp 2 - C2)
+
+File lưu trữ: [rq2_results.csv](./rq2_results.csv) (bản sao lưu nguyên gốc: [rq2_results_backup.csv](./rq2_results_backup.csv)).
+- **Mục tiêu nghiên cứu**: Câu hỏi RQ2 - Định lượng sự suy giảm hiệu năng do tích tụ tombstone khi không rebuild ($\tau = \infty$) so với bảng đối chứng sạch (*Clean Table*) qua các chu kỳ xóa-thêm (churn).
+- **Môi trường đo**:
+  - Dung lượng bảng: $M = 2^{20} = 1,048,576$ slots
+  - Hệ số tải sống: $\alpha = 0.50$ ($N = 524,288$ keys)
+  - Ngưỡng rebuild: $\tau = \infty$ (không tự động rebuild)
+  - 6 mốc churn: $C \in \{0, 262144, 524288, 1048576, 2097152, 4194304\}$ ($0, 0.25M, 0.5M, M, 2M, 4M$)
+  - Biến thể: `base` (bảng tích tụ tombstone) và `clean_table` (bảng sạch đối chứng chứa đúng tập khóa sống)
+  - Loại truy vấn: `hit` (tra cứu toàn bộ khóa sống) và `miss` (tra cứu khóa vắng mặt)
+  - Chế độ đo: `count` (đo số bước dò `ops_count`) và `time` (đo thời gian `elapsed_ms`)
+  - Tổng số cấu hình đo: $6 \text{ mốc } \times 2 \text{ biến thể } \times 2 \text{ query } \times 2 \text{ mode } = 48$ lượt chạy độc lập.
+
+- **Kết quả nghiệm thu nhiệm vụ [Cả nhóm] đối với RQ2 (Chủ Nhật 25/10/2026)**:
+  1. **Kiểm tra chéo `output_check`**:
+     - 100% khớp chính xác giữa `base` và `clean_table` cho tất cả các mốc churn $C$ ở cả truy vấn `hit` và `miss`.
+     - 100% khớp chính xác giữa chế độ `count` và `time`.
+     - Đối chiếu chéo với các thuật toán RQ3 (`lp-backshift`, `rh`, `rh-noearly`) cùng seed 42 và workload: `output_check` khớp hoàn toàn ở tất cả các mốc $C > 0$.
+  2. **Trạng thái mốc lỗi/timeout/ngoại lệ**:
+     - 48/48 lượt chạy đạt trạng thái `ok`.
+     - 0 lượt bị `timeout` (giới hạn 60s), 0 lượt bị `crash`, 0 lượt bị `oom`. Mốc tải nặng nhất ($C = 4M$, miss search) chỉ mất 5.85s. Không có mốc nào cần chạy lại.
+  3. **Mốc cứng sao lưu CSV gốc**:
+     - Bản gốc: `rq2_results.csv` (SHA-256: `1327c822969670835e30b8aae1b541488ef092d79b4c8646d00d6d70ac68d62b`)
+     - Bản sao lưu: `rq2_results_backup.csv` (SHA-256: `1327c822969670835e30b8aae1b541488ef092d79b4c8646d00d6d70ac68d62b`)
+     - Hai file đồng nhất 100% về mã băm và kích thước (12,109 bytes).
