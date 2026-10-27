@@ -5,6 +5,37 @@
 
 ---
 
+## TẬP DƯỢT NGÀY 29/10: BA CÂU HỎI TRỌNG TÂM CỦA HỘI ĐỒNG
+
+Phần dưới đây là câu trả lời miệng ngắn (khoảng 20--30 giây/câu). Với câu hỏi ngoài RQ3, C3 nêu cơ chế và số liệu minh họa rồi chuyển C1 trình bày sâu phần RQ1.
+
+### 1. Vì sao Robin Hood giảm phương sai độ dài dò?
+
+**Trả lời miệng:** “Linear Probing có thể để một số khóa bị đẩy đi rất xa trong khi khóa khác ở gần bucket gốc. Robin Hood so sánh DIB khi chèn: khóa đã đi xa hơn sẽ được ưu tiên vị trí, còn khóa bị đẩy tiếp tục dò. Cơ chế này phân phối lại chi phí dò, giảm các trường hợp cực đoan thay vì cam kết làm mọi thao tác nhanh hơn. Trong dữ liệu RQ3, Max DIB cuối workload giảm từ 41 xuống 9 tại $\alpha=0.50$, và từ 195 xuống 25 tại $\alpha=0.80$ khi so `lp-backshift` với Robin Hood. Đây là bằng chứng về độ dịch chuyển cực đại, không phải phép đo trực tiếp phương sai hay percentile latency.”
+
+**Nếu bị hỏi “có phải Robin Hood luôn ít probe hơn?”** Không. Robin Hood có thể tăng công việc chèn do swap và tốn thêm mảng DIB. Lợi ích phụ thuộc tải, tỷ lệ hit/miss và workload; kết quả C3 cho thấy early exit đặc biệt giảm probe ở truy vấn miss, không chứng minh mọi thời gian chạy đều tốt hơn.
+
+### 2. Vì sao tombstone làm truy vấn vắng mặt chậm?
+
+**Trả lời miệng:** “Trong bảng dò tuyến tính, `TOMB` không thể được xem như ô trống: khóa cần tìm có thể nằm phía sau nó, nên truy vấn miss phải tiếp tục dò cho đến khi gặp `EMPTY`. Churn làm nhiều ô không còn là `EMPTY`, khiến điểm kết thúc tìm kiếm bị đẩy xa. Ở RQ2, sau $C=4M$, số ô `EMPTY` còn 0.04% và miss tăng từ 2.499 lên 2,843.373 probe trung bình; bảng sạch cùng tập khóa chỉ khoảng 2.499. Rebuild phục hồi các ô trống nhưng thêm công việc đồng bộ vào lần cập nhật kích hoạt rebuild. Backshift tránh tích tụ tombstone, đổi lại một lần xóa có thể phải dịch chuyển cả cụm.”
+
+**Nếu bị hỏi “backshift có loại bỏ mọi spike không?”** Không nên khẳng định như vậy. Nó loại bỏ các lần rebuild và spike do rebuild; bản thân việc dịch chuyển cụm lúc xóa vẫn có chi phí biến thiên. Trong block profiling, `lp-backshift` cũng có block chậm; kết quả phụ thuộc kích thước block và cấu hình.
+
+### 3. Vì sao Separate Chaining ít probe hơn nhưng đôi khi không nhanh hơn Linear Probing?
+
+**Trả lời miệng (C3 phối hợp C1):** “Probe count đếm đơn vị khác nhau: với Separate Chaining là số node đã thăm, còn với Linear Probing là số slot đã kiểm tra. Một node thường cần lần theo con trỏ tới vùng nhớ có thể phân tán; Linear Probing kiểm tra mảng liên tiếp nên tận dụng locality và hardware prefetch tốt hơn. Vì vậy ít probe hơn không tự động đồng nghĩa ít thời gian hơn. Ví dụ trong bộ đo RQ1 ở $\alpha=0.50$, hit của SC là 1.2503 node và 53.97 ns/op; LP là 1.5033 slot và 36.95 ns/op. Nhưng ở $\alpha=0.75$, phép đo hiện có lại cho SC nhanh hơn LP ở cả hit và miss. Đây là số liệu một lượt, nên kết luận đúng là tốc độ phụ thuộc workload và môi trường; không có thuật toán thắng tuyệt đối.”
+
+**Nếu bị hỏi “SC có luôn chậm hơn không?”** Không. SC có thể phù hợp khi tải cao hoặc phân phối phù hợp; cần so cả thời gian, bộ nhớ và loại truy vấn trên cùng máy. C1 phụ trách giải thích chi tiết bảng RQ1 và chi phí cấp phát node.
+
+### Nhắc nhanh trước khi trả lời
+
+- Nêu cấu hình cùng số liệu nguồn: RQ2 dùng $M=2^{20}$, $\alpha=0.50$, $C=4M$; RQ3 block profiling dùng $M=2^{20}$, $\alpha=0.50/0.80$, $C=4M$.
+- Phân biệt **probe count**, **Max DIB**, **block latency** và **thời gian lookup**; không dùng một đại lượng để thay thế đại lượng khác.
+- Nói rõ các giới hạn: số seed hữu hạn, dữ liệu tổng hợp, một máy; không suy rộng thành bảo đảm SLA hay kết luận phổ quát.
+- Phân vai: C3 trả lời Robin Hood, tombstone/backshift; chuyển C1 trả lời sâu về SC-vs-LP. Cả nhóm cần thống nhất số liệu và tránh khẳng định theo câu hỏi gợi ý nếu dữ liệu không ủng hộ.
+
+---
+
 ### CÂU HỎI 1: VÌ SAO ROBIN HOOD LẠI GIẢM ĐƯỢC PHƯƠNG SAI ĐỘ DÀI DÒ (PROBE VARIANCE REDUCTION)?
 
 #### Bản chất lý thuyết & Cơ chế:
@@ -15,7 +46,7 @@
   + Phần tử bị hoán đổi ($k_{old}$) tiếp tục quá trình chèn với $DIB_{old} + 1$.
 - **Hệ quả Toán học**:
   1. **San phẳng phân phối (Equalization)**: Thuật toán không bao giờ để một phần tử chịu thiệt thòi quá mức trong khi phần tử khác ở ngay home bucket. Độ dài bước dò của các phần tử trong cùng cụm tiệm cận về giá trị trung bình $\mu$.
-  2. **Nén chặt đuôi phân phối (Tail Truncation)**: Độ lệch chuẩn $\sigma$ và phương sai $\sigma^2$ giảm mạnh. Theo bất đẳng thức Chebyshev và Jensen, việc giảm phương sai trực tiếp khống chế độ trễ phân vị cao (tail latency - 99th/99.9th percentile).
+  2. **Giảm các khoảng cách cực đoan**: Cơ chế hoán đổi phân phối lại độ dời giữa các khóa trong cụm, giúp tránh một số khóa chịu phần lớn chi phí dò. Max DIB thấp hơn là dấu hiệu thực nghiệm của đuôi ngắn hơn trong cấu hình đã đo; riêng phương sai và percentile latency cần được tính/đo trực tiếp, không suy ra chỉ từ Max DIB.
 
 #### Số liệu thực chứng từ đồ án:
 - Tại tải $\alpha = 0.50$: Max DIB trong `lp-backshift` là **41**, trong khi Robin Hood nén xuống chỉ còn **9** (giảm **78.0%**).
@@ -29,7 +60,7 @@
 - **Tombstone**: Khi xóa, chỉ đánh dấu ô là `TOMB`. 
   + *Ưu điểm*: Thao tác xóa cực nhanh $\mathcal{O}(1)$.
   + *Nhược điểm chí mạng (RQ2)*: Ô `TOMB` không giải phóng khoảng trống thực sự cho các truy vấn trượt (Miss Query). Miss query bắt buộc phải quét qua toàn bộ chuỗi tombstone để tìm ô `EMPTY`. Khi churn $C \to 4M$, số ô `EMPTY` suy giảm từ $50\%$ xuống còn $0.04\%$, khiến số bước dò miss bùng nổ từ $2.50$ lên **$2,843.37$ bước dò** (tăng $1,137.9\times$).
-  + *Cái giá của Rebuild*: Để cứu vãn, `lp-tomb` phải rebuild định kỳ theo ngưỡng $\tau \cdot M$. Tuy nhiên, rebuild là thao tác dừng toàn bộ hệ thống (Stop-the-world), quét $M$ ô và cấp phát lại. Trong thực nghiệm, mỗi lần rebuild gây ra **đột biến độ trễ (latency spike) từ $10.14 - 13.34$ ms** (tăng vọt $5.4\times - 6.1\times$ so với bình thường, đỉnh điểm lên tới $36.10$ ms), phá vỡ cam kết SLA trong hệ thống thời gian thực.
+  + *Cái giá của Rebuild*: Để cứu vãn, `lp-tomb` rebuild định kỳ theo ngưỡng $\tau \cdot M$. Rebuild thêm công việc quét/tái dựng bảng vào thao tác kích hoạt nó; nếu thực thi đồng bộ, thao tác đó có thể có latency cao hơn các thao tác thường. Trong block profiling, các block có rebuild tăng trung bình khoảng $5.4\times$--$6.1\times$ so với block thường, với đỉnh quan sát $36.10$ ms. Đây là kết quả của cấu hình đo, không đủ để kết luận về SLA hay mọi hệ thống production.
 
 #### Cơ chế của Backward Shift (Knuth Algorithm R):
 - **Xóa dịch lùi (Backward Shift)** dọn dẹp tại chỗ (in-place cluster defragmentation) ngay tại thời điểm xóa:
@@ -39,7 +70,7 @@
   4. Quá trình dừng lại ngay khi gặp ô `EMPTY` hoặc duyệt hết cụm. Lỗ hổng cuối cùng được đánh dấu là `EMPTY`.
 - **Ưu thế vượt trội**:
   - **Zero Tombstone**: Số lượng tombstone trong bảng luôn bằng **0** trong suốt 4 triệu chu kỳ churn.
-  - **Zero Rebuild**: Không bao giờ cần kích hoạt rebuild (**0 lần rebuild**), loại bỏ hoàn toàn các xung đột biến thời gian (spikes), giữ đường độ trễ phẳng lỳ.
+  - **Zero Rebuild**: Không kích hoạt rebuild (**0 lần rebuild**), do đó tránh được các spike gắn với tái dựng toàn bảng. Chi phí dịch chuyển vẫn phát sinh trong thao tác xóa và có thể biến thiên theo độ dài cụm.
   - **Không tốn thêm bộ nhớ**: Thực hiện trực tiếp trên các mảng nguyên thủy hiện có.
 
 ---

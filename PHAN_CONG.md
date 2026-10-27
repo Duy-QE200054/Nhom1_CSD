@@ -55,8 +55,8 @@
     - Số mốc lỗi cần chạy lại: **0 mốc**. Dữ liệu thô hoàn toàn sạch và hợp lệ.
   - **Phân tích RQ3: tổng thời gian, median/max khối, số lần rebuild và bóc tách 3 cơ chế**:
     - Triển khai script đo đạc và điều phối phân tích khối tự động `bench/run_rq3_analysis.py`: ghi nhận chi tiết 3,356 khối $10^4$ thao tác cho $\alpha=0.50$ và 3,356 khối cho $\alpha=0.80$ xuyên suốt $4,194,304$ chu kỳ churn (lưu tại `results/raw/rq3_block_profiling_alpha050.csv` và `results/raw/rq3_block_profiling_alpha080.csv`).
-    - **Cơ chế 1 (Loại bỏ Tombstone)**: `lp-tomb` kích hoạt 14 lần rebuild ở $\alpha=0.50$ và 23 lần rebuild ở $\alpha=0.80$, gây đột biến thời gian khối (rebuild latency spikes) trung bình $10.14 - 13.34$ ms (tăng vọt $5.4\times - 6.1\times$ so với khối bình thường $\approx 1.87 - 2.18$ ms, đỉnh điểm lên tới $36.10$ ms). Ngược lại, `lp-backshift` và `rh` duy trì 0 lần rebuild, 0 tombstones và đường độ trễ phẳng lì ổn định.
-    - **Cơ chế 2 (Hoán đổi theo DIB)**: San phẳng phân phối chuỗi dò, cắt giảm Max DIB từ $41$ xuống $9$ ở $\alpha=0.50$ (giảm $78.0\%$) và từ $195$ xuống $25$ ở $\alpha=0.80$ (giảm $87.2\%$), kiểm soát chặt chẽ tail latency.
+    - **Cơ chế 1 (Loại bỏ Tombstone)**: `lp-tomb` kích hoạt 14 lần rebuild ở $\alpha=0.50$ và 23 lần rebuild ở $\alpha=0.80$, gây đột biến thời gian khối (rebuild latency spikes) trung bình $10.14 - 13.34$ ms (tăng vọt $5.4\times - 6.1\times$ so với khối bình thường $\approx 1.87 - 2.18$ ms, đỉnh điểm lên tới $36.10$ ms). Ngược lại, `lp-backshift` và `rh` duy trì 0 lần rebuild và 0 tombstone; thao tác xóa vẫn có thể tốn thời gian dịch chuyển cụm.
+    - **Cơ chế 2 (Hoán đổi theo DIB)**: San phẳng phân phối độ dời, cắt giảm Max DIB từ $41$ xuống $9$ ở $\alpha=0.50$ (giảm $78.0\%$) và từ $195$ xuống $25$ ở $\alpha=0.80$ (giảm $87.2\%$). Đây là chỉ số cực đại, không phải phép đo trực tiếp phương sai hoặc percentile tail latency.
     - **Cơ chế 3 (Dừng sớm Early Exit)**: Cắt giảm $30.0\%$ số bước dò miss ở $\alpha=0.50$ ($2.499 \to 1.751$) và cắt giảm tới **$73.8\%$** ở $\alpha=0.80$ ($12.933 \to 3.398$). So với `lp-tomb` có rebuild, Robin Hood giảm tới **$83.7\%$** số bước dò miss.
   - **Biểu đồ & Bài báo IEEE**:
     - Cập nhật `bench/plot_figures.py` hỗ trợ cờ `--plot-oct26`: xuất 3 biểu đồ độ phân giải cao tại `results/figures/rq3_20261026/` (`fig_rq3_rebuild_spikes.png`, `fig_rq3_max_dib_comparison.png`, `fig_rq3_mechanism_breakdown.png`).
@@ -103,6 +103,9 @@
     - Cập nhật đề cương slide tổng thể 8 slide (thời lượng 5 phút) tại `slides/outline.md`, phân vai rõ ràng cho 6 thành viên (Cặp 3 chủ trì Slide 7 và Slide 8).
     - Soạn thảo kịch bản thuyết trình chi tiết từng giây cho Cặp 3 tại `slides/rq3_slide_presentation.md` (SV 5 Nguyễn Đình Tiến trình bày Slide 7 trong 75s; SV 6 Lê Hoàng Cầu trình bày Slide 8 trong 30s).
     - Soạn thảo cẩm nang bộ câu hỏi phản biện bảo vệ chuyên sâu cho Cặp 3 tại `slides/defense_qa_c3.md`: Giải thích cặn kẽ bản chất toán học giảm phương sai DIB, ưu thế vượt trội của Knuth Algorithm R so với Sedgewick và Rebuild, cơ chế dừng sớm Early Exit và mức tiết kiệm $73.8\%$ bước dò miss ở tải cao.
-
-
+- [x] **Thứ Năm (29/10/2026) - Chuẩn bị tập dượt vấn đáp (Cặp 3 - C3)**:
+  - Bổ sung câu trả lời miệng ngắn cho ba câu hỏi trọng tâm của nhóm: Robin Hood giảm độ dời cực đại như thế nào; vì sao tombstone làm miss chậm; vì sao probe count thấp của Separate Chaining không luôn đồng nghĩa thời gian thấp.
+  - Rà soát lời thoại Slide 7/8 và câu trả lời để phân biệt probe count, Max DIB, block latency và lookup time; bỏ các khẳng định chưa được phép đo xác nhận (phương sai/percentile trực tiếp, bảo đảm SLA, “không có spike” tuyệt đối).
+  - Tài liệu dùng để các thành viên tập dượt: `slides/defense_qa_c3.md`, `slides/rq3_slide_presentation.md`, `slides/outline.md`.
+  - **Phạm vi hoàn tất**: đã chuẩn bị và chỉnh tài liệu; buổi tập dượt trực tiếp của cả nhóm cần các thành viên thực hiện cùng nhau.
 

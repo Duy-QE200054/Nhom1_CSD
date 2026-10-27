@@ -30,11 +30,11 @@
 >
 > *Từ kết quả RQ2, chúng ta đã thấy Tombstone tàn phá bảng băm ra sao. Nhóm em đã thiết kế biến thể ablation `rh-noearly` kết hợp cùng `lp-backshift` để cô lập chính xác giá trị của từng cơ chế kỹ thuật:*
 >
-> * **Thứ nhất - Loại bỏ Tombstone bằng Xóa dịch lùi (Knuth Algorithm R)**: Khi so sánh `lp-tomb` với `lp-backshift`, ta thấy ở $\alpha=0.50$ và $\alpha=0.80$, `lp-tomb` phải rebuild lần lượt 14 và 23 lần, tạo ra các xung đột biến thời gian (latency spikes) lên tới $36.10$ ms, gấp $5.4\times$ đến $6.1\times$ khối bình thường. Ngược lại, việc dịch lùi in-place triệt tiêu 100% tombstone, duy trì **0 lần rebuild**, bảo đảm thông lượng phẳng lỳ và ổn định tuyệt đối.
+> * **Thứ nhất - Loại bỏ Tombstone bằng Xóa dịch lùi (Knuth Algorithm R)**: Trong chiến dịch đo, `lp-tomb` rebuild 14 lần ở $\alpha=0.50$ và 23 lần ở $\alpha=0.80$. Các block có rebuild chậm trung bình khoảng $5.4\times$--$6.1\times$ so với block thường, đỉnh quan sát là $36.10$ ms. `lp-backshift` không giữ tombstone và không rebuild, nhưng đổi lại phải dịch chuyển phần tử ngay khi xóa; vì vậy phương pháp này loại bỏ spike do rebuild chứ không đảm bảo mọi block đều nhanh hay phẳng.
 >
-> * **Thứ hai - San phẳng phương sai chuỗi dò nhờ Hoán đổi DIB (Robin Hood Swapping)**: So sánh `lp-backshift` với `rh-noearly` cho thấy: dù cả hai đều không có tombstone, nhưng `lp-backshift` để các cụm phình to tự do, đẩy Max DIB lên 41 ở tải vừa và **195** ở tải cao. Thuật toán Robin Hood 'lấy của người giàu chia cho người nghèo' đã nén chặt Max DIB xuống chỉ còn **9** (giảm 78.0%) và **25** (giảm 87.2%), khống chế triệt để tail latency.
+> * **Thứ hai - Phân phối lại độ dời bằng Hoán đổi DIB (Robin Hood Swapping)**: So sánh `lp-backshift` với `rh-noearly` cho thấy: dù cả hai đều không có tombstone, Max DIB của `lp-backshift` đạt 41 ở tải vừa và **195** ở tải cao. Robin Hood swapping giảm Max DIB đo được còn **9** (giảm 78.0%) và **25** (giảm 87.2%). Đây là chỉ số độ dời cực đại; chúng em không suy diễn trực tiếp thành percentile latency vì chưa đo percentile.
 >
-> * **Thứ ba - Tăng tốc tra cứu bằng Cơ chế Dừng sớm (Early Exit)**: So sánh `rh-noearly` với `rh` nguyên bản cho thấy quy tắc dừng sớm $DIB_{probe} > DIB_{slot}$ là 'vũ khí tối thượng' cho các truy vấn trượt (Miss Query). Ở tải vừa, nó tiết kiệm 30.0% số bước dò; và ở tải cao $\alpha=0.80$, nó cắt giảm tới **73.8% số bước dò miss** (từ 12.93 xuống chỉ còn 3.40 bước dò). So với Linear Probing dùng tombstone có rebuild, Robin Hood giảm tới **83.7% chi phí dò tìm**.
+> * **Thứ ba - Cơ chế Dừng sớm (Early Exit)**: So sánh `rh-noearly` với `rh` cho thấy quy tắc dừng khi $DIB_{probe} > DIB_{slot}$ giảm số probe miss khoảng 30.0% ở tải vừa và **73.8%** ở $\alpha=0.80$ (từ 12.933 xuống 3.398 probe trung bình). Đây là lợi ích về probe count trong workload đã đo, không đồng nghĩa chắc chắn với cải thiện thời gian chạy.
 >
 > *Sau đây, bạn Lê Hoàng Cầu sẽ trình bày phần khuyến nghị kỹ thuật và kết luận của nhóm."*
 
@@ -51,6 +51,6 @@
 >
 > 1. *Với hệ thống **Append-mostly** (chủ yếu thêm, ít xóa) ở tải vừa ($\alpha \le 0.50$): **Linear Probing thông thường** là tối ưu nhất vì chi phí CPU thấp, tận dụng trọn vẹn phần cứng cache prefetching.*
 > 2. *Với hệ thống có **xóa định kỳ nhưng tài nguyên bộ nhớ hạn hẹp**: **Linear Probing Backshift (Knuth Algorithm R)** là lựa chọn vượt trội vì dọn dẹp cụm tại chỗ, không tốn thêm byte bộ nhớ nào cho mảng DIB và không bị đóng băng hệ thống do Rebuild.*
-> 3. *Với hệ thống **Giao dịch tài chính / Microservices chịu tải cao ($\alpha \ge 0.80$)** có tỷ lệ truy vấn trượt (Miss queries) lớn: **Robin Hood Hashing toàn diện** là giải pháp bắt buộc. Dù tiêu tốn thêm mảng `int[] dib`, Robin Hood bảo vệ hệ thống không bị nghẽn mạch, cắt giảm 73.8% độ sâu dò tìm và triệt tiêu hoàn toàn rủi ro suy thoái.*
+> 3. *Với hệ thống có tải cao và nhiều truy vấn trượt, **Robin Hood Hashing toàn diện** là một phương án đáng cân nhắc. Trong workload đo tại $\alpha=0.80$, early exit giảm 73.8% số probe miss so với `rh-noearly`; cần benchmark lại trên dữ liệu, phần cứng và mục tiêu độ trễ thực tế trước khi chọn.*
 >
 > *Nhóm 1 xin chân thành cảm ơn Thầy/Cô và sẵn sàng trả lời các câu hỏi phản biện!"*

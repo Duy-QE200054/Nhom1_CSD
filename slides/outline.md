@@ -52,8 +52,9 @@
 - Đo đạc khoa học: Đo trong process JVM riêng biệt, timeout an toàn 60s, tách biệt hoàn toàn lượt `--count` (bước dò chính xác) và lượt `--mode time` (đo mili-giây).
 
 #### Slide 5: Kết quả RQ1 (Separate Chaining vs Linear Probing)
-- Biểu đồ số bước dò theo $\alpha$: `sc` có số bước dò thấp hơn $1 + \alpha/2$, nhưng thời gian tra cứu không nhanh hơn LP ở tải vừa.
-- Phân tích chi phí cấp phát đối tượng `Node`: Overhead $24-32$ bytes/node, trỏ tham chiếu ngẫu nhiên làm mất tính cache locality so với mảng nguyên thủy liên tục của LP.
+- Phân biệt đơn vị probe: SC đếm số node đã thăm, LP đếm số slot đã kiểm tra; số probe ít hơn không đồng nghĩa chắc chắn nhanh hơn.
+- Phân tích chi phí cấp phát đối tượng `Node`: SC cần node và liên kết tham chiếu cho từng khóa; pointer chasing có thể kém locality hơn mảng nguyên thủy liên tục của LP.
+- Trả lời theo cấu hình đo, không nói SC luôn chậm hơn: kết quả thời gian thay đổi theo tải và loại truy vấn; xem [defense_qa_c3.md](defense_qa_c3.md) để thống nhất câu trả lời.
 
 #### Slide 6: Kết quả & Phân tích RQ2 (Cái giá của Tombstone khi không Rebuild - Cặp 2 chủ trì)
 *(Chi tiết kịch bản thuyết trình và slide layout có tại [Slide_RQ2_Thuyet_Trinh.md](file:///C:/Users/Hi/.gemini/antigravity-ide/scratch/Nhom1_CSD/slides/Slide_RQ2_Thuyet_Trinh.md))*
@@ -61,17 +62,17 @@
 - **Hiện tượng cạn kiệt ô `EMPTY`**: Tại $C = 4M$, ô `EMPTY` suy giảm từ $50\%$ xuống chỉ còn **$0.04\%$**.
 - **Bùng nổ bước dò**: Số bước dò miss tăng vọt từ $2.50$ lên **$2,843.37$ bước dò** (tăng $1,137.9\times$) và độ trễ tăng $233.3\times$ ($22.8 \to 5847.5$ ms).
 - **Bảng đối chứng Clean Table**: Giữ nguyên $1.50$ hit / $2.50$ miss probes (khớp chuẩn Knuth), chứng minh $100\%$ suy thoái là do tombstone.
-- **Phân tích tiệm cận & Rebuild**: Khi $C \to \infty$, độ phức tạp trượt về $\mathcal{O}(M)$ quét toàn bảng. Khẳng định cơ chế Rebuild định kỳ theo ngưỡng $\tau \cdot M$ ($\tau \in [0.10, 0.20]$) là giải pháp bắt buộc.
+- **Phân tích tiệm cận & Rebuild**: Khi số ô `EMPTY` tiến gần 0, miss của LP dùng tombstone có thể phải dò gần hết bảng ($\mathcal{O}(M)$). Với biến thể tombstone, rebuild theo ngưỡng là một cách khôi phục ô trống; backshift là một lựa chọn khác để tránh tích tụ tombstone.
 
 #### Slide 7: Kết quả & Phân tích RQ3 (Bóc tách 3 Cơ chế Robin Hood Hashing - Cặp 3 chủ trì)
 *(Chi tiết kịch bản thuyết trình có tại [rq3_slide_presentation.md](file:///C:/Users/Hi/.gemini/antigravity-ide/scratch/Nhom1_CSD/slides/rq3_slide_presentation.md))*
-- **Cơ chế 1 (Loại bỏ Tombstone)**: `lp-backshift` triệt tiêu 100% tombstone, 0 lần rebuild, loại bỏ hoàn toàn các đỉnh đột biến thời gian $10.14 - 13.34$ ms (đỉnh $36.10$ ms) của `lp-tomb`.
-- **Cơ chế 2 (Hoán đổi theo DIB)**: San phẳng phân phối, nén Max DIB từ 41 xuống 9 ở $\alpha=0.50$ (giảm 78.0%) và từ 195 xuống 25 ở $\alpha=0.80$ (giảm 87.2%), khống chế tail latency.
-- **Cơ chế 3 (Dừng sớm Early Exit)**: Cắt giảm 30.0% bước dò miss ở tải vừa và **73.8% ở tải cao $\alpha=0.80$** ($12.93 \to 3.40$ bước dò). Giảm 83.7% bước dò so với `lp-tomb`.
+- **Cơ chế 1 (Loại bỏ Tombstone)**: `lp-backshift` không giữ tombstone và không rebuild; tránh spike do rebuild nhưng vẫn có chi phí dịch chuyển cụm khi xóa.
+- **Cơ chế 2 (Hoán đổi theo DIB)**: Max DIB đo được giảm từ 41 xuống 9 ở $\alpha=0.50$ (78.0%) và từ 195 xuống 25 ở $\alpha=0.80$ (87.2%); Max DIB là chỉ số cực đại, không phải phép đo trực tiếp phương sai hay percentile latency.
+- **Cơ chế 3 (Dừng sớm Early Exit)**: Cắt giảm 30.0% bước dò miss ở tải vừa và **73.8% ở tải cao $\alpha=0.80$** ($12.933 \to 3.398$ probes); đây là số probe, không mặc nhiên là speedup theo thời gian.
 
 #### Slide 8: Khuyến nghị Kỹ thuật, Kết luận & Hướng phát triển - Cặp 3 chủ trì
 - **Ma trận quyết định kiến trúc**:
   - Workload thêm là chính, ít xóa ($\alpha \le 0.50$): Chọn **Linear Probing chuẩn**.
   - Workload xóa định kỳ, bộ nhớ eo hẹp: Chọn **Linear Probing Backshift (Knuth Algorithm R)**.
   - Workload giao dịch tải cao ($\alpha \ge 0.80$), nhiều truy vấn vắng mặt: Chọn **Robin Hood Hashing toàn diện**.
-- **Cẩm nang câu hỏi phản biện bảo vệ**: [defense_qa_c3.md](file:///C:/Users/Hi/.gemini/antigravity-ide/scratch/Nhom1_CSD/slides/defense_qa_c3.md).
+- **Cẩm nang câu hỏi phản biện bảo vệ**: [defense_qa_c3.md](defense_qa_c3.md), gồm câu trả lời tập dượt ngày 29/10.
