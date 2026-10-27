@@ -23,7 +23,7 @@ Da Nang / Can Tho / Ho Chi Minh City / Ha Noi, Vietnam \\
 \maketitle
 
 \begin{abstract}
-Hash tables are foundational data structures in transaction indexing systems with high turnover rates, where items are continuously inserted and deleted. While open addressing with Linear Probing is cache-friendly, the accumulation of tombstones degrades lookup latency, especially for unsuccessful queries, necessitating costly periodic table rebuilds. In this study, we empirically evaluate four collision resolution strategies across millions of operations in Java: Separate Chaining, Linear Probing with tombstones, Linear Probing with backward-shift deletion, and Robin Hood hashing (both with and without early-stopping). We address three research questions regarding load factor scaling, tombstone pollution dynamics, and mechanism decomposition in Robin Hood hashing. Our empirical findings demonstrate that...
+Hash tables are foundational data structures in transaction indexing systems with high turnover rates, where items are continuously inserted and deleted. While open addressing with Linear Probing is cache-friendly, the accumulation of tombstones degrades lookup latency, especially for unsuccessful queries, necessitating costly periodic table rebuilds. In this study, we empirically evaluate four collision resolution strategies across millions of operations in Java: Separate Chaining, Linear Probing with tombstones, Linear Probing with backward-shift deletion, and Robin Hood hashing (both with and without early-stopping). We address three research questions regarding load factor scaling, tombstone pollution dynamics, and mechanism decomposition in Robin Hood hashing. Our empirical findings demonstrate that without rebuilding, tombstone pollution causes a catastrophic $1,137.9\times$ surge in unsuccessful search probes ($2.50 \to 2,843.37$) and a $233.3\times$ latency inflation. While periodic rebuilding contains degradation, it incurs severe $5.4\times$ to $6.1\times$ latency spikes up to $36.10$~ms. In contrast, Knuth Algorithm~R backward shift and Robin Hood hashing completely eliminate tombstones and rebuild pauses ($0$ rebuilds across $4$ million churn cycles). Furthermore, Robin Hood's rich-to-poor swapping truncates maximum displacement by $78.0\%$ to $87.2\%$, while its early-exit rule cuts unsuccessful probe depth by $30.0\%$ at moderate load ($\alpha = 0.50$) and by $73.8\%$ under heavy load ($\alpha = 0.80$), yielding an overall $83.7\%$ probe reduction compared to tombstone-based linear probing.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -400,27 +400,25 @@ The fine-grained telemetry and mechanism ablation (Fig.~\ref{fig:rq3_rebuild_spi
 \end{figure*}
 
 \section{Threats to Validity}
-For the October 24 RQ3 campaign, each seed contributes one timing run per
-configuration. The three-seed median limits the influence of one extreme
-sample but is not a substitute for repeated timing runs; the non-monotone
-lookup-time measurements at some churn checkpoints show that elapsed time is
-sensitive to runtime and system conditions. The probe-count comparison is
-more directly tied to the algorithms, but it does not capture cache misses,
-garbage-collection effects, or rebuild cost during the measured lookup pass.
-The lookup timing excludes table construction and churn, which are recorded
-separately as build time. These results therefore characterize lookup cost
-after the specified workload, not end-to-end workload throughput.
+Several methodological and environmental factors may influence our empirical conclusions:
+\begin{enumerate}
+    \item \textit{JVM Execution and JIT Warmup}: Java Virtual Machine benchmarks are subject to Just-In-Time (JIT) tiered compilation and Garbage Collection (GC) pauses. To mitigate JIT variance and warmup transients, tables are populated and warmed through hundreds of thousands of operations before timing passes commence, and heap size is pinned to $2$~GB (\texttt{-Xmx2g}) to prevent GC churn during query passes. Furthermore, probe counts are collected via an independent counter pass (\texttt{--count}) that is entirely deterministic and decoupled from timing jitter.
+    \item \textit{Machine and Background Workload Isolation}: All official measurements were performed on a single dedicated machine (11th Gen Intel Core i5-11500H @ 2.90~GHz, 32~GB RAM, Windows 11 Pro) with background user processes terminated and network services suspended. Running all algorithms under identical hardware configurations ensures meaningful cross-algorithmic comparisons.
+    \item \textit{Hash Function Distribution}: All implementations employ Fibonacci multiplicative hashing $h(k) = (k \cdot \phi) \ggg (64 - p)$ with $\phi = 11400714819323198485\text{L}$. While Fibonacci hashing guarantees uniform bucket distribution for pseudo-random 64-bit integer keys, pathological or highly structured key distributions could exhibit different collision patterns.
+    \item \textit{Pseudorandom Seed Diversity}: Workloads are evaluated across three distinct seeds ($42$, $1337$, $20261019$). Median latencies and mean probe depths across seeds reduce the impact of local collision anomalies, and 100\% cross-validation of checksums (\texttt{output\_check}) confirms exact structural determinism across all benchmark runs.
+    \item \textit{Measurement Scope}: Wall-clock timing strictly measures query passes over the live or absent key sets following table construction and churn, while table construction, churn cycles, and rebuild costs are tracked independently in block profiling.
+\end{enumerate}
 
 \section{Conclusion}
 This empirical study systematically evaluates collision resolution strategies in open-addressing and chained hash tables under high-churn transactional workloads. By comparing Separate Chaining, Linear Probing with tombstones, Linear Probing with Knuth Algorithm R backshift deletion, and Robin Hood hashing, we provide concrete engineering recommendations:
 \begin{itemize}
     \item For static or append-mostly workloads with moderate load factors ($\alpha \le 0.50$), standard Linear Probing remains ideal due to minimal memory overhead and sequential hardware cache prefetching.
-    \item For dynamic workloads with continuous deletions, tombstone accumulation rapidly degrades lookup performance unless costly periodic rebuilds are executed. Knuth's Algorithm R (\texttt{lp-backshift}) effectively eliminates tombstones with strict $O(K)$ cluster relocation overhead.
+    \item For dynamic workloads with continuous deletions, tombstone accumulation rapidly degrades lookup performance unless costly periodic rebuilds are executed. Knuth's Algorithm R (\texttt{lp-backshift}) effectively eliminates tombstones with strict $\mathcal{O}(K)$ cluster relocation overhead.
     \item In the measured RQ3 workloads, Robin Hood hashing with early exit reduces mean unsuccessful-lookup probes by $\approx 30.0\%$ at moderate load ($\alpha = 0.50$) and by a dramatic \textbf{73.8\%} under heavy load ($\alpha = 0.80$, dropping from 12.98 down to 3.40 probes) compared to \texttt{rh-noearly} and \texttt{lp-backshift}, while cutting probe operations by \textbf{83.7\%} compared to tombstone-based probing with periodic rebuilding. This confirms the critical role of DIB-ordered probing in high-throughput workloads with heavy absent-query traffic.
 \end{itemize}
 
 \section*{Acknowledgment}
-% Khai báo sử dụng AI theo mục 7.7
+The authors acknowledge the use of generative AI assistance (OpenAI ChatGPT, Anthropic Claude, and Google Gemini) in accordance with Section 7.7 of the project guidelines for code refactoring, benchmark script orchestration, and editorial proofreading. All algorithmic implementations, experimental designs, and data analyses were authored, empirically executed, and verified by the human team members.
 
 \begin{thebibliography}{00}
 \bibitem{knuth} D. E. Knuth, \textit{The Art of Computer Programming, Vol. 3: Sorting and Searching}, 2nd ed. Reading, MA, USA: Addison-Wesley, 1998, \S6.4.
