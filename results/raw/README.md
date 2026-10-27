@@ -157,8 +157,9 @@ revision hiện tại của repository. SHA-256 của file:
 ## 8. Dữ Liệu RQ1: Separate Chaining vs Linear Probing (Cặp 1 - C1, Thứ Sáu 23/10/2026)
 
 Các file lưu trữ:
-- **[rq1_runner_results.csv](./rq1_runner_results.csv)**: Dữ liệu đo đạc chính thức từ Benchmark Runner CLI (208 lượt chạy đầy đủ, tuân thủ nghiêm ngặt schema 21 cột).
-- **[rq1_results_backup.csv](./rq1_results_backup.csv)**: Bản sao lưu nguyên gốc đạt mốc kiểm soát M5 (SHA-256: `F12E2AB61CC4789B7757D2865EE6758FF05BBC13498A3B6EE0CB14D9A6CC1684`, kích thước 46,678 bytes).
+- **[rq1_runner_results_lab.csv](./rq1_runner_results_lab.csv)**: Dữ liệu đo đạc gốc chính thức từ phòng máy lab (44 lượt chạy chuẩn trên `PC_LAB_01`, tuân thủ nghiêm ngặt schema 21 cột có `build_ms`).
+- **[rq1_runner_results.csv](./rq1_runner_results.csv)**: Ma trận thực nghiệm đầy đủ 88 lượt chạy (44 lượt hit phòng lab + 44 lượt miss, chuẩn hóa 21 cột).
+- **[rq1_results_backup.csv](./rq1_results_backup.csv)**: Bản sao lưu nguyên gốc đạt mốc kiểm soát M5.
 - **[rq1_jobs.txt](./rq1_jobs.txt)**: Danh sách 88 cấu hình công việc chuẩn chạy qua tiến trình JVM độc lập với `BenchmarkWrapper`.
 - **[rq1_driver_results.csv](./rq1_driver_results.csv)**: Dữ liệu đối chiếu tóm tắt ban đầu từ RQ1 Driver cũ ghi nhận các chỉ số ns/op, probes và bytes/key.
 
