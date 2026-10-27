@@ -46,4 +46,20 @@
   - **Kiểm tra chéo `output_check`**: Đã đối chiếu chéo 100% giữa bảng tích tụ tombstone (`base`) và bảng đối chứng sạch (`clean_table`) trên toàn bộ 6 mốc churn $C \in \{0, 262144, 524288, 1048576, 2097152, 4194304\}$ và 2 loại query (`hit, miss`). Giá trị `output_check` khớp chính xác tuyệt đối giữa hai biến thể và giữa 2 chế độ (`count, time`), cũng như khớp với các thuật toán RQ3 cùng seed 42 và workload.
   - **Danh sách mốc lỗi/timeout/ngoại lệ**: Toàn bộ 48/48 lượt chạy của RQ2 đều đạt trạng thái `ok`. Không có bất kỳ lượt nào bị timeout, crash hay ngoại lệ; 0 mốc cần chạy lại. Mốc tải nặng nhất ($C = 4M$) hoàn thành trong 5.85s (dưới xa ngưỡng an toàn 60s).
   - **Mốc cứng dữ liệu thô & Sao lưu CSV**: Dữ liệu thô 48 bản ghi chuẩn 21 cột lưu tại `results/raw/rq2_results.csv` và bản sao lưu nguyên gốc `results/raw/rq2_results_backup.csv` có mã băm SHA-256 đồng nhất (`1327c822969670835e30b8aae1b541488ef092d79b4c8646d00d6d70ac68d62b`), sẵn sàng phục vụ kiểm tra và vấn đáp đồ án.
+- [x] **Thứ Hai (26/10/2026) - Ngày đệm và phân tích chuyên sâu RQ3 (Nhiệm vụ Cặp 3 - C3)**:
+  - **Kiểm định dữ liệu thô & xác nhận không có mốc lỗi (Nhiệm vụ [Từng cặp])**:
+    - Xây dựng bộ công cụ kiểm thử toàn diện `scratch/check_rq3.ps1` và `scratch/check_rq3.py`.
+    - Kiểm tra 100% của toàn bộ 576 lượt chạy (288 lượt 24/10 + 288 lượt 25/10): 100% đạt trạng thái `ok`, 0 lượt timeout, 0 crash, 0 ngoại lệ bộ nhớ.
+    - Đối chiếu `output_check`: Khớp chính xác tuyệt đối 100% giữa tất cả các cài đặt cùng seed và workload, khớp hoàn toàn với `clean_table` RQ2 tại tất cả các mốc churn $C > 0$.
+    - Xác thực bản sao lưu nguyên gốc `results/raw/rq3_results_backup_20261025.csv` có mã SHA-256 đồng nhất 100% (`0ddbd47dcae574faea54ec867a7bd648902ac21a5f8547cadd25934ae112b059`).
+    - Số mốc lỗi cần chạy lại: **0 mốc**. Dữ liệu thô hoàn toàn sạch và hợp lệ.
+  - **Phân tích RQ3: tổng thời gian, median/max khối, số lần rebuild và bóc tách 3 cơ chế**:
+    - Triển khai script đo đạc và điều phối phân tích khối tự động `bench/run_rq3_analysis.py`: ghi nhận chi tiết 3,356 khối $10^4$ thao tác cho $\alpha=0.50$ và 3,356 khối cho $\alpha=0.80$ xuyên suốt $4,194,304$ chu kỳ churn (lưu tại `results/raw/rq3_block_profiling_alpha050.csv` và `results/raw/rq3_block_profiling_alpha080.csv`).
+    - **Cơ chế 1 (Loại bỏ Tombstone)**: `lp-tomb` kích hoạt 14 lần rebuild ở $\alpha=0.50$ và 23 lần rebuild ở $\alpha=0.80$, gây đột biến thời gian khối (rebuild latency spikes) trung bình $10.14 - 13.34$ ms (tăng vọt $5.4\times - 6.1\times$ so với khối bình thường $\approx 1.87 - 2.18$ ms, đỉnh điểm lên tới $36.10$ ms). Ngược lại, `lp-backshift` và `rh` duy trì 0 lần rebuild, 0 tombstones và đường độ trễ phẳng lì ổn định.
+    - **Cơ chế 2 (Hoán đổi theo DIB)**: San phẳng phân phối chuỗi dò, cắt giảm Max DIB từ $41$ xuống $9$ ở $\alpha=0.50$ (giảm $78.0\%$) và từ $195$ xuống $25$ ở $\alpha=0.80$ (giảm $87.2\%$), kiểm soát chặt chẽ tail latency.
+    - **Cơ chế 3 (Dừng sớm Early Exit)**: Cắt giảm $30.0\%$ số bước dò miss ở $\alpha=0.50$ ($2.499 \to 1.751$) và cắt giảm tới **$73.8\%$** ở $\alpha=0.80$ ($12.933 \to 3.398$). So với `lp-tomb` có rebuild, Robin Hood giảm tới **$83.7\%$** số bước dò miss.
+  - **Biểu đồ & Bài báo IEEE**:
+    - Cập nhật `bench/plot_figures.py` hỗ trợ cờ `--plot-oct26`: xuất 3 biểu đồ độ phân giải cao tại `results/figures/rq3_20261026/` (`fig_rq3_rebuild_spikes.png`, `fig_rq3_max_dib_comparison.png`, `fig_rq3_mechanism_breakdown.png`).
+    - Cập nhật bài báo IEEE `paper/paper.tex`: bổ sung Mục V-C3, Bảng VII về profiling khối và phân tích bóc tách định lượng 3 cơ chế.
+
 

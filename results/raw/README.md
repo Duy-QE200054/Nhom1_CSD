@@ -95,3 +95,31 @@ File lưu trữ: [rq2_results.csv](./rq2_results.csv) (bản sao lưu nguyên g�
      - Bản gốc: `rq2_results.csv` (SHA-256: `1327c822969670835e30b8aae1b541488ef092d79b4c8646d00d6d70ac68d62b`)
      - Bản sao lưu: `rq2_results_backup.csv` (SHA-256: `1327c822969670835e30b8aae1b541488ef092d79b4c8646d00d6d70ac68d62b`)
      - Hai file đồng nhất 100% về mã băm và kích thước (12,109 bytes).
+
+---
+
+## 6. Dữ Liệu Phân Tích Chuyên Sâu Khối 10⁴ Thao Tác & Rebuild (Cặp 3 - C3, Ngày 26/10/2026)
+
+Theo đúng yêu cầu kế hoạch ngày 26/10 của Cặp 3 (`[C3] Phân tích RQ3: tổng thời gian, median/max khối, số lần rebuild; tách đóng góp của backshift, hoán đổi, dừng sớm`), toàn bộ dữ liệu micro-profiling theo khối $10^4$ thao tác xuyên suốt $C = 4M$ chu kỳ churn ($8.39 \times 10^6$ thao tác xóa-thêm) được lưu trữ tại:
+
+- **[rq3_block_profiling_alpha050.csv](./rq3_block_profiling_alpha050.csv)**: 3,356 bản ghi khối (839 khối $\times$ 4 thuật toán) tại $\alpha = 0.50$, $\tau = 0.20$ cho `lp-tomb`.
+- **[rq3_block_profiling_alpha080.csv](./rq3_block_profiling_alpha080.csv)**: 3,356 bản ghi khối (839 khối $\times$ 4 thuật toán) tại $\alpha = 0.80$, $\tau = 0.10$ cho `lp-tomb`.
+- **[rq3_workload_summary.csv](./rq3_workload_summary.csv)**: Bảng tổng hợp các chỉ số hiệu năng chính:
+  - Tổng thời gian churn (`total_churn_time_ms`)
+  - Độ trễ khối trung vị (`median_block_ms`)
+  - Độ trễ khối cực đại (`max_block_ms` - phản ánh đột biến do rebuild)
+  - Tổng số lần kích hoạt rebuild (`rebuild_count`)
+  - Khoảng cách dò trung bình (`average_dib`) và lớn nhất (`max_dib`)
+  - Tỷ lệ ô tombstone (`tombstone_ratio`) và ô trống (`empty_ratio`)
+
+### Schema của file block profiling (15 cột):
+```csv
+alpha,algorithm,block_index,start_cycle,end_cycle,ops_count,elapsed_ms,tombstone_count,tombstone_ratio,empty_count,empty_ratio,average_dib,max_dib,rebuild_count,rebuilds_in_block
+```
+
+### Kết quả kiểm định tính toàn vẹn và nghiệm thu không có mốc lỗi (26/10/2026):
+- Bộ script kiểm tra tính toàn vẹn: `scratch/check_rq3.ps1` và `scratch/check_rq3.py`.
+- **Xác nhận 100% đạt chuẩn**: 576/576 lượt chạy của 24/10 và 25/10 đều có `status = ok`, 0 timeout, 0 crash.
+- **Giá trị `output_check`**: Khớp chính xác 100% giữa tất cả các cài đặt cùng seed và workload.
+- **Mốc lỗi cần chạy lại**: **0 mốc**.
+

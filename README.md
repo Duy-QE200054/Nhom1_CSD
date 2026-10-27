@@ -112,14 +112,36 @@ python bench/run_all.py --rq RQ3 --m 1048576 --alpha 0.80 --cycles 0,262144,5242
 ```
 *(Thêm cờ `--quick` để chạy thử nghiệm nhanh trong vài giây).*
 
+### Kiểm Tra Tính Toàn Vẹn & Không Có Mốc Lỗi (Nhiệm vụ 26/10)
+```powershell
+# Bằng PowerShell
+powershell -ExecutionPolicy Bypass -File scratch/check_rq3.ps1
+
+# Hoặc bằng Python cross-platform
+python scratch/check_rq3.py
+```
+
+### Phân Tích Chuyên Sâu Khối 10⁴ Thao Tác & Bóc Tách Cơ Chế RQ3 (Nhiệm vụ 26/10)
+- Chạy toàn bộ workload profiling theo khối $10^4$ thao tác và ghi nhận độ đột biến Rebuild:
+```bash
+python bench/run_rq3_analysis.py
+```
+Dữ liệu khối được xuất tự động vào: `results/raw/rq3_block_profiling_alpha050.csv`, `results/raw/rq3_block_profiling_alpha080.csv`, và `results/raw/rq3_workload_summary.csv`.
+
 ### Tái Tạo Biểu Đồ Cho Bài Báo IEEE (Figures Generator)
 - Biểu đồ chiến dịch ngày 25/10 ($\alpha = 0.80$):
 ```bash
 python bench/plot_figures.py --csv results/raw/rq3_20261025.csv --outdir results/figures/rq3_20261025
 ```
-Ảnh đồ thị chất lượng cao được lưu tại: `results/figures/rq3_20261025/`.
+
+- Biểu đồ chuyên sâu ngày 26/10 (Rebuild latency spikes, Max DIB evolution, và bóc tách 3 cơ chế):
+```bash
+python bench/plot_figures.py --plot-oct26
+```
+Ảnh đồ thị chất lượng cao được lưu tại: `results/figures/rq3_20261026/`.
 
 ---
+
 
 ## 5. Giải thích các trường dữ liệu CSV (Bảng 4)
 Mỗi dòng trong file CSV tại `results/raw/` tương ứng với một lượt đo độc lập:
