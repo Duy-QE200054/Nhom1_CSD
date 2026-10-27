@@ -23,7 +23,21 @@ Da Nang / Can Tho / Ho Chi Minh City / Ha Noi, Vietnam \\
 \maketitle
 
 \begin{abstract}
-Hash tables are foundational data structures in transaction indexing systems with high turnover rates, where items are continuously inserted and deleted. While open addressing with Linear Probing is cache-friendly, the accumulation of tombstones degrades lookup latency, especially for unsuccessful queries, necessitating costly periodic table rebuilds. In this study, we empirically evaluate four collision resolution strategies across millions of operations in Java: Separate Chaining, Linear Probing with tombstones, Linear Probing with backward-shift deletion, and Robin Hood hashing (both with and without early-stopping). We address three research questions regarding load factor scaling, tombstone pollution dynamics, and mechanism decomposition in Robin Hood hashing. Our empirical findings demonstrate that...
+Hash tables are widely used in indexes subject to continuous insertions and
+deletions, where collision resolution and deletion policy can affect lookup
+cost. We evaluate Separate Chaining, Linear Probing with tombstones, Linear
+Probing with backward-shift deletion, and Robin Hood hashing with and without
+DIB-based early exit in Java. The study considers load-factor scaling,
+tombstone accumulation under churn, and the contribution of Robin Hood
+mechanisms. In the measured no-rebuild workload, unsuccessful lookups reached
+2,801.591 mean probes after $4M$ churn cycles, compared with 2.507 probes in a
+clean table holding the same live keys. In a separate RQ3 campaign at
+$M=2^{20}$ and $\alpha=0.50$, early exit reduced mean miss probes by about
+30\% relative to Robin Hood hashing without early exit. This probe reduction
+did not correspond to lower median miss time at $C=4M$ (38.81 ms versus
+32.82 ms). The results illustrate that probe counts and elapsed time capture
+different aspects of lookup behavior and should be interpreted within the
+tested workload and measurement environment.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -297,33 +311,51 @@ latency, so it does not support conclusions about those quantities.
 \end{figure*}
 
 \section{Threats to Validity}
-For the October 24 RQ3 campaign, each seed contributes one timing run per
-configuration. The three-seed median limits the influence of one extreme
-sample but is not a substitute for repeated timing runs; the non-monotone
-lookup-time measurements at some churn checkpoints show that elapsed time is
-sensitive to runtime and system conditions. The probe-count comparison is
-more directly tied to the algorithms, but it does not capture cache misses,
-garbage-collection effects, or rebuild cost during the measured lookup pass.
-The lookup timing excludes table construction and churn, which are recorded
-separately as build time. These results therefore characterize lookup cost
-after the specified workload, not end-to-end workload throughput.
+The RQ3 campaign was run on one machine, operating system, and JVM
+configuration. Concurrent processes, thermal state, and other system activity
+may therefore affect elapsed times and limit generalization to other
+hardware. The timing runner warms up 1,000 queries, but this fixed warmup does
+not guarantee that JIT compilation has reached a steady state; compilation
+and garbage-collection activity may still influence timing. Each configuration
+uses three fixed seeds and one timing run per seed, so the median is
+descriptive rather than a substitute for repeated trials or confidence
+intervals. Probe counts are less sensitive to these timing effects, but do
+not capture cache behavior or garbage-collection pauses.
+
+The experiments use Fibonacci hashing with generated keys and a small set of
+fixed seeds. Different key distributions, hash functions, capacities, and
+load factors may change clustering and the relative costs of the algorithms.
+Finally, lookup timing is measured after table construction and churn; it does
+not represent end-to-end throughput or include the cost of those operations.
+The results should therefore be interpreted as measurements of the stated
+workloads rather than universal rankings of hash-table implementations.
 
 \section{Conclusion}
-This empirical study systematically evaluates collision resolution strategies in open-addressing and chained hash tables under high-churn transactional workloads. By comparing Separate Chaining, Linear Probing with tombstones, Linear Probing with Knuth Algorithm R backshift deletion, and Robin Hood hashing, we provide concrete engineering recommendations:
+This study compares chained and open-addressed hash tables under the
+specified lookup and churn workloads. The results support the following
+workload-specific conclusions:
 \begin{itemize}
-    \item For static or append-mostly workloads with moderate load factors ($\alpha \le 0.50$), standard Linear Probing remains ideal due to minimal memory overhead and sequential hardware cache prefetching.
-    \item For dynamic workloads with continuous deletions, tombstone accumulation rapidly degrades lookup performance unless costly periodic rebuilds are executed. Knuth's Algorithm R (\texttt{lp-backshift}) effectively eliminates tombstones with strict $O(K)$ cluster relocation overhead.
-    \item In the measured RQ3 workload, Robin Hood hashing with early exit reduced mean unsuccessful-lookup probes by about $30\%$ relative to \texttt{rh-noearly}; the timing samples did not show a corresponding miss-latency advantage. The probe experiment does not measure variance or tail latency, so those benefits require separate evaluation.
+    \item In the measured no-rebuild workload, tombstone accumulation reduced
+    the number of empty slots and increased mean miss probes to 2,801.591 at
+    $C=4M$, compared with 2.507 for a clean table with the same live keys.
+    \item Under the RQ3 workload, backward-shift implementations maintained
+    stable probe counts through churn. Robin Hood early exit reduced mean miss
+    probes by about $30\%$ relative to \texttt{rh-noearly}, but its measured
+    median miss time at $C=4M$ was higher (38.81 ms versus 32.82 ms).
+    \item Probe counts alone do not establish a latency or throughput
+    advantage. Repeated timing trials, additional machines, and broader key
+    distributions are needed before generalizing these results or making a
+    universal recommendation.
 \end{itemize}
 
 \section*{Acknowledgment}
 % Khai báo sử dụng AI theo mục 7.7
 
 \begin{thebibliography}{00}
-\bibitem{knuth} D. E. Knuth, \textit{The Art of Computer Programming, Vol. 3: Sorting and Searching}, 2nd ed. Reading, MA, USA: Addison-Wesley, 1998, \S6.4.
 \bibitem{peterson} W. W. Peterson, ``Addressing for random-access storage,'' \textit{IBM J. Res. Dev.}, vol. 1, no. 2, pp. 130--146, 1957.
-\bibitem{celis} P. Celis, P.-\AA. Larson, and J. I. Munro, ``Robin Hood hashing,'' in \textit{Proc. 26th Annu. Symp. Found. Comput. Sci. (FOCS)}, 1985, pp. 281--288.
+\bibitem{knuth} D. E. Knuth, \textit{The Art of Computer Programming, Vol. 3: Sorting and Searching}, 2nd ed. Reading, MA, USA: Addison-Wesley, 1998, \S6.4.
 \bibitem{sedgewick} R. Sedgewick and K. Wayne, \textit{Algorithms}, 4th ed. Boston, MA, USA: Addison-Wesley, 2011, \S3.4.
+\bibitem{celis} P. Celis, P.-\AA. Larson, and J. I. Munro, ``Robin Hood hashing,'' in \textit{Proc. 26th Annu. Symp. Found. Comput. Sci. (FOCS)}, 1985, pp. 281--288.
 \end{thebibliography}
 
 \end{document}
