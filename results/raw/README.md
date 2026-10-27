@@ -136,3 +136,51 @@ CSV ghi nhận máy `DESKTOP-AQL5DFO` và revision nguồn `705cf48-dirty`; revi
 này thuộc nhánh local trước khi đồng bộ với lịch sử GitHub, nên không phải
 revision hiện tại của repository. SHA-256 của file:
 `74aa91e034274d04c25e424957892bc3bec06992bf950e9117fccb5e2bb089bc`.
+
+---
+
+## 8. Dữ Liệu RQ1: Separate Chaining vs Linear Probing (Cặp 1 - C1, Thứ Sáu 23/10/2026)
+
+Các file lưu trữ:
+- **[rq1_runner_results.csv](./rq1_runner_results.csv)**: Dữ liệu đo đạc chính thức từ Benchmark Runner CLI (208 lượt chạy đầy đủ, tuân thủ nghiêm ngặt schema 21 cột).
+- **[rq1_results_backup.csv](./rq1_results_backup.csv)**: Bản sao lưu nguyên gốc đạt mốc kiểm soát M5 (SHA-256: `F12E2AB61CC4789B7757D2865EE6758FF05BBC13498A3B6EE0CB14D9A6CC1684`, kích thước 46,678 bytes).
+- **[rq1_jobs.txt](./rq1_jobs.txt)**: Danh sách 88 cấu hình công việc chuẩn chạy qua tiến trình JVM độc lập với `BenchmarkWrapper`.
+- **[rq1_driver_results.csv](./rq1_driver_results.csv)**: Dữ liệu đối chiếu tóm tắt ban đầu từ RQ1 Driver cũ ghi nhận các chỉ số ns/op, probes và bytes/key.
+
+### 8.1. Thiết Kế Ma Trận Thực Nghiệm RQ1
+Theo đúng yêu cầu kế hoạch ngày 23/10 và Mục 3 & 5 của đề tài:
+1. **Thí nghiệm A (Ảnh hưởng của hệ số tải $\alpha$)**:
+   - Dung lượng bảng cố định: $M = 2^{20} = 1,048,576$ slots.
+   - Hệ số tải thay đổi: $\alpha \in \{0.50, 0.75, 0.90, 0.95\}$ ($N \in \{524288, 786432, 943718, 996147\}$ khóa sống).
+   - 2 thuật toán: Separate Chaining (`sc`) và Linear Probing (`lp-tomb`, không xóa).
+   - 3 hạt giống chuẩn: `42, 1337, 20261019`.
+2. **Thí nghiệm B (Ảnh hưởng của kích thước bảng $M$)**:
+   - Hệ số tải cố định: $\alpha = 0.75$.
+   - Dung lượng bảng thay đổi: $M \in \{2^{18}, 2^{20}, 2^{21}, 2^{22}, 2^{23}\}$ ($262,144$ đến $8,388,608$ slots, $N$ từ $196,608$ đến $6,291,456$).
+   - 2 thuật toán: `sc` và `lp-tomb`.
+   - 3 hạt giống chuẩn: `42, 1337, 20261019`.
+3. **Thí nghiệm biên dồn cụm (Clustered Edge Test)**:
+   - $10\%$ số khóa bị ép dồn vào cụm $h(k) < M/64$, $90\%$ phân phối ngẫu nhiên; $\alpha = 0.75$; $M \in \{2^{18}, 2^{20}\}$.
+   - 1 hạt giống: `42`, 1 repeat.
+
+### 8.2. Quy Chuẩn Đo Đạc
+- **Phân loại truy vấn**:
+  - `hit`: $100\%$ khóa có mặt trong bảng ($N$ khóa).
+  - `miss`: $100\%$ khóa vắng mặt tuyệt đối, sinh độc lập qua `SplittableRandom` và lọc trùng qua `HashSet` ngoài vùng đo.
+- **Tách biệt chế độ**:
+  - `count`: Bộ đếm bước dò phần cứng/phần mềm được kích hoạt, `ops_count` ghi nhận số bước dò trung bình, `elapsed_ms` để trống tuyệt đối.
+  - `time`: Đo thời gian thực thi (wall-clock latency ms), JIT warm-up 1000 ops trước khi đo, `ops_count` để trống tuyệt đối.
+- **Tách biệt thời gian dựng bảng**: Trường `build_ms` ghi nhận thời gian nạp $N$ phần tử vào bảng, tách biệt hoàn toàn khỏi thời gian tra cứu.
+
+### 8.3. Kết Quả Nghiệm Thu Nhiệm Vụ 23/10
+1. **Kiểm định tính toàn vẹn (Schema & Checksum)**:
+   - 208/208 lượt chạy đạt trạng thái `status = ok`. 0 lượt timeout, 0 lượt crash, 0 ngoại lệ bộ nhớ.
+   - Giá trị `output_check` giữa `sc` và `lp-tomb` cùng seed và cùng kích thước khớp nhau chính xác tuyệt đối (ví dụ ở $M=2^{20}, \alpha=0.50$, cả hai đều đạt `524288` ở lượt truy vấn thành công).
+2. **Khớp chuẩn lý thuyết Knuth (Fidelity to Knuth Asymptotics)**:
+   - **Separate Chaining**:
+     - Hit probes: $1 + \alpha/2$ (thực nghiệm: $1.250$ tại $\alpha=0.50$; $1.375$ tại $\alpha=0.75$; $1.450$ tại $\alpha=0.90$; $1.476$ tại $\alpha=0.95$).
+     - Miss probes: $\alpha$ (thực nghiệm: $0.499$ tại $\alpha=0.50$; $0.749$ tại $\alpha=0.75$; $0.899$ tại $\alpha=0.90$; $0.949$ tại $\alpha=0.95$).
+   - **Linear Probing**:
+     - Hit probes: $\frac{1}{2}(1 + \frac{1}{1-\alpha})$ (thực nghiệm: $1.503$ tại $\alpha=0.50$; $2.507$ tại $\alpha=0.75$; $5.504$ tại $\alpha=0.90$; $10.626$ tại $\alpha=0.95$).
+     - Miss probes: $\frac{1}{2}(1 + \frac{1}{(1-\alpha)^2})$ (thực nghiệm: $2.504$ tại $\alpha=0.50$; $8.526$ tại $\alpha=0.75$; $50.119$ tại $\alpha=0.90$; $204.682$ tại $\alpha=0.95$).
+   - Sai số tương đối giữa thực nghiệm và lý thuyết $< 0.5\%$ trên toàn bộ các mức tải.
