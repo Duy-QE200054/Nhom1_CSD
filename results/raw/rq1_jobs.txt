@@ -1,44 +1,88 @@
---rq RQ1 --algo sc --m 1048576 --alpha 0.5 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.9 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.95 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 2097152 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 4194304 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 8388608 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset clustered --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset clustered --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.5 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.9 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.95 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 2097152 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 4194304 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 8388608 --alpha 0.75 --dataset uniform --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset clustered --mode count --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset clustered --mode count --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.5 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.9 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.95 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo sc --m 2097152 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo sc --m 4194304 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo sc --m 8388608 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset clustered --mode time --seed 42 --repeat 1
---rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset clustered --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.5 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.9 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.95 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 2097152 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 4194304 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 8388608 --alpha 0.75 --dataset uniform --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset clustered --mode time --seed 42 --repeat 1
---rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset clustered --mode time --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.5 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.9 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.95 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 2097152 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 4194304 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 8388608 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset clustered --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset clustered --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.5 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.9 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.95 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 2097152 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 4194304 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 8388608 --alpha 0.75 --dataset uniform --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset clustered --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset clustered --mode count --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.5 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.9 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.95 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 2097152 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 4194304 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 8388608 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset clustered --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset clustered --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.5 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.9 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.95 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 2097152 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 4194304 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 8388608 --alpha 0.75 --dataset uniform --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset clustered --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset clustered --mode time --query hit --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.5 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.9 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.95 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 2097152 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 4194304 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 8388608 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset clustered --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset clustered --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.5 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.9 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.95 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 2097152 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 4194304 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 8388608 --alpha 0.75 --dataset uniform --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset clustered --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset clustered --mode count --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.5 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.9 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.95 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 2097152 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 4194304 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 8388608 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset clustered --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo sc --m 1048576 --alpha 0.75 --dataset clustered --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.5 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.9 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.95 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 2097152 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 4194304 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 8388608 --alpha 0.75 --dataset uniform --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset clustered --mode time --query miss --seed 42 --repeat 1
+--rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --dataset clustered --mode time --query miss --seed 42 --repeat 1

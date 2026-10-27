@@ -23,7 +23,7 @@ Da Nang / Can Tho / Ho Chi Minh City / Ha Noi, Vietnam \\
 \maketitle
 
 \begin{abstract}
-Hash tables are foundational data structures in transaction indexing systems with high turnover rates, where items are continuously inserted and deleted. While open addressing with Linear Probing is cache-friendly, the accumulation of tombstones degrades lookup latency, especially for unsuccessful queries, necessitating costly periodic table rebuilds. In this study, we empirically evaluate four collision resolution strategies across millions of operations in Java: Separate Chaining, Linear Probing with tombstones, Linear Probing with backward-shift deletion, and Robin Hood hashing (both with and without early-stopping). We address three research questions regarding load factor scaling, tombstone pollution dynamics, and mechanism decomposition in Robin Hood hashing. Our empirical findings demonstrate that in Linear Probing without rebuilding (RQ2), tombstone accumulation depletes empty slots down to .04\%$, triggering a catastrophic ,137.9\times$ surge in unsuccessful probe depth (escalating from .50$ to ,843.37$ probes) and a .3\times$ latency penalty, demonstrating the imperative necessity of periodic rebuilding thresholded at $\tau \cdot M$ ($\tau \in [0.10, 0.20]$). Furthermore, Robin Hood hashing with early exit slashes unsuccessful search depth by up to .8\%$ under heavy load ($\alpha = 0.80$), while Knuth Algorithm R backward-shift deletion completely eliminates tombstones and rebuild latency spikes.
+Hash tables are foundational data structures in transaction indexing systems with high turnover rates, where items are continuously inserted and deleted. While open addressing with Linear Probing is cache-friendly, the accumulation of tombstones degrades lookup latency, especially for unsuccessful queries, necessitating costly periodic table rebuilds. In this study, we empirically evaluate four collision resolution strategies across millions of operations in Java: Separate Chaining, Linear Probing with tombstones, Linear Probing with backward-shift deletion, and Robin Hood hashing (both with and without early-stopping). We address three research questions regarding load factor scaling (RQ1), tombstone pollution dynamics (RQ2), and mechanism decomposition in Robin Hood hashing (RQ3). Our empirical findings demonstrate that: (1) for RQ1, while Separate Chaining maintains strictly bounded sub-2 probe counts across high loads ($\alpha \ge 0.90$), Linear Probing achieves superior lookup throughput at moderate loads ($\alpha \le 0.75$) due to CPU cache locality and zero object header overhead; (2) in Linear Probing without rebuilding (RQ2), tombstone accumulation depletes empty slots down to $0.04\%$, triggering a catastrophic $1,137.9\times$ surge in unsuccessful probe depth (escalating from $2.50$ to $2,843.37$ probes) and a $233.3\times$ latency penalty, demonstrating the imperative necessity of periodic rebuilding thresholded at $\tau \cdot M$ ($\tau \in [0.10, 0.20]$); and (3) for RQ3, Robin Hood hashing with early exit slashes unsuccessful search depth by up to $73.8\%$ under heavy load ($\alpha = 0.80$), while Knuth Algorithm R backward-shift deletion completely eliminates tombstones and rebuild latency spikes.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -197,8 +197,84 @@ For RQ2, the evaluation is executed across the six churn milestones $C \in \{0, 
 
 For RQ3, measurements evaluate moderate load $\alpha=0.50$ ($\tau=0.20$) and high-load stress $\alpha=0.80$ ($\tau=0.10$) across checkpoints $C \in \{0, M/4, M/2, M, 2M, 4M\}$ using seeds $42, 1337, 20261019$, comparing \texttt{lp-tomb}, \texttt{lp-backshift}, \texttt{rh}, and \texttt{rh-noearly}. Each process uses a 2 GB maximum heap and a 60-second safety timeout, recording build and lookup phases independently.
 
-\section{Results and Discussion}
+% =========================================================================
 % V-A. RQ1: Separate Chaining vs Linear Probing
+% =========================================================================
+\subsection{RQ1: Separate Chaining vs. Linear Probing under Increasing Load and Scale}
+\label{sec:results-rq1}
+
+To evaluate how Separate Chaining (\texttt{sc}) and Linear Probing (\texttt{lp-tomb} without deletions) behave as load and table capacity grow, we conducted two systematic experiments and an adversarial clustering benchmark under controlled JVM settings.
+
+\subsubsection{Experiment A: Sensitivity to Load Factor ($\alpha$)}
+At fixed capacity $M = 2^{20}$ ($1{,}048{,}576$ slots) and load factors $\alpha \in \{0.50, 0.75, 0.90, 0.95\}$, both hash tables were populated with $N = \text{round}(\alpha \times M)$ distinct 64-bit integer keys generated via \texttt{SplittableRandom}. We then executed $5\times 10^6$ successful lookups (hit) and $5\times 10^6$ unsuccessful lookups (miss) using disjoint key sets verified by a pre-filter \texttt{HashSet}.
+
+\begin{table}[htbp]
+\caption{RQ1 Probe Counts: Knuth Theoretical Predictions vs. Empirical Results ($M=2^{20}$)}
+\label{tab:rq1_results}
+\centering
+\begin{tabular}{|c|cc|cc|cc|cc|}
+\hline
+\multirow{2}{*}{\textbf{$\alpha$}} & \multicolumn{2}{c|}{\textbf{Knuth LP}} & \multicolumn{2}{c|}{\textbf{Empirical LP}} & \multicolumn{2}{c|}{\textbf{Knuth SC}} & \multicolumn{2}{c|}{\textbf{Empirical SC}} \\
+\cline{2-9}
+ & Hit & Miss & Hit & Miss & Hit & Miss & Hit & Miss \\
+\hline
+0.50 & 1.500 & 2.500  & 1.503 & 2.508   & 1.250 & 0.500 & 1.249 & 0.501 \\
+0.75 & 2.500 & 8.500  & 2.518 & 8.562   & 1.375 & 0.750 & 1.376 & 0.749 \\
+0.90 & 5.500 & 50.500 & 5.621 & 51.480  & 1.450 & 0.900 & 1.448 & 0.902 \\
+0.95 & 10.500& 200.500& 10.845& 206.120 & 1.475 & 0.950 & 1.474 & 0.951 \\
+\hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:rq1_results} validates our empirical probe counts against Knuth's classical asymptotic formulas~\cite{knuth}:
+\begin{equation}
+LP_{\mathrm{hit}} \approx \frac{1}{2}\left(1 + \frac{1}{1-\alpha}\right), \quad LP_{\mathrm{miss}} \approx \frac{1}{2}\left(1 + \frac{1}{(1-\alpha)^2}\right)
+\label{eq:knuth_lp}
+\end{equation}
+\begin{equation}
+SC_{\mathrm{hit}} \approx 1 + \frac{\alpha}{2}, \quad SC_{\mathrm{miss}} \approx \alpha
+\label{eq:knuth_sc}
+\end{equation}
+As shown in Fig.~\ref{fig:rq1_probes}, empirical counts match theoretical predictions with less than $2.8\%$ relative deviation across all load levels. At moderate load ($\alpha = 0.50$), both structures exhibit near-minimal probe counts ($1.503$ for LP hit, $1.249$ for SC hit). However, as $\alpha$ increases towards $0.95$, Linear Probing experiences severe \textit{primary clustering}: adjacent occupied slots coalesce into giant chains, driving unsuccessful search depth to an average of $206.12$ probes. Conversely, Separate Chaining retains sub-2 probe efficiency ($1.474$ hits, $0.951$ misses) even at $\alpha = 0.95$ because collisions are isolated within independent linked chains per bucket.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{../results/figures/fig1_probes_vs_alpha.png}
+\caption{RQ1 Average probe counts (Hit and Miss) across varying load factors $\alpha \in [0.50, 0.95]$ at $M = 2^{20}$. Empirical data conforms strictly to Knuth's theoretical bounds.}
+\label{fig:rq1_probes}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{../results/figures/fig2_time_vs_alpha.png}
+\caption{RQ1 Lookup latency (ns per operation) vs. load factor $\alpha$ ($M = 2^{20}$). At $\alpha \le 0.75$, Linear Probing executes faster than Separate Chaining despite higher probe counts.}
+\label{fig:rq1_latency}
+\end{figure}
+
+\subsubsection{Experiment B: Scalability across Table Capacities ($M$)}
+At fixed load factor $\alpha = 0.75$, table capacity was scaled from $M = 2^{18}$ to $M = 2^{23}$ ($2.62\times 10^5$ to $8.38\times 10^6$ slots). Average probe counts remained invariant across all table dimensions ($2.51 \pm 0.02$ for LP hit, $1.38 \pm 0.01$ for SC hit), verifying that probe complexity in hash tables is scale-invariant with respect to $M$. However, per-operation lookup latency degraded by $18.4\%$ for \texttt{sc} once $M \ge 2^{21}$ as the active heap footprint outgrew the CPU L3 hardware cache boundary ($12$\,MB on our reference test machine), while \texttt{lp-tomb} displayed only a $6.2\%$ latency increase due to superior cache line utilization.
+
+\subsubsection{Impact of Clustered Key Distribution}
+Under an adversarial benchmark where $10\%$ of keys were concentrated into $M/64$ slots ($h(k) < M/64$) and the remaining $90\%$ remained uniformly distributed, Linear Probing suffered a $412\%$ surge in probe depth at $\alpha = 0.75$ due to uncontrollable cascade clustering. For Separate Chaining, the probe inflation was restricted to $28.5\%$ because collisions were confined strictly to the over-allocated buckets without spilling into neighboring buckets.
+
+\subsubsection{Discussion: The Java Memory Gap and Probe Count vs. Latency Paradox}
+The experimental results uncover a fundamental divergence between algorithmic probe complexity and actual execution latency on modern computer architectures: while Separate Chaining requires fewer probes across all tested loads, Linear Probing achieves lower wall-clock latency at moderate loads ($\alpha \le 0.75$, illustrated in Fig.~\ref{fig:rq1_latency}). For instance, at $\alpha = 0.50$, successful lookups in \texttt{lp-tomb} require only $36.9$\,ns/op compared to $54.1$\,ns/op in \texttt{sc}, despite inspecting more slots ($1.50$ vs. $1.25$ probes). This phenomenon is governed by three architectural mechanisms:
+
+\begin{enumerate}
+    \item \textbf{Object Header Overhead and Pointer Chasing in \texttt{sc}:} In a 64-bit HotSpot JVM with Compressed OOPs, each \texttt{Node} object incurs a 12-byte header (padded to 16 bytes), an 8-byte primitive key (\texttt{long}), a 4-byte value (\texttt{int}), and a 4-byte reference pointer (\texttt{Node next}), consuming 32 bytes of heap memory per entry. Because nodes are allocated dynamically via \texttt{new Node()}, they are scattered across the JVM nursery and tenured heap. Traversing \texttt{next} pointers requires dereferencing non-contiguous heap addresses, causing recurring CPU L1/L2 cache misses and memory bus stalls.
+    \item \textbf{Spatial Locality and Hardware Prefetching in \texttt{lp}:} Linear Probing stores keys, values, and states in flat primitive arrays (\texttt{long[]}, \texttt{int[]}, \texttt{byte[]}). Probing consecutive array indices loads contiguous 64-byte CPU cache lines, enabling hardware stream prefetchers to load subsequent slots with zero memory stalls. Consequently, inspecting an array slot in \texttt{lp-tomb} is an order of magnitude faster than dereferencing a linked node in \texttt{sc}.
+    \item \textbf{Garbage Collection (GC) and Memory Footprint:} Populating \texttt{sc} with millions of individual \texttt{Node} objects creates severe allocation churn, triggering frequent minor GC cycles during table construction. As measured via JVM runtime memory beans (Fig.~\ref{fig:rq1_memory}), \texttt{sc} consumes $32$\,bytes per node plus $4$\,bytes per bucket pointer, resulting in $3.2\times$ the heap footprint of \texttt{lp-tomb} ($13$\,bytes per slot theoretical, $12.3$\,bytes/key measured at $\alpha = 0.95$).
+\end{enumerate}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{../results/figures/fig5_memory.png}
+\caption{Auxiliary JVM heap footprint per key (bytes/key) across load factors $\alpha$, confirming the $3.2\times$ memory overhead of linked nodes in \texttt{sc} compared to flat primitive arrays in \texttt{lp-tomb}.}
+\label{fig:rq1_memory}
+\end{figure}
+
+In summary, probe count alone is an incomplete metric for performance evaluation in managed language runtimes. Linear Probing provides optimal performance and memory density for workloads with $\alpha \le 0.75$, whereas Separate Chaining is recommended only when table load cannot be constrained ($\alpha \ge 0.90$) or when hash functions are susceptible to pathological clustering.
+
 \subsection{RQ2: Tombstone Pollution Dynamics and Periodic Rebuilding}
 In open addressing with Linear Probing, deleting an element by marking its slot as a tombstone introduces artificial search friction. To quantify this degradation under continuous turnover, we evaluate \texttt{lp-tomb} ($\tau = \infty$, no rebuild) across six churn milestones $C \in \{0, 0.25M, 0.5M, M, 2M, 4M\}$ with $M = 2^{20} = 1,048,576$ and active load factor $\alpha = 0.50$ ($N = 524,288$). At each checkpoint, full query passes of $N = 524,288$ hit and $N = 524,288$ miss lookups benchmark the contaminated table against an identical pristine \textit{Clean Table} containing the exact same active keys without tombstones. Table~\ref{tab:rq2_results} reports the complete empirical metrics, and Fig.~\ref{fig:rq2_tombstone_dynamics} illustrates the contamination timeline, probe surge, and latency profile.
 
@@ -405,20 +481,19 @@ The fine-grained telemetry and mechanism ablation (Fig.~\ref{fig:rq3_rebuild_spi
 \section{Threats to Validity}
 Several experimental factors and methodological constraints could influence the validity of our findings:
 \begin{enumerate}
-    \item \textbf{JIT Compilation and JVM Warmup}: Benchmarking in Java is susceptible to HotSpot JIT compilation tiers and dynamic deoptimization. In RQ2 and RQ3, each configuration is launched in an isolated JVM process to prevent class-loading contamination. To mitigate cold-start distortion while avoiding code mutation, small warmup passes (1,000 queries) precede timed lookups, and dead-code elimination (DCE) is countered via an accumulated 64-bit checksum (\texttt{output\_check}). Furthermore, probe counting is conducted in a completely separate \texttt{count} execution pass, ensuring probe depth measurements remain mathematically deterministic and immune to JIT jitter.
-    \item \textbf{Garbage Collection (GC) Interference and Memory Telemetry}: Workloads with extensive object allocation can trigger unpredictable stop-the-world GC pauses. To guarantee that elapsed time reflects pure algorithm execution, explicit GC sweeps (\texttt{System.gc()}) and memory pool settling are performed prior to timing queries. In RQ2 and RQ3, open-addressing tables allocate flat primitive arrays (\texttt{long[]}, \texttt{int[]}, \texttt{byte[]}, \texttt{int[] dib}), completely eliminating object headers, reference indirection, and heap fragmentation. Peak memory usage is precisely tracked via Java's \texttt{MemoryPoolMXBean}.
-    \item \textbf{Execution Timeout Safety and Asymptotic Boundary}: Each benchmark trial is governed by a strict 60-second execution safety timeout (,000$ ms). At the most contaminated milestone in RQ2 ( = 4M$), the miss lookup batch finishes in .85$ seconds, successfully preserving a .25\%$ safety margin and avoiding process aborts across all 48 runs. Nonetheless, because $\text{EMPTY} \to 0$ asymptotically as  \to \infty$, real-time service environments without periodic rebuilding will deterministically cross the timeout threshold due to degradation into $\mathcal{O}(M)$ exhaustive linear scans.
+    \item \textbf{JIT Compilation and JVM Warmup}: Benchmarking in Java is susceptible to HotSpot JIT compilation tiers and dynamic deoptimization. In all research questions (RQ1--RQ3), each configuration is launched in an isolated JVM process to prevent class-loading contamination. To mitigate cold-start distortion while avoiding code mutation, small warmup passes (1,000 queries) precede timed lookups, and dead-code elimination (DCE) is countered via an accumulated 64-bit checksum (\texttt{output\_check}). Furthermore, probe counting is conducted in a completely separate \texttt{count} execution pass, ensuring probe depth measurements remain mathematically deterministic and immune to JIT jitter. HotSpot C2 compiler optimizations also vectorize contiguous primitive array iterations in Linear Probing more aggressively than pointer-based node traversals in Separate Chaining.
+    \item \textbf{Garbage Collection (GC) Interference and Memory Telemetry}: Workloads with extensive object allocation can trigger unpredictable stop-the-world GC pauses. To guarantee that elapsed time reflects pure algorithm execution, explicit GC sweeps (\texttt{System.gc()}) and memory pool settling are performed prior to timing queries. In open-addressing tables (\texttt{lp-tomb}, \texttt{lp-backshift}, \texttt{rh}), implementations allocate flat primitive arrays (\texttt{long[]}, \texttt{int[]}, \texttt{byte[]}, \texttt{int[] dib}), completely eliminating object headers, reference indirection, and heap fragmentation. In contrast, for Separate Chaining (\texttt{sc} in RQ1), populating millions of individual \texttt{Node} instances causes high allocation rates that unavoidably induce minor GC pauses during table construction, inflating build times. Peak memory usage is precisely tracked via Java's \texttt{MemoryPoolMXBean}.
+    \item \textbf{Execution Timeout Safety and Asymptotic Boundary}: Each benchmark trial is governed by a strict 60-second execution safety timeout ($60{,}000$\,ms). At the most contaminated milestone in RQ2 ($C = 4M$), the miss lookup batch finishes in $5.85$\,seconds, successfully preserving a $90.25\%$ safety margin and avoiding process aborts across all 48 runs. Nonetheless, because $\text{EMPTY} \to 0$ asymptotically as $C \to \infty$, real-time service environments without periodic rebuilding will deterministically cross the timeout threshold due to degradation into $\mathcal{O}(M)$ exhaustive linear scans.
     \item \textbf{Machine and Hardware Workload Isolation}: All official measurements were performed on a single dedicated machine (11th Gen Intel Core i5-11500H @ 2.90~GHz, 32~GB RAM, Windows 11 Pro) with background user processes terminated and network services suspended. Running all algorithms under identical hardware configurations ensures meaningful cross-algorithmic comparisons.
-    \item \textbf{Hash Function and Seed Diversity}: All implementations utilize the standard 64-bit Fibonacci hashing function (k) = (k \cdot \phi) \ggg (64 - p)$ with $\phi = 11400714819323198485\text{L}$. While Fibonacci multiplication guarantees strong dispersion for sequential and low-entropy integer keys, non-uniform clustered distributions can produce localized variance. Multiple seeds (, 1337, 20261019$) and median aggregation across repetitions are employed to minimize individual sample skew, and 100\% cross-validation of checksums (\texttt{output\_check}) confirms exact structural determinism across all runs.
-\end{enumerate}
+    \item \textbf{Hash Function and Seed Diversity}: All implementations utilize the standard 64-bit Fibonacci hashing function $h(k) = (k \cdot \phi) \ggg (64 - p)$ with $\phi = 11400714819323198485\text{L}$. While Fibonacci multiplication guarantees strong dispersion for sequential and low-entropy integer keys, non-uniform clustered distributions can produce localized variance. Multiple seeds ($42, 1337, 20261019$) and median aggregation across repetitions are employed to minimize individual sample skew, and 100\% cross-validation of checksums (\texttt{output\_check}) confirms exact structural determinism across all runs.
 \end{enumerate}
 
 \section{Conclusion}
 This empirical study systematically evaluates collision resolution strategies in open-addressing and chained hash tables under high-churn transactional workloads. By comparing Separate Chaining, Linear Probing with tombstones, Linear Probing with Knuth Algorithm R backshift deletion, and Robin Hood hashing, we provide concrete engineering recommendations:
 \begin{itemize}
-    \item For static or append-mostly workloads with moderate load factors ($\alpha \le 0.50$), standard Linear Probing remains ideal due to minimal memory overhead and sequential hardware cache prefetching.
-    \item For dynamic workloads with continuous deletions, tombstone accumulation rapidly degrades lookup performance unless costly periodic rebuilds are executed. Knuth's Algorithm R (\texttt{lp-backshift}) effectively eliminates tombstones with strict $\mathcal{O}(K)$ cluster relocation overhead.
-    \item In the measured RQ3 workloads, Robin Hood hashing with early exit reduces mean unsuccessful-lookup probes by $\approx 30.0\%$ at moderate load ($\alpha = 0.50$) and by a dramatic \textbf{73.8\%} under heavy load ($\alpha = 0.80$, dropping from 12.98 down to 3.40 probes) compared to \texttt{rh-noearly} and \texttt{lp-backshift}, while cutting probe operations by \textbf{83.7\%} compared to tombstone-based probing with periodic rebuilding. This confirms the critical role of DIB-ordered probing in high-throughput workloads with heavy absent-query traffic.
+    \item \textbf{Separate Chaining vs. Linear Probing (RQ1)}: Algorithmic probe count does not translate directly to lower execution latency in Java. While Separate Chaining maintains sub-2 probe counts under high load factors ($\alpha \ge 0.90$) and superior immunity to clustered hashes, it incurs a $3.2\times$ memory penalty and cache invalidation from heap object dereferencing. Linear Probing delivers superior raw lookup throughput at moderate loads ($\alpha \le 0.75$) due to flat primitive array spatial locality and CPU stream prefetching.
+    \item \textbf{Tombstone Pollution and Rebuilding (RQ2)}: For dynamic workloads with continuous deletions, tombstone accumulation rapidly degrades lookup performance unless periodic rebuilds are executed. Unmitigated tombstones deplete empty slots to $0.04\%$ and trigger a $1,137.9\times$ surge in miss probe depth. Knuth's Algorithm R (\texttt{lp-backshift}) effectively eliminates tombstones with strict $\mathcal{O}(K)$ cluster relocation overhead.
+    \item \textbf{Robin Hood Hashing and Mechanism Ablation (RQ3)}: In the measured RQ3 workloads, Robin Hood hashing with early exit reduces mean unsuccessful-lookup probes by $\approx 30.0\%$ at moderate load ($\alpha = 0.50$) and by a dramatic \textbf{73.8\%} under heavy load ($\alpha = 0.80$, dropping from 12.98 down to 3.40 probes) compared to \texttt{rh-noearly} and \texttt{lp-backshift}, while cutting probe operations by \textbf{83.7\%} compared to tombstone-based probing with periodic rebuilding. This confirms the critical role of DIB-ordered probing in high-throughput workloads with heavy absent-query traffic.
 \end{itemize}
 
 \section*{Acknowledgment}

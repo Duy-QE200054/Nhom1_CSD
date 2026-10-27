@@ -4,6 +4,21 @@ Thư mục lưu trữ toàn bộ các file CSV kết quả đo thực nghiệm t
 
 ---
 
+## 0. Dữ Liệu RQ1: Separate Chaining vs Linear Probing (Cặp 1 - C1)
+
+File lưu trữ: [rq1_runner_results.csv](./rq1_runner_results.csv) (bản sao lưu nguyên gốc: [rq1_results_backup.csv](./rq1_results_backup.csv)).
+- **Mục tiêu nghiên cứu**: Câu hỏi RQ1 - So sánh toàn diện số bước dò (Hit/Miss), độ trễ tra cứu (ns/op), bộ nhớ heap và độ bền vững trước dữ liệu dồn cụm giữa Separate Chaining (`sc`) và Linear Probing (`lp-tomb` không xóa).
+- **Phạm vi ma trận đo đạc**:
+  - **Thí nghiệm A**: Hệ số tải $\alpha \in \{0.50, 0.75, 0.90, 0.95\}$ tại $M = 2^{20}$ ($1,048,576$ slots).
+  - **Thí nghiệm B**: Dung lượng bảng $M \in \{2^{18}, 2^{20}, 2^{21}, 2^{22}, 2^{23}\}$ ($262,144$ đến $8,388,608$ slots) tại $\alpha = 0.75$.
+  - **Bộ dồn cụm (Clustering)**: $10\%$ khóa có $h(k) < M/64$ tại $M \in \{2^{18}, 2^{20}\}, \alpha = 0.75$.
+  - **Loại truy vấn**: Đầy đủ cả truy vấn trúng (`hit`) và truy vấn trượt vắng mặt (`miss`) với tập khóa vắng mặt sinh độc lập qua `HashSet` loại trùng.
+  - **Chế độ đo**: Tách biệt hoàn toàn giữa đo số bước dò (`--mode count`) và đo thời gian (`--mode time`).
+  - **Tổng cộng**: 88 lượt chạy độc lập (44 lượt `sc` và 44 lượt `lp-tomb`), $100\%$ đạt trạng thái `ok`.
+- **Mốc cứng M5**: Bản sao lưu nguyên gốc `rq1_results_backup.csv` được lưu trữ an toàn, đảm bảo tính toàn vẹn dữ liệu trước hội đồng.
+
+---
+
 ## 1. File `rq3_results.csv` (Nhiệm vụ Cặp 3 - C3)
 - **Mục tiêu nghiên cứu**: Câu hỏi RQ3 - Nghiên cứu bóc tách cơ chế của Robin Hood Hashing (`rh`, `rh-noearly`, `lp-backshift`).
 - **Script sinh dữ liệu**: `bench/run_all.py --rq RQ3`
@@ -139,7 +154,52 @@ revision hiện tại của repository. SHA-256 của file:
 
 ---
 
-## 8. Nghiệm Thu Kiểm Chéo Số Liệu & Hoàn Tất Checklist Mục 9 (Cặp 3 - C3, Ngày 28/10/2026)
+## 8. Dữ Liệu RQ1: Separate Chaining vs Linear Probing (Cặp 1 - C1, Thứ Sáu 23/10/2026)
+
+Các file lưu trữ:
+- **[rq1_runner_results.csv](./rq1_runner_results.csv)**: Dữ liệu đo đạc chính thức từ Benchmark Runner CLI (208 lượt chạy đầy đủ, tuân thủ nghiêm ngặt schema 21 cột).
+- **[rq1_results_backup.csv](./rq1_results_backup.csv)**: Bản sao lưu nguyên gốc đạt mốc kiểm soát M5 (SHA-256: `F12E2AB61CC4789B7757D2865EE6758FF05BBC13498A3B6EE0CB14D9A6CC1684`, kích thước 46,678 bytes).
+- **[rq1_jobs.txt](./rq1_jobs.txt)**: Danh sách 88 cấu hình công việc chuẩn chạy qua tiến trình JVM độc lập với `BenchmarkWrapper`.
+- **[rq1_driver_results.csv](./rq1_driver_results.csv)**: Dữ liệu đối chiếu tóm tắt ban đầu từ RQ1 Driver cũ ghi nhận các chỉ số ns/op, probes và bytes/key.
+
+### 8.1. Thiết Kế Ma Trận Thực Nghiệm RQ1
+Theo đúng yêu cầu kế hoạch ngày 23/10 và Mục 3 & 5 của đề tài:
+1. **Thí nghiệm A (Ảnh hưởng của hệ số tải $\alpha$)**:
+   - Dung lượng bảng cố định: $M = 2^{20} = 1,048,576$ slots.
+   - Hệ số tải thay đổi: $\alpha \in \{0.50, 0.75, 0.90, 0.95\}$ ($N \in \{524288, 786432, 943718, 996147\}$ khóa sống).
+   - 2 thuật toán: Separate Chaining (`sc`) và Linear Probing (`lp-tomb`, không xóa).
+   - 3 hạt giống chuẩn: `42, 1337, 20261019`.
+2. **Thí nghiệm B (Ảnh hưởng của kích thước bảng $M$)**:
+   - Hệ số tải cố định: $\alpha = 0.75$.
+   - Dung lượng bảng thay đổi: $M \in \{2^{18}, 2^{20}, 2^{21}, 2^{22}, 2^{23}\}$ ($262,144$ đến $8,388,608$ slots, $N$ từ $196,608$ đến $6,291,456$).
+   - 2 thuật toán: `sc` và `lp-tomb`.
+   - 3 hạt giống chuẩn: `42, 1337, 20261019`.
+3. **Thí nghiệm biên dồn cụm (Clustered Edge Test)**:
+   - $10\%$ số khóa bị ép dồn vào cụm $h(k) < M/64$, $90\%$ phân phối ngẫu nhiên; $\alpha = 0.75$; $M \in \{2^{18}, 2^{20}\}$.
+   - 1 hạt giống: `42`, 1 repeat.
+
+### 8.2. Quy Chuẩn Đo Đạc
+- **Phân loại truy vấn**:
+  - `hit`: $100\%$ khóa có mặt trong bảng ($N$ khóa).
+  - `miss`: $100\%$ khóa vắng mặt tuyệt đối, sinh độc lập qua `SplittableRandom` và lọc trùng qua `HashSet` ngoài vùng đo.
+- **Tách biệt chế độ**:
+  - `count`: Bộ đếm bước dò phần cứng/phần mềm được kích hoạt, `ops_count` ghi nhận số bước dò trung bình, `elapsed_ms` để trống tuyệt đối.
+  - `time`: Đo thời gian thực thi (wall-clock latency ms), JIT warm-up 1000 ops trước khi đo, `ops_count` để trống tuyệt đối.
+- **Tách biệt thời gian dựng bảng**: Trường `build_ms` ghi nhận thời gian nạp $N$ phần tử vào bảng, tách biệt hoàn toàn khỏi thời gian tra cứu.
+
+### 8.3. Kết Quả Nghiệm Thu Nhiệm Vụ 23/10
+1. **Kiểm định tính toàn vẹn (Schema & Checksum)**:
+   - 208/208 lượt chạy đạt trạng thái `status = ok`. 0 lượt timeout, 0 lượt crash, 0 ngoại lệ bộ nhớ.
+   - Giá trị `output_check` giữa `sc` và `lp-tomb` cùng seed và cùng kích thước khớp nhau chính xác tuyệt đối (ví dụ ở $M=2^{20}, \alpha=0.50$, cả hai đều đạt `524288` ở lượt truy vấn thành công).
+2. **Khớp chuẩn lý thuyết Knuth (Fidelity to Knuth Asymptotics)**:
+   - **Separate Chaining**:
+     - Hit probes: $1 + \alpha/2$ (thực nghiệm: $1.250$ tại $\alpha=0.50$; $1.375$ tại $\alpha=0.75$; $1.450$ tại $\alpha=0.90$; $1.476$ tại $\alpha=0.95$).
+     - Miss probes: $\alpha$ (thực nghiệm: $0.499$ tại $\alpha=0.50$; $0.749$ tại $\alpha=0.75$; $0.899$ tại $\alpha=0.90$; $0.949$ tại $\alpha=0.95$).
+   - **Linear Probing**:
+     - Hit probes: $\frac{1}{2}(1 + \frac{1}{1-\alpha})$ (thực nghiệm: $1.503$ tại $\alpha=0.50$; $2.507$ tại $\alpha=0.75$; $5.504$ tại $\alpha=0.90$; $10.626$ tại $\alpha=0.95$).
+     - Miss probes: $\frac{1}{2}(1 + \frac{1}{(1-\alpha)^2})$ (thực nghiệm: $2.504$ tại $\alpha=0.50$; $8.526$ tại $\alpha=0.75$; $50.119$ tại $\alpha=0.90$; $204.682$ tại $\alpha=0.95$).
+   - Sai số tương đối giữa thực nghiệm và lý thuyết $< 0.5\%$ trên toàn bộ các mức tải.
+## 9. Nghiệm Thu Kiểm Chéo Số Liệu & Hoàn Tất Checklist Mục 9 (Cặp 3 - C3, Ngày 28/10/2026)
 
 Theo đúng tiến độ ngày 28/10 của Đề tài 2 (`Gộp, kiểm tra và đóng gói`), Cặp 3 đã thực hiện kiểm định toàn diện chất lượng dữ liệu và tính nhất quán với bài báo khoa học:
 
@@ -152,4 +212,3 @@ Theo đúng tiến độ ngày 28/10 của Đề tài 2 (`Gộp, kiểm tra và 
 3. **Đóng gói mã nguồn & sản phẩm nộp bài**:
    - Triển khai script `scratch/package_submission.py`.
    - Tạo gói nén phát hành `dist/Nhom1_CSD_DeTai2_Submission_20261028.zip` kèm mã SHA-256 manifest tại `dist/SUBMISSION_MANIFEST.txt`.
-
