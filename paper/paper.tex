@@ -7,6 +7,7 @@
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\usepackage{multirow}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
@@ -187,8 +188,10 @@ The hit pass queries all live keys; the miss pass uses generated keys absent
 from the live set. Table construction and churn happen before lookup timing.
 Timing and probe counting are collected in separate JVM runs: time mode
 measures elapsed lookup time, while count mode reports average probes per
-query. The runner emits an input checksum and output check for reproducibility
-and result validation.
+query. The benchmark harness records all empirical telemetry into a standardized
+21-column CSV schema capturing execution status, table construction time (\texttt{build\_ms}),
+query latency (\texttt{elapsed\_ms}), memory footprints, deterministic probe counts
+(\texttt{ops\_count}), input cryptographic hashes, and verification checksums for reproducibility.
 
 \section{Experimental Setup}
 All experimental benchmarks were conducted on an Intel Core i5-11500H processor (6 cores, 12 threads @ 2.90 GHz base, 4.60 GHz turbo) with 32 GB DDR4 RAM running 64-bit Windows 11 Pro. The software runtime environment is the 64-bit OpenJDK HotSpot JVM (Temurin-11 / Java 24) launched with strict JVM flags: \texttt{-Xmx2g -XX:+UseG1GC}.
@@ -196,6 +199,12 @@ All experimental benchmarks were conducted on an Intel Core i5-11500H processor 
 For RQ2, the evaluation is executed across the six churn milestones $C \in \{0, 0.25M, 0.5M, M, 2M, 4M\}$ at $M = 2^{20} = 1,048,576$ and $\alpha = 0.50$ ($N = 524,288$) with seed $42$. Each configuration executes separate hit and miss query passes of $524,288$ operations for both the contaminated table (\texttt{base}) and the reference baseline (\texttt{clean\_table}) across both measurement modes (\texttt{count} and \texttt{time}), yielding 48 independent trials constrained by an automated 60-second process timeout.
 
 For RQ3, measurements evaluate moderate load $\alpha=0.50$ ($\tau=0.20$) and high-load stress $\alpha=0.80$ ($\tau=0.10$) across checkpoints $C \in \{0, M/4, M/2, M, 2M, 4M\}$ using seeds $42, 1337, 20261019$, comparing \texttt{lp-tomb}, \texttt{lp-backshift}, \texttt{rh}, and \texttt{rh-noearly}. Each process uses a 2 GB maximum heap and a 60-second safety timeout, recording build and lookup phases independently.
+
+% =========================================================================
+% V. Results and Discussion
+% =========================================================================
+\section{Results and Discussion}
+\label{sec:results}
 
 % =========================================================================
 % V-A. RQ1: Separate Chaining vs Linear Probing
@@ -218,10 +227,10 @@ At fixed capacity $M = 2^{20}$ ($1{,}048{,}576$ slots) and load factors $\alpha 
 \cline{2-9}
  & Hit & Miss & Hit & Miss & Hit & Miss & Hit & Miss \\
 \hline
-0.50 & 1.500 & 2.500  & 1.503 & 2.508   & 1.250 & 0.500 & 1.249 & 0.501 \\
-0.75 & 2.500 & 8.500  & 2.518 & 8.562   & 1.375 & 0.750 & 1.376 & 0.749 \\
-0.90 & 5.500 & 50.500 & 5.621 & 51.480  & 1.450 & 0.900 & 1.448 & 0.902 \\
-0.95 & 10.500& 200.500& 10.845& 206.120 & 1.475 & 0.950 & 1.474 & 0.951 \\
+0.50 & 1.500 & 2.500  & 1.503 & 2.506   & 1.250 & 0.500 & 1.250 & 0.499 \\
+0.75 & 2.500 & 8.500  & 2.507 & 8.530   & 1.375 & 0.750 & 1.375 & 0.748 \\
+0.90 & 5.500 & 50.500 & 5.504 & 50.068  & 1.450 & 0.900 & 1.450 & 0.898 \\
+0.95 & 10.500& 200.500& 10.626& 204.738 & 1.475 & 0.950 & 1.476 & 0.949 \\
 \hline
 \end{tabular}
 \end{table}
