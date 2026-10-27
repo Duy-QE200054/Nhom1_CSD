@@ -32,7 +32,7 @@
   - Robin Hood tắt dừng sớm (`rh-noearly`): phục vụ phân tích bóc tách cơ chế RQ3.
   - Linear Probing Backshift (`lp-backshift`): cài đặt chuẩn Knuth Algorithm R, hoàn thiện tài liệu so sánh và lý do chọn Knuth Algorithm R thay vì Sedgewick đưa vào paper IEEE.
 - [x] **Cả nhóm (Biến thể A)**: Chốt chuẩn hóa toàn bộ đề tài theo Biến thể A: khóa nguyên thủy `long` 64-bit và hàm băm Fibonacci chuẩn $h(k) = (k \cdot \phi) \ggg (64 - p)$.
-  - Tích hợp và hoàn thiện `BenchmarkRunner` CLI cho toàn bộ các kịch bản đo đạc của RQ3: hỗ trợ các cờ `--repeat`, `--query` (hit/miss/mixed), `--mode` (time/count), chuẩn hóa đúng schema 20 cột (Bảng 4), bảo vệ triệt để chống JIT Dead Code Elimination (DCE).
+  - Tích hợp và hoàn thiện `BenchmarkRunner` CLI cho toàn bộ các kịch bản đo đạc của RQ3: hỗ trợ các cờ `--repeat`, `--query` (hit/miss/mixed), `--mode` (time/count), chuẩn hóa đúng schema 21 cột (Bảng 4, có `build_ms`), bảo vệ triệt để chống JIT Dead Code Elimination (DCE).
   - Tích hợp runner điều phối thực nghiệm tự động trong `bench/run_all.py` cho RQ3: quản lý tiến trình JVM độc lập (`-Xmx2g`), cơ chế timeout 60s an toàn, tự động ghi nhận vào `results/raw/rq3_results.csv`.
   - Hoàn thành chạy thử nghiệm 108 lượt đo thực tế qua ma trận đầy đủ của RQ3: $M = 262144, \alpha = 0.50$, 3 mốc churn $C \in \{65536, 131072, 262144\}$, 3 hạt giống chuẩn (`42, 1337, 20261019`), 3 thuật toán (`rh`, `rh-noearly`, `lp-backshift`). 100% lượt chạy đạt trạng thái `ok`.
   - Cài đặt script vẽ đồ thị tự động `bench/plot_figures.py` (SV 6 phụ trách): xuất 3 biểu đồ chuẩn IEEE độ phân giải cao vào `results/figures/` phục vụ bài báo (`fig_rq3_probes_vs_churn.png`, `fig_rq3_lookup_latency.png`, `fig_rq3_mechanism_ablation.png`).
