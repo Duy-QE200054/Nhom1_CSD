@@ -2,4 +2,5 @@
 /HashTableProject/build/vscode-classes/
 __pycache__/
 *.pyc
+dist/*.zip
 

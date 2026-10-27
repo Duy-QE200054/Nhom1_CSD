@@ -89,6 +89,20 @@
       + **Fig. 6**: `rq3_20261026/fig_rq3_rebuild_spikes.png` (RQ3 Timeline độ trễ khối và đột biến do rebuild).
       + **Fig. 7**: `rq3_20261026/fig_rq3_mechanism_breakdown.png` (RQ3 Bóc tách định lượng 3 cơ chế Robin Hood).
   - Cập nhật toàn diện tài liệu hướng dẫn `results/figures/README.md`.
+- [x] **Thứ Tư (28/10/2026) - Gộp, kiểm tra toàn diện và đóng gói (Nhiệm vụ Cặp 3 - C3 & Cả nhóm)**:
+  - **Sáng (Morning) - Kiểm chéo số liệu bài báo IEEE và đồng bộ hóa văn bản**:
+    - Xây dựng công cụ kiểm chéo số liệu tự động `scratch/verify_paper_c3_numbers.py`.
+    - Đối chiếu 100% các giá trị trong Table II (Tải vừa $\alpha=0.50$), Table III (Tải cao $\alpha=0.80$), Table IV (Profiling khối $10^4$ ops), và các khẳng định định lượng trong bài báo với các tệp CSV gốc (`rq3_20261024.csv`, `rq3_20261025.csv`, `rq3_workload_summary.csv`): Đạt độ chính xác tuyệt đối **100.0%**, 0 sai lệch.
+    - Hoàn thiện bài báo IEEE `paper/paper.tex`: Hoàn thiện Abstract, bổ sung phân tích chuyên sâu Threats to Validity (JIT warmup, GC pauses, đo độc lập trên 1 máy, hàm băm Fibonacci, hạt giống seed), chuẩn hóa trích dẫn [1]–[4] theo IEEE, và bổ sung tuyên bố sử dụng AI theo mục 7.7.
+  - **Chiều (Afternoon) - Nghiệm thu Checklist Mục 9 và Đóng gói nộp bài**:
+    - Xây dựng và thực thi bộ kiểm tra tự động Checklist Mục 9: `scratch/checklist_c3.py` và wrapper `scratch/checklist_c3.ps1`.
+    - Đạt chuẩn **18/18 tiêu chí bắt buộc** của Cặp 3: Cài đặt đúng `rh`, `rh-noearly`, `lp-backshift` (Knuth Algorithm R), Fibonacci hash; Test suite vượt qua 100% (Oracle $10^6$ ops, 6 ca bắt buộc, DIB invariant); Dữ liệu RQ3 sạch 100% không lỗi; Bài báo chuẩn IEEE; Tài liệu hướng dẫn đầy đủ.
+    - Cập nhật `README.md` và `results/raw/README.md` với đầy đủ thông số chạy lại, cờ lệnh JVM, và danh mục dataset.
+    - Triển khai script đóng gói `scratch/package_submission.py`, kiểm tra tính toàn vẹn và tạo gói phát hành `dist/Nhom1_CSD_DeTai2_Submission_20261028.zip` kèm mã SHA-256 manifest `dist/SUBMISSION_MANIFEST.txt`.
+  - **Tối (Evening) - Slide thuyết trình và Cẩm nang phản biện bảo vệ**:
+    - Cập nhật đề cương slide tổng thể 8 slide (thời lượng 5 phút) tại `slides/outline.md`, phân vai rõ ràng cho 6 thành viên (Cặp 3 chủ trì Slide 7 và Slide 8).
+    - Soạn thảo kịch bản thuyết trình chi tiết từng giây cho Cặp 3 tại `slides/rq3_slide_presentation.md` (SV 5 Nguyễn Đình Tiến trình bày Slide 7 trong 75s; SV 6 Lê Hoàng Cầu trình bày Slide 8 trong 30s).
+    - Soạn thảo cẩm nang bộ câu hỏi phản biện bảo vệ chuyên sâu cho Cặp 3 tại `slides/defense_qa_c3.md`: Giải thích cặn kẽ bản chất toán học giảm phương sai DIB, ưu thế vượt trội của Knuth Algorithm R so với Sedgewick và Rebuild, cơ chế dừng sớm Early Exit và mức tiết kiệm $73.8\%$ bước dò miss ở tải cao.
 
 
 
