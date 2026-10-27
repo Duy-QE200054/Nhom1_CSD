@@ -6,42 +6,43 @@ Người thực hiện: Cặp 1 (C1) - Lớp SE20C - FPT University
 
 1. BẢNG PHÂN TÍCH SỐ LIỆU THỰC TẾ GIỮA CÁC FILE CSV
 --------------------------------------------------------------------------------
-| File | Số dòng dữ liệu | machine_id | status | Số cột | Trạng thái schema |
+| File | Số dòng dữ liệu | machine_id | status | Số cột | Trạng thái & Quyết định |
 |---|---|---|---|---|---|
-| results/raw/rq1_runner_results_lab.csv | 44 dòng | 100% 'PC_LAB_01' | 44 ok | 21 cột | ĐỦ 21 CỘT (có build_ms) - FILE GỐC PHÒNG LAB |
-| results/raw/rq1_runner_results_lab_backup.csv | 44 dòng | 100% 'PC_LAB_01' | 44 ok | 21 cột | ĐỦ 21 CỘT (có build_ms) - Bản sao lưu mốc M5 |
-| results/raw/rq1_runner_results.csv | 88 dòng | 'PC_LAB_01' / 'SANDBOX' | 88 ok | 21 cột | Đã chuẩn hóa 21 cột (gồm 44 lab hit + 44 miss) |
-| results/raw/rq1_driver_results.csv | 20 dòng | PC_LAB_01 | 20 ok | 14 cột | Tóm tắt đối chiếu Knuth (hit + miss) |
+| results/raw/rq1_runner_results_lab.csv | 44 dòng | 100% 'PC_LAB_01' | 44 ok | 21 cột (có build_ms) | FILE GỐC PHÒNG LAB (9,854 bytes, 21 cột chuẩn) |
+| results/raw/rq1_runner_results.csv | 44 dòng | 100% 'PC_LAB_01' | 44 ok | 21 cột (có build_ms) | FILE CHÍNH THỨC (Đồng bộ 100% với file lab gốc) |
+| results/raw/rq1_results_backup.csv | 44 dòng | 100% 'PC_LAB_01' | 44 ok | 21 cột (có build_ms) | BẢN SAO LƯU MỐC M5 (Đồng nhất với file lab chính) |
+| results/raw/rq1_runner_results_lab_backup.csv | 44 dòng | 100% 'PC_LAB_01' | 44 ok | 21 cột (có build_ms) | BẢN SAO LƯU DỰ PHÒNG LAB M5 (9,854 bytes) |
+| results/raw/rq1_runner_results_sandbox.csv | 88 dòng | 100% 'SANDBOX' | 88 ok | 20 cột (thiếu build_ms) | DỮ LIỆU SANDBOX CŨ (Lưu trữ riêng, không trộn vào lab) |
+| results/raw/rq1_driver_results.csv | 20 dòng | PC_LAB_01 | 20 ok | 14 cột | Bảng tóm tắt đối chiếu Knuth, ns/op và bytes/key |
 
 --------------------------------------------------------------------------------
-2. GIẢI THÍCH CHI TIẾT SỰ KHÁC BIỆT GIỮA 44 DÒNG LAB VÀ 88 DÒNG SANDBOX
+2. GIẢI THÍCH NGUYÊN NHÂN SỰ KHÁC BIỆT SỐ DÒNG (44 LAB vs 88 SANDBOX)
 --------------------------------------------------------------------------------
-- File phòng lab 'rq1_runner_results_lab.csv' (44 dòng):
-  + Đo đạc trực tiếp trên máy chủ thử nghiệm chuẩn PC_LAB_01 (Intel Core i5-11500H, 32GB RAM).
-  + Thu thập đầy đủ 21 cột theo chuẩn mới nhất (bao gồm cột 'build_ms' đo thời gian nạp dữ liệu).
-  + Phạm vi đo: 22 cấu hình tra cứu thành công (query=hit):
+- Bản báo cáo ghi "44 lượt":
+  + Phản ánh đúng 44 lượt chạy ĐẦU TIÊN và DUY NHẤT được đo đạc trực tiếp trên máy phòng thí nghiệm PC_LAB_01.
+  + Phạm vi: 22 cấu hình tra cứu thành công (query=hit):
     * 4 mức tải alpha (0.50, 0.75, 0.90, 0.95) tại M = 1,048,576 slots.
     * 5 mức dung lượng M (2^18, 2^20, 2^21, 2^22, 2^23) tại alpha = 0.75.
-    * 2 mức dung lượng M (2^18, 2^20) cho kịch bản dồn cụm (clustered).
+    * 2 mức dung lượng M (2^18, 2^20) cho test dồn cụm (clustered).
     * Áp dụng cho cả 2 thuật toán: sc và lp-tomb.
-    * Mỗi cấu hình chạy 1 lượt đếm bước dò (--mode count) và 1 lượt đo thời gian (--mode time).
-    * Tổng cộng: (4 + 5 + 2) x 2 thuật toán x 2 modes = 44 lượt chạy.
+    * Mỗi cấu hình chạy đúng 1 lượt đếm bước dò (--mode count) và 1 lượt đo thời gian (--mode time).
+    * Tổng cộng: (4 + 5 + 2) x 2 thuật toán x 2 chế độ = 44 lượt đo.
+  + Cấu trúc: 21 cột hoàn chỉnh, bao gồm cột 'build_ms' đo thời gian dựng bảng.
 
-- File sandbox 'rq1_runner_results.csv' bản đầu (88 dòng):
-  + Chạy thử nghiệm trên môi trường máy ảo phát triển (machine_id=SANDBOX).
-  + Thu thập theo định dạng cũ 20 cột (chưa có cột 'build_ms').
-  + Bao gồm 44 lượt truy vấn thành công (hit) + 44 lượt truy vấn thất bại (miss).
+- Bản báo cáo ghi "88 lượt":
+  + Là số lượt của file thử nghiệm trên máy ảo SANDBOX, trong đó có thêm 44 lượt truy vấn vắng mặt (query=miss) sinh ngẫu nhiên.
+  + File sandbox cũ này chỉ có 20 cột (thiếu 'build_ms'), và chạy trên môi trường ảo hóa không chuẩn (1 vCPU).
 
 --------------------------------------------------------------------------------
-3. QUYẾT ĐỊNH VÀ KẾT LUẬN CUỐI CÙNG
+3. QUYẾT ĐỊNH THỐNG NHẤT CỦA CẢ NHÓM (HƯỚNG A)
 --------------------------------------------------------------------------------
-1. File dữ liệu chính thức:
-   - File 'rq1_runner_results_lab.csv' là tập dữ liệu đo đạc gốc tại phòng lab (44 dòng, 21 cột).
-   - File 'rq1_runner_results.csv' đã được chuyển đổi đồng bộ sang 21 cột (có 'build_ms'), lấy 44 dòng dữ liệu lab chuẩn làm lõi.
-2. Kiểm chéo số liệu Table I:
-   - 100% số liệu tra cứu trúng (Hit probes) của Table I trong paper/paper.tex khớp chính xác tuyệt đối với 'rq1_runner_results_lab.csv'.
+1. Thống nhất chọn Hướng (a):
+   - Đưa dữ liệu chuẩn từ phòng lab ('rq1_runner_results_lab.csv', 44 dòng, 21 cột, 'PC_LAB_01') làm nội dung chính thức cho 'rq1_runner_results.csv'.
+   - File 'rq1_runner_results_sandbox.csv' (88 dòng) được lưu trữ riêng để đối chiếu lịch sử, KHÔNG đưa vào manifest nộp bài để tránh nhầm lẫn dữ liệu máy ảo với dữ liệu lab.
+2. Kiểm chéo Table I trong bài báo paper.tex:
+   - 100% số liệu tra cứu trúng (Hit probes) khớp chính xác tuyệt đối với file lab 44 dòng 'rq1_runner_results_lab.csv'.
    - 100% số liệu tra cứu trượt (Miss probes) khớp với 'rq1_driver_results.csv'.
-   - Script 'scratch/verify_paper_all_numbers.py' đã được cấu hình đọc trực tiếp file lab và xác nhận 100% PASSED (0% sai lệch).
-3. Slide báo cáo:
-   - Bộ slide chính thức 'slides/slides_final.md' và 'slides/slide_rq1_c1.md' sử dụng 100% dữ liệu đo máy phòng lab PC_LAB_01, không sử dụng số liệu sandbox.
+   - Script tự động 'scratch/verify_paper_all_numbers.py' đọc trực tiếp file lab và xác nhận độ sai lệch 0.0% (100% PASSED).
+3. Slide báo cáo bảo vệ:
+   - File slide chính thức ('slides/slides_final.md' và 'slides/slide_rq1_c1.md') sử dụng 100% dữ liệu đo máy phòng lab PC_LAB_01, hoàn toàn không chứa bất kỳ số liệu SANDBOX nào.
 ================================================================================
