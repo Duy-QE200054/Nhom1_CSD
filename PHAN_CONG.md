@@ -61,5 +61,34 @@
   - **Biểu đồ & Bài báo IEEE**:
     - Cập nhật `bench/plot_figures.py` hỗ trợ cờ `--plot-oct26`: xuất 3 biểu đồ độ phân giải cao tại `results/figures/rq3_20261026/` (`fig_rq3_rebuild_spikes.png`, `fig_rq3_max_dib_comparison.png`, `fig_rq3_mechanism_breakdown.png`).
     - Cập nhật bài báo IEEE `paper/paper.tex`: bổ sung Mục V-C3, Bảng VII về profiling khối và phân tích bóc tách định lượng 3 cơ chế.
+- [x] **Thứ Hai (26/10/2026) - Ngày đệm và phân tích chuyên sâu RQ2 (Nhiệm vụ Cặp 2 - C2)**:
+  - **Kiểm định dữ liệu thô & xác nhận không có mốc lỗi (Nhiệm vụ [Từng cặp])**:
+    - Kiểm tra 100% của toàn bộ 48 lượt chạy RQ2: 100% đạt trạng thái `ok`, 0 lượt timeout, 0 crash, 0 ngoại lệ bộ nhớ.
+    - Đối chiếu chéo `output_check`: Khớp chính xác tuyệt đối 100% giữa bảng tích tụ tombstone (`base`) và bảng đối chứng sạch (`clean_table`) trên mọi mốc churn $C$ và 2 chế độ (`count, time`).
+    - Số mốc lỗi cần chạy lại: **0 mốc**.
+  - **Phân tích RQ2: Tỷ lệ TOMB/EMPTY, số lần dò và thời gian theo C so với bảng đối chứng Clean Table**:
+    - **Tỷ lệ ô nhớ**: Sự suy giảm hàm mũ của ô \texttt{EMPTY} từ $524,288$ ô ($50.00\%$) rơi tự do xuống chỉ còn **$412$ ô ($0.04\%$)** tại $C = 4M$. Tombstone bão hòa chiếm $49.96\%$ dung lượng bảng ($523,876$ ô, chiếm $99.92\%$ toàn bộ khoảng trống ngoài các khóa sống).
+    - **Số bước dò**: Tra cứu thành công (Hit) dừng sớm tại khóa tìm thấy nên chỉ tăng nhẹ từ $1.502$ lên $2.345$ ($1.56\times$). Ngược lại, tra cứu thất bại (Miss) bắt buộc phải dò tìm ô \texttt{EMPTY} nên bị mắc kẹt duyệt qua các cụm tombstone khổng lồ, bùng nổ thảm họa từ $2.499$ lên **$2,843.37$ bước dò** (tăng vọt **$1,137.9\times$**). Bảng đối chứng \textit{Clean Table} duy trì ổn định $1.50$ hit probes và $2.50$ miss probes (khớp chuẩn cận lý thuyết Knuth).
+    - **Thời gian tra cứu**: Miss latency tăng vọt từ $22.75$ ms lên **$5,847.48$ ms** ($5.85$ giây, tăng **$233.3\times$**), trong khi Clean Table hoàn tất trong $25.06$ ms.
+    - **Giải thích mốc timeout**: Lượt chạy nặng nhất ($C = 4M$) hoàn thành trong $5.85$ giây, nằm an toàn dưới ngưỡng timeout $60$ giây của benchmark (biên an toàn $90.25\%$). Tuy nhiên, phân tích tiệm cận chỉ ra rằng khi $C \to \infty$ nếu không rebuild, số ô rỗng triệt tiêu ($\text{EMPTY} \to 0$) khiến độ phức tạp tra cứu trượt chuyển dịch từ $O(1)$ sang quét toàn bảng $O(M)$ cho mỗi truy vấn, chắc chắn gây timeout hệ thống trong môi trường sản xuất. Do đó, cơ chế rebuild định kỳ theo ngưỡng $\tau \cdot M$ ($\tau \in [0.10, 0.20]$) là giải pháp bắt buộc để dọn sạch tombstones và chặn trên độ trễ.
+  - **Tích hợp bộ biểu đồ RQ2 vào codebase**:
+    - Mở rộng script `bench/plot_figures.py` bổ sung cờ `--plot-rq2`: tự động xuất 4 đồ thị khoa học chuẩn IEEE độ phân giải 300 DPI tại `results/figures/` (`fig_rq2_tomb_empty_ratio.png`, `fig_rq2_probes_vs_clean.png`, `fig_rq2_lookup_latency.png`, `fig_rq2_tombstone_dynamics.png`).
+- [x] **Thứ Hai (26/10/2026) - Thống nhất bộ biểu đồ và bảng cho bài báo IEEE (Nhiệm vụ [Cả nhóm])**:
+  - **Quy chuẩn phong cách đồ họa đồng bộ (Visual Style)**:
+    - Bảng màu IEEE thống nhất: `#1f77b4` (Clean Table / Empty / Robin Hood), `#d62728` (Tombstone / Contaminated Table), `#2ca02c` (Live Keys / LP Backshift), `#ff7f0e` (rh-noearly), `#9467bd` (Safety Timeout).
+    - Font chữ khoa học đồng nhất (DejaVu Sans / Helvetica), kích thước nhãn trục 11pt, tiêu đề 12-13pt, lưới tọa độ mảnh (`:` alpha 0.6), định dạng số có ngăn cách hàng nghìn.
+    - Chú thích chân hình chuẩn hóa ghi rõ file CSV nguồn và script tạo. Độ phân giải chuẩn in ấn **300 DPI**.
+  - **Thống nhất đánh số và cấu trúc bài báo trong `paper/paper.tex`**:
+    - **Bảng (Tables)**: Đánh số liền mạch từ Table I đến Table IV (Table I: RQ2 Contamination & Comparison; Table II: RQ3 Moderate Load; Table III: RQ3 High Load Stress; Table IV: Workload Block Profiling).
+    - **Hình (Figures)**: Sắp xếp vị trí khai báo hình khớp chính xác theo trình tự đọc tuyến tính từ Fig. 1 đến Fig. 7:
+      + **Fig. 1**: `fig_rq2_tombstone_dynamics.png` (RQ2 Động học tích tụ tombstone, bùng nổ bước dò và biên an toàn timeout).
+      + **Fig. 2**: `fig_rq3_probes_vs_churn.png` (RQ3 Số bước dò ở tải $\alpha=0.50$).
+      + **Fig. 3**: `fig_rq3_lookup_latency.png` (RQ3 Độ trễ tra cứu ở tải $\alpha=0.50$).
+      + **Fig. 4**: `fig_rq3_mechanism_ablation.png` (RQ3 Bóc tách cơ chế ở tải $\alpha=0.50$).
+      + **Fig. 5**: `rq3_20261025/fig_rq3_probes_vs_churn.png` (RQ3 Số bước dò ở chế độ chịu tải cao $\alpha=0.80$).
+      + **Fig. 6**: `rq3_20261026/fig_rq3_rebuild_spikes.png` (RQ3 Timeline độ trễ khối và đột biến do rebuild).
+      + **Fig. 7**: `rq3_20261026/fig_rq3_mechanism_breakdown.png` (RQ3 Bóc tách định lượng 3 cơ chế Robin Hood).
+  - Cập nhật toàn diện tài liệu hướng dẫn `results/figures/README.md`.
+
 
 
