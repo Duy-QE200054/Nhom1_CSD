@@ -154,7 +154,6 @@ revision hiện tại của repository. SHA-256 của file:
 
 ---
 
-<<<<<<< HEAD
 ## 8. Dữ Liệu RQ1: Separate Chaining vs Linear Probing (Cặp 1 - C1, Thứ Sáu 23/10/2026)
 
 Các file lưu trữ:
@@ -200,8 +199,10 @@ Theo đúng yêu cầu kế hoạch ngày 23/10 và Mục 3 & 5 của đề tài
      - Hit probes: $\frac{1}{2}(1 + \frac{1}{1-\alpha})$ (thực nghiệm: $1.503$ tại $\alpha=0.50$; $2.507$ tại $\alpha=0.75$; $5.504$ tại $\alpha=0.90$; $10.626$ tại $\alpha=0.95$).
      - Miss probes: $\frac{1}{2}(1 + \frac{1}{(1-\alpha)^2})$ (thực nghiệm: $2.504$ tại $\alpha=0.50$; $8.526$ tại $\alpha=0.75$; $50.119$ tại $\alpha=0.90$; $204.682$ tại $\alpha=0.95$).
    - Sai số tương đối giữa thực nghiệm và lý thuyết $< 0.5\%$ trên toàn bộ các mức tải.
-=======
-## 8. Nghiệm Thu Kiểm Chéo Số Liệu & Hoàn Tất Checklist Mục 9 (Cặp 3 - C3, Ngày 28/10/2026)
+
+---
+
+## 9. Nghiệm Thu Kiểm Chéo Số Liệu & Hoàn Tất Checklist Mục 9 (Cặp 3 - C3, Ngày 28/10/2026)
 
 Theo đúng tiến độ ngày 28/10 của Đề tài 2 (`Gộp, kiểm tra và đóng gói`), Cặp 3 đã thực hiện kiểm định toàn diện chất lượng dữ liệu và tính nhất quán với bài báo khoa học:
 
@@ -214,5 +215,3 @@ Theo đúng tiến độ ngày 28/10 của Đề tài 2 (`Gộp, kiểm tra và 
 3. **Đóng gói mã nguồn & sản phẩm nộp bài**:
    - Triển khai script `scratch/package_submission.py`.
    - Tạo gói nén phát hành `dist/Nhom1_CSD_DeTai2_Submission_20261028.zip` kèm mã SHA-256 manifest tại `dist/SUBMISSION_MANIFEST.txt`.
-
->>>>>>> 7957f99a3b8fcc4ea26a3b0dd68e029dac9c1d4c
