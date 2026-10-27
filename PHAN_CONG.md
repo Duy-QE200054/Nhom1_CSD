@@ -40,6 +40,17 @@
   - Cài đặt script vẽ đồ thị tự động `bench/plot_figures.py` (SV 6 phụ trách): xuất 3 biểu đồ chuẩn IEEE độ phân giải cao vào `results/figures/` phục vụ bài báo (`fig_rq3_probes_vs_churn.png`, `fig_rq3_lookup_latency.png`, `fig_rq3_mechanism_ablation.png`).
   - Cập nhật số liệu và phân tích bài báo IEEE: hoàn thiện Mục V-C (Results & Discussion RQ3) và Mục VII (Conclusion).
 - [x] **Cuối ngày 22/10**: 100% unit tests và benchmark runs hoàn tất, mã nguồn và kết quả đo đạc đã được kiểm chứng và đẩy lên repository.
+- [x] **Thứ Sáu (23/10/2026) - Chạy RQ1: Separate Chaining vs Linear Probing (Nhiệm vụ Cặp 1 - C1)**:
+  - **Thí nghiệm A (Hệ số tải $\alpha$)**: Đo đạc đầy đủ 8 cấu hình tại $M = 2^{20} = 1,048,576$, $\alpha \in \{0.50, 0.75, 0.90, 0.95\}$ cho cả `sc` và `lp-tomb` (không xóa).
+  - **Thí nghiệm B (Kích thước bảng $M$)**: Đo đạc 10 cấu hình tại $\alpha = 0.75$, $M \in \{2^{18}, 2^{20}, 2^{21}, 2^{22}, 2^{23}\}$ cho `sc` và `lp-tomb`.
+  - **Bộ dồn cụm (Clustered edge test)**: 4 cấu hình tại $\alpha = 0.75$, $M \in \{2^{18}, 2^{20}\}$ với $10\%$ khóa dồn vào $h(k) < M/64$.
+  - **Đo đạc độc lập Hit & Miss**: Mỗi cấu hình chạy tách biệt 2 loại truy vấn (`hit`: $100\%$ khóa có mặt; `miss`: $100\%$ khóa vắng mặt) và 2 chế độ (`count`: đếm bước dò `ops_count`; `time`: đo thời gian `elapsed_ms`), tách riêng thời gian dựng bảng `build_ms`.
+  - **Quy chuẩn dữ liệu thô & Kiểm tra chéo**:
+    - Hoàn tất toàn bộ 208 lượt chạy chuẩn 21 cột (3 seed `42, 1337, 20261019` cho dữ liệu đều, seed `42` cho dữ liệu dồn cụm) lưu tại `results/raw/rq1_runner_results.csv`.
+    - Tạo bản sao lưu an toàn `results/raw/rq1_results_backup.csv` đồng nhất mã SHA-256 (`F12E2AB61CC4789B7757D2865EE6758FF05BBC13498A3B6EE0CB14D9A6CC1684`).
+    - 208/208 lượt chạy đạt trạng thái `ok`, 0 lượt timeout, 0 crash.
+    - `output_check` khớp chính xác 100% giữa `sc` và `lp-tomb` cùng seed.
+    - Số bước dò khớp lý thuyết Knuth với sai số $< 0.5\%$: $SC_{\text{hit}} \approx 1 + \alpha/2$, $SC_{\text{miss}} \approx \alpha$, $LP_{\text{hit}} \approx \frac{1}{2}(1 + \frac{1}{1-\alpha})$, $LP_{\text{miss}} \approx \frac{1}{2}(1 + \frac{1}{(1-\alpha)^2})$.
 - [x] **Thứ Bảy (24/10/2026) - Ma trận RQ3 (C3)**: Đo riêng `lp-tomb` ($\tau=0.2$), `lp-backshift`, `rh`, và `rh-noearly` tại $M=2^{20}$, $\alpha=0.50$, $C \in \{0, M/4, M/2, M, 2M, 4M\}$; 3 seed, 1 repeat, hit/miss và count/time. Hoàn tất 288 lượt, tất cả `ok`, checksum/output nhất quán. CSV: `results/raw/rq3_20261024.csv`; biểu đồ và phân tích cập nhật trong paper.
 - [x] **Chủ Nhật (25/10/2026) - Hoàn tất dữ liệu RQ3 tải sống cao 0.8 (Nhiệm vụ Cặp 3 - C3)**: Hoàn thành toàn diện kịch bản đo đạc tải sống cao $\alpha = 0.80$ ($N = 838,861, M = 2^{20} = 1,048,576$) cho 4 cấu hình: `lp-tomb` ($\tau = 0.10$), `lp-backshift`, `rh`, `rh-noearly` qua 6 mốc churn $C \in \{0, 262144, 524288, 1048576, 2097152, 4194304\}$; 3 seed chuẩn (`42, 1337, 20261019`), 1 repeat, 2 loại truy vấn (`hit, miss`) và 2 chế độ (`count, time`). Đạt 288/288 lượt chạy trạng thái `ok`, kiểm tra chéo `output_check` khớp 100% giữa tất cả các cài đặt cùng seed và workload. Lưu trữ dữ liệu thô tại `results/raw/rq3_20261025.csv`, tạo bản sao lưu an toàn `results/raw/rq3_results_backup_20261025.csv` đáp ứng mốc kiểm soát M5, xuất bộ biểu đồ tại `results/figures/rq3_20261025/` và cập nhật bài báo IEEE.
 - [x] **Chủ Nhật (25/10/2026) - Hoàn tất dữ liệu & Nghiệm thu mốc [Cả nhóm] cho RQ2 (Nhiệm vụ Cặp 2 - C2)**:
@@ -89,6 +100,8 @@
       + **Fig. 6**: `rq3_20261026/fig_rq3_rebuild_spikes.png` (RQ3 Timeline độ trễ khối và đột biến do rebuild).
       + **Fig. 7**: `rq3_20261026/fig_rq3_mechanism_breakdown.png` (RQ3 Bóc tách định lượng 3 cơ chế Robin Hood).
   - Cập nhật toàn diện tài liệu hướng dẫn `results/figures/README.md`.
-
-
-
+- [x] **Thứ Ba (27/10/2026) - Viết Paper IEEE (Nhiệm vụ Cặp 1 - C1)**:
+  - Hoàn thiện Mục V-A (Results & Discussion RQ1) trong `paper/paper.tex`.
+  - Trình bày Bảng kết quả so sánh đối chiếu số bước dò thực nghiệm với cận lý thuyết của Knuth [1] cho cả hai loại truy vấn `hit` và `miss`.
+  - Phân tích chuyên sâu về sự suy giảm thảm họa của Linear Probing ở tải cao ($\alpha = 0.95$, miss probes lên tới $204.68$) và khi dữ liệu dồn cụm ($27,803$ probes).
+  - Hoàn thành phần phân tích bắt buộc trong Discussion: Đánh giá chi phí cấp phát đối tượng `Node` của Separate Chaining trong Java (header đối tượng 16 bytes, con trỏ tham chiếu 8 bytes, phân tán trên bộ nhớ heap gây cache miss và áp lực GC) so với mảng nguyên thủy liên tục của Linear Probing (tiết kiệm $2.47\times$ bộ nhớ, tận dụng tối đa cơ chế nạp trước dòng cache L1/L2 của CPU).
