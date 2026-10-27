@@ -51,6 +51,7 @@ public class BenchmarkRunner {
         double tau = Double.parseDouble(getArg(args, "--tau", "Infinity"));
         int repeat = Integer.parseInt(getArg(args, "--repeat", "1"));
         String queryType = getArg(args, "--query", "hit");
+        int queriesArg = Integer.parseInt(getArg(args, "--queries", "-1"));
         String xmx = getArg(args, "--xmx", "2g");
         String machineId = getArg(args, "--machine-id", "PC_LAB_01");
         String gitCommit = getArg(args, "--git-commit", "8b19d6d");
@@ -142,16 +143,39 @@ public class BenchmarkRunner {
 
         // Tạo tập khóa truy vấn theo queryType
         long[] queryKeys;
+        int targetQueries = (queriesArg > 0) ? queriesArg : keys.length;
         if ("miss".equalsIgnoreCase(queryType) || "absent".equalsIgnoreCase(queryType)) {
-            queryKeys = RQ1DataGenerator.generateAbsentKeys(keys.length, seed + 100_000L + repeat * 7L, keys);
+            if (targetQueries <= keys.length) {
+                queryKeys = RQ1DataGenerator.generateAbsentKeys(targetQueries, seed + 100_000L + repeat * 7L, keys);
+            } else {
+                long[] absentPool = RQ1DataGenerator.generateAbsentKeys(Math.min(keys.length, 1_000_000), seed + 100_000L + repeat * 7L, keys);
+                queryKeys = new long[targetQueries];
+                java.util.SplittableRandom qRnd = new java.util.SplittableRandom(seed + 100_000L + repeat * 7L);
+                for (int i = 0; i < targetQueries; i++) {
+                    queryKeys[i] = absentPool[qRnd.nextInt(absentPool.length)];
+                }
+            }
         } else if ("mixed".equalsIgnoreCase(queryType)) {
-            int half = keys.length / 2;
-            long[] absent = RQ1DataGenerator.generateAbsentKeys(keys.length - half, seed + 100_000L + repeat * 7L, keys);
-            queryKeys = new long[keys.length];
-            System.arraycopy(keys, 0, queryKeys, 0, half);
-            System.arraycopy(absent, 0, queryKeys, half, absent.length);
+            int half = targetQueries / 2;
+            long[] absentPool = RQ1DataGenerator.generateAbsentKeys(Math.min(keys.length - (keys.length / 2), 500_000), seed + 100_000L + repeat * 7L, keys);
+            queryKeys = new long[targetQueries];
+            java.util.SplittableRandom qRnd = new java.util.SplittableRandom(seed + 200_000L + repeat * 7L);
+            for (int i = 0; i < half; i++) {
+                queryKeys[i] = keys[qRnd.nextInt(keys.length)];
+            }
+            for (int i = half; i < targetQueries; i++) {
+                queryKeys[i] = absentPool[qRnd.nextInt(absentPool.length)];
+            }
         } else {
-            queryKeys = keys;
+            if (targetQueries == keys.length) {
+                queryKeys = keys;
+            } else {
+                queryKeys = new long[targetQueries];
+                java.util.SplittableRandom qRnd = new java.util.SplittableRandom(seed + 55555L + repeat * 13L);
+                for (int i = 0; i < targetQueries; i++) {
+                    queryKeys[i] = keys[qRnd.nextInt(keys.length)];
+                }
+            }
         }
 
         // 5. Đo đạc theo chế độ count hoặc time
