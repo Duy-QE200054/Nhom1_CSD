@@ -30,11 +30,11 @@ public final class C3HashTableTest {
         testOracle(new LinearProbingBackshift(16_384), "lp-backshift", 1L);
         testOracle(new RobinHoodTable(16_384, true), "rh", 2L);
         testOracle(new RobinHoodTable(16_384, false), "rh-noearly", 3L);
-        System.out.println("--- TẤT CẢ 6 CA C3 VÀ ORACLE 1.000.000 THAO TÁC ĐÃ PASS ---\n");
+        System.out.println("--- All 6 C3 cases and 1,000,000-operation oracles PASSED ---\n");
     }
 
     private static void testLinearProbingRandomCollisions() {
-        System.out.print("[C3 Case 1] LP-backshift: M=16, khóa đụng độ ngẫu nhiên... ");
+        System.out.print("[C3 Case 1] LP-backshift: random collisions, M=16... ");
         LinearProbingBackshift table = new LinearProbingBackshift(CAPACITY);
         long[] keys = findCollidingKeys(CAPACITY, 5, 101L);
         for (int i = 0; i < keys.length; i++) {
@@ -52,7 +52,7 @@ public final class C3HashTableTest {
     }
 
     private static void testLinearProbingRepeatedInsertDelete() {
-        System.out.print("[C3 Case 2] LP-backshift: chèn/xóa liên tục... ");
+        System.out.print("[C3 Case 2] LP-backshift: repeated insertions and deletions... ");
         LinearProbingBackshift table = new LinearProbingBackshift(CAPACITY);
         for (int round = 0; round < 20; round++) {
             for (int i = 0; i < 12; i++) {
@@ -71,7 +71,7 @@ public final class C3HashTableTest {
     }
 
     private static void testLinearProbingWrapAroundShift() {
-        System.out.print("[C3 Case 3] LP-backshift: dịch lùi qua cuối mảng... ");
+        System.out.print("[C3 Case 3] LP-backshift: wrap-around backward shift... ");
         LinearProbingBackshift table = new LinearProbingBackshift(CAPACITY);
         long[] keys = findCollidingKeysForHome(CAPACITY, CAPACITY - 2, 4, 202L);
         for (int i = 0; i < keys.length; i++) {
@@ -88,7 +88,7 @@ public final class C3HashTableTest {
     }
 
     private static void testRobinHoodDibSwap() {
-        System.out.print("[C3 Case 4] RH: hoán đổi phần tử theo DIB... ");
+        System.out.print("[C3 Case 4] RH: swap entries by DIB... ");
         RobinHoodTable table = new RobinHoodTable(CAPACITY, true);
         long homeZeroFirst = findCollidingKeysForHome(CAPACITY, 0, 2, 303L)[0];
         long homeOne = findCollidingKeysForHome(CAPACITY, 1, 1, 404L)[0];
@@ -109,7 +109,7 @@ public final class C3HashTableTest {
     }
 
     private static void testRobinHoodRandomCollisions() {
-        System.out.print("[C3 Case 5] RH và RH-noearly: M=16, khóa đụng độ ngẫu nhiên... ");
+        System.out.print("[C3 Case 5] RH and RH-noearly: random collisions, M=16... ");
         long[] keys = findCollidingKeys(CAPACITY, 5, 606L);
         HashTable[] tables = {
             new RobinHoodTable(CAPACITY, true),
@@ -128,7 +128,7 @@ public final class C3HashTableTest {
     }
 
     private static void testRobinHoodNoEarlyRepeatedInsertDelete() {
-        System.out.print("[C3 Case 6] RH-noearly: chèn/xóa và kiểm tra DIB... ");
+        System.out.print("[C3 Case 6] RH-noearly: repeated insertions, deletions, and DIB checks... ");
         RobinHoodNoEarly table = new RobinHoodNoEarly(CAPACITY);
         for (int round = 0; round < 20; round++) {
             for (int i = 0; i < 12; i++) {
@@ -147,7 +147,7 @@ public final class C3HashTableTest {
     }
 
     private static void testOracle(HashTable table, String name, long seed) {
-        System.out.print("[C3 Oracle] " + name + ": 1.000.000 thao tác (40/40/20)... ");
+        System.out.print("[C3 Oracle] " + name + ": 1,000,000 operations (40/40/20)... ");
         Map<Long, Integer> oracle = new HashMap<>();
         SplittableRandom random = new SplittableRandom(seed);
         int puts = 0;
