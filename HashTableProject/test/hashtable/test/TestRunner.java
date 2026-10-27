@@ -14,7 +14,6 @@ public class TestRunner {
         failures += runSuite("RobinHoodAndBackshiftTest", RobinHoodAndBackshiftTest::runAllTests);
         failures += runSuite("LinearProbingBackshiftTest", LinearProbingBackshiftTest::runAllTests);
         failures += runSuite("RobinHoodTableTest", RobinHoodTableTest::runAllTests);
-        failures += runSuite("VariantBStringTest", VariantBStringTest::runAllTests);
         failures += runSuite("C3HashTableTest", C3HashTableTest::runAllTests);
         failures += runSuite("BenchmarkRunnerTest", BenchmarkRunnerTest::runAllTests);
 

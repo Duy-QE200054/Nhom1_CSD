@@ -23,34 +23,5 @@ public final class FibonacciHash {
         }
         return (int) ((key * FIBONACCI_CONSTANT) >>> (64 - p));
     }
-
-    /**
-     * Hàm băm Fibonacci cho chuỗi ký tự theo chuẩn Biến thể B:
-     * h(s) = hash((long) s.hashCode(), p)
-     * Ép kiểu s.hashCode() sang long rồi áp dụng hàm băm Fibonacci.
-     *
-     * @param s Chuỗi ký tự (12 ký tự chữ in hoa + chữ số)
-     * @param p Số bit của kích thước bảng (M = 1 << p)
-     * @return Chỉ số bucket trong khoảng [0, M - 1]
-     */
-    public static int hash(String s, int p) {
-        if (s == null) {
-            throw new IllegalArgumentException("Chuỗi s không được null");
-        }
-        return hash((long) s.hashCode(), p);
-    }
-
-    /**
-     * Chuyển đổi chuỗi thành khóa long theo quy chuẩn Biến thể B: (long) s.hashCode()
-     *
-     * @param s Chuỗi ký tự
-     * @return Khóa long tương ứng
-     */
-    public static long toKey(String s) {
-        if (s == null) {
-            throw new IllegalArgumentException("Chuỗi s không được null");
-        }
-        return (long) s.hashCode();
-    }
 }
 
