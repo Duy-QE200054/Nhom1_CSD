@@ -10,18 +10,45 @@ Nhằm đảm bảo tính nhất quán khoa học và quy chuẩn thẩm mỹ b�
 
 2. **Thống nhất Đánh số Bảng & Hình trong Paper `paper/paper.tex`**:
    - **Bảng (Tables)**:
-     - **Table I**: Kết quả đo thực nghiệm RQ2 và ô nhiễm tombstone ($M=2^{20}, \alpha=0.50$, so sánh đối chứng base vs clean\_table).
-     - **Table II**: Kết quả đo thực nghiệm RQ3 tại $C=4M$ ở tải trung bình ($M=2^{20}, \alpha=0.50$).
-     - **Table III**: Kết quả đo thực nghiệm RQ3 tại tải cao ($\alpha=0.80, \tau=0.10$).
-     - **Table IV**: Profiling chi tiết từng khối $10^4$ thao tác và trạng thái cấu trúc bảng khi hoàn thành ($C=4M$).
-   - **Hình (Figures)** theo đúng trình tự đọc tuyến tính:
-     - **Fig. 1**: `fig_rq2_tombstone_dynamics.png` (RQ2 - Động học tích tụ tombstone, bùng nổ bước dò và biên an toàn timeout).
-     - **Fig. 2**: `fig_rq3_probes_vs_churn.png` (RQ3 - Số bước dò theo chu kỳ churn ở tải $\alpha=0.50$).
-     - **Fig. 3**: `fig_rq3_lookup_latency.png` (RQ3 - Độ trễ tra cứu theo churn ở tải $\alpha=0.50$).
-     - **Fig. 4**: `fig_rq3_mechanism_ablation.png` (RQ3 - Biểu đồ cột bóc tách cơ chế ở tải $\alpha=0.50$).
-     - **Fig. 5**: `rq3_20261025/fig_rq3_probes_vs_churn.png` (RQ3 - Số bước dò ở chế độ chịu tải cao $\alpha=0.80$).
-     - **Fig. 6**: `rq3_20261026/fig_rq3_rebuild_spikes.png` (RQ3 - Diễn tiến độ trễ khối $10^4$ thao tác và các đột biến do rebuild).
-     - **Fig. 7**: `rq3_20261026/fig_rq3_mechanism_breakdown.png` (RQ3 - Bóc tách định lượng 3 cơ chế Robin Hood).
+     - **Table I (RQ1)**: Số bước dò lý thuyết Knuth vs. thực nghiệm của Separate Chaining và Linear Probing ($M=2^{20}, \alpha \in [0.50, 0.95]$).
+     - **Table II (RQ2)**: Kết quả đo thực nghiệm RQ2 và ô nhiễm tombstone ($M=2^{20}, \alpha=0.50$, so sánh đối chứng base vs clean\_table).
+     - **Table III (RQ3)**: Kết quả đo thực nghiệm RQ3 tại $C=4M$ ở tải trung bình ($M=2^{20}, \alpha=0.50$).
+     - **Table IV (RQ3)**: Kết quả đo thực nghiệm RQ3 tại tải cao ($\alpha=0.80, \tau=0.10$).
+     - **Table V (RQ3)**: Profiling chi tiết từng khối $10^4$ thao tác và trạng thái cấu trúc bảng khi hoàn thành ($C=4M$).
+   - **Hình (Figures)** theo đúng trình tự đọc tuyến tính trong Paper:
+     - **Fig. 1**: `fig1_probes_vs_alpha.png` (RQ1 - Số bước dò Hit/Miss thực nghiệm vs Knuth theo hệ số tải $\alpha$).
+     - **Fig. 2**: `fig2_time_vs_alpha.png` (RQ1 - Độ trễ tra cứu ns/op theo $\alpha$, minh chứng nghịch lý số lần dò vs thời gian).
+     - **Fig. 3**: `fig5_memory.png` (RQ1 - Dung lượng bộ nhớ JVM heap byte/khóa giữa Node của SC và mảng nguyên thủy LP).
+     - **Fig. 4**: `fig_rq2_tombstone_dynamics.png` (RQ2 - Động học tích tụ tombstone, bùng nổ bước dò và biên an toàn timeout).
+     - **Fig. 5**: `rq3_20261024/fig_rq3_probes_vs_churn.png` (RQ3 - Số bước dò theo chu kỳ churn ở tải $\alpha=0.50$).
+     - **Fig. 6**: `rq3_20261024/fig_rq3_lookup_latency.png` (RQ3 - Độ trễ tra cứu theo churn ở tải $\alpha=0.50$).
+     - **Fig. 7**: `rq3_20261024/fig_rq3_mechanism_ablation.png` (RQ3 - Biểu đồ cột bóc tách cơ chế ở tải $\alpha=0.50$).
+     - **Fig. 8**: `rq3_20261025/fig_rq3_probes_vs_churn.png` (RQ3 - Số bước dò ở chế độ chịu tải cao $\alpha=0.80$).
+     - **Fig. 9**: `rq3_20261026/fig_rq3_rebuild_spikes.png` (RQ3 - Diễn tiến độ trễ khối $10^4$ thao tác và các đột biến do rebuild).
+     - **Fig. 10**: `rq3_20261026/fig_rq3_mechanism_breakdown.png` (RQ3 - Bóc tách định lượng 3 cơ chế Robin Hood).
+
+---
+
+## Danh Sách Các Biểu Đồ RQ1 (Nhiệm vụ Cặp 1 - C1)
+
+Bộ 5 biểu đồ cốt lõi cho Câu hỏi Nghiên cứu 1 (Separate Chaining vs. Linear Probing):
+
+### 1. `fig1_probes_vs_alpha.png`
+- **Mục đích**: So sánh số lần dò trung bình (Hit và Miss) giữa `sc` và `lp-tomb` trên thang đo logarit đối chiếu với đường cận lý thuyết Knuth Volume 3 khi $\alpha \in \{0.50, 0.75, 0.90, 0.95\}$ tại $M = 2^{20}$.
+- **Phát hiện chính**:
+  - Tra cứu thành công (Hit): LP tăng từ $1.50$ lên $10.85$ bước dò; SC tăng từ $1.25$ lên $1.47$ bước dò.
+  - Tra cứu thất bại (Miss): LP bùng nổ do cụm sơ cấp (primary clustering) từ $2.51$ lên $206.12$ bước dò; SC giữ vững ở mức $0.95$ bước dò. Khớp chính xác với lý thuyết Knuth ($< 2.8\%$ sai lệch).
+
+### 2. `fig2_time_vs_alpha.png`
+- **Mục đích**: Khảo sát thời gian thực thi tra cứu (ns / thao tác) theo hệ số tải $\alpha$ tại $M = 2^{20}$.
+- **Phát hiện chính**:
+  - Tại tải trung bình ($\alpha \le 0.75$), Linear Probing đạt tốc độ cao hơn Separate Chaining ($36.9$ ns/op vs $54.1$ ns/op tại $\alpha=0.50$) nhờ mảng nguyên thủy liên tục kích hoạt cơ chế nạp trước CPU cache line (hardware prefetching).
+  - Tại tải rất cao ($\alpha \ge 0.90$), Linear Probing suy giảm mạnh do chuỗi dò dài ($84.1$ ns/op tại $\alpha=0.95$), trong khi Separate Chaining duy trì ổn định ($50.7$ ns/op).
+
+### 3. `fig5_memory.png`
+- **Mục đích**: So sánh mức tiêu hao bộ nhớ phụ (byte / khóa) trên heap JVM giữa cấp phát đối tượng `Node` của SC và mảng nguyên thủy phẳng của LP.
+- **Phát hiện chính**:
+  - Cấu trúc `Node` trong Java 64-bit tiêu tốn $32$ bytes/node (16B header + 8B key + 4B val + 4B next pointer) cộng thêm $4$ bytes/ô bucket, dẫn đến mức tiêu thụ thực tế gấp $3.2\times$ so với Linear Probing (chỉ tốn $13$ bytes/ô: 8B key + 4B val + 1B state).
 
 ---
 

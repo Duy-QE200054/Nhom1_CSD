@@ -4,6 +4,21 @@ Thư mục lưu trữ toàn bộ các file CSV kết quả đo thực nghiệm t
 
 ---
 
+## 0. Dữ Liệu RQ1: Separate Chaining vs Linear Probing (Cặp 1 - C1)
+
+File lưu trữ: [rq1_runner_results.csv](./rq1_runner_results.csv) (bản sao lưu nguyên gốc: [rq1_results_backup.csv](./rq1_results_backup.csv)).
+- **Mục tiêu nghiên cứu**: Câu hỏi RQ1 - So sánh toàn diện số bước dò (Hit/Miss), độ trễ tra cứu (ns/op), bộ nhớ heap và độ bền vững trước dữ liệu dồn cụm giữa Separate Chaining (`sc`) và Linear Probing (`lp-tomb` không xóa).
+- **Phạm vi ma trận đo đạc**:
+  - **Thí nghiệm A**: Hệ số tải $\alpha \in \{0.50, 0.75, 0.90, 0.95\}$ tại $M = 2^{20}$ ($1,048,576$ slots).
+  - **Thí nghiệm B**: Dung lượng bảng $M \in \{2^{18}, 2^{20}, 2^{21}, 2^{22}, 2^{23}\}$ ($262,144$ đến $8,388,608$ slots) tại $\alpha = 0.75$.
+  - **Bộ dồn cụm (Clustering)**: $10\%$ khóa có $h(k) < M/64$ tại $M \in \{2^{18}, 2^{20}\}, \alpha = 0.75$.
+  - **Loại truy vấn**: Đầy đủ cả truy vấn trúng (`hit`) và truy vấn trượt vắng mặt (`miss`) với tập khóa vắng mặt sinh độc lập qua `HashSet` loại trùng.
+  - **Chế độ đo**: Tách biệt hoàn toàn giữa đo số bước dò (`--mode count`) và đo thời gian (`--mode time`).
+  - **Tổng cộng**: 88 lượt chạy độc lập (44 lượt `sc` và 44 lượt `lp-tomb`), $100\%$ đạt trạng thái `ok`.
+- **Mốc cứng M5**: Bản sao lưu nguyên gốc `rq1_results_backup.csv` được lưu trữ an toàn, đảm bảo tính toàn vẹn dữ liệu trước hội đồng.
+
+---
+
 ## 1. File `rq3_results.csv` (Nhiệm vụ Cặp 3 - C3)
 - **Mục tiêu nghiên cứu**: Câu hỏi RQ3 - Nghiên cứu bóc tách cơ chế của Robin Hood Hashing (`rh`, `rh-noearly`, `lp-backshift`).
 - **Script sinh dữ liệu**: `bench/run_all.py --rq RQ3`
