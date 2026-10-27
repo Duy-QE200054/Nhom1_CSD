@@ -153,6 +153,6 @@ public class SeparateChaining implements HashTable {
     }
 
     private static void validateKey(long key) {
-        // Hỗ trợ tất cả các khóa long, bao gồm cả (long) s.hashCode() từ chuỗi ký tự Biến thể B
+        // Hỗ trợ tất cả các khóa long nguyên thủy không âm theo quy chuẩn Biến thể A
     }
 }

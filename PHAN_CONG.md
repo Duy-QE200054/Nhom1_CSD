@@ -31,9 +31,7 @@
   - Robin Hood đầy đủ (`rh`): DIB, Robin Hood swap, Early exit dừng sớm, Xóa dịch lùi (Backward-shift deletion) không tombstone.
   - Robin Hood tắt dừng sớm (`rh-noearly`): phục vụ phân tích bóc tách cơ chế RQ3.
   - Linear Probing Backshift (`lp-backshift`): cài đặt chuẩn Knuth Algorithm R, hoàn thiện tài liệu so sánh và lý do chọn Knuth Algorithm R thay vì Sedgewick đưa vào paper IEEE.
-  - Test Oracle toàn diện cho `rh` và `lp-backshift` (100,000 ops đối chiếu HashMap).
-- [x] **Cả nhóm (Biến thể B)**: Bộ sinh chuỗi 12 ký tự chữ in hoa + chữ số (`StringKeyGenerator`) và hàm băm Fibonacci trên `(long) s.hashCode()`.
-- [x] **Thứ Năm (22/10/2026) - Tích hợp Bộ Đo và Chạy Thử (Nhiệm vụ Cặp 3 - C3)**:
+- [x] **Cả nhóm (Biến thể A)**: Chốt chuẩn hóa toàn bộ đề tài theo Biến thể A: khóa nguyên thủy `long` 64-bit và hàm băm Fibonacci chuẩn $h(k) = (k \cdot \phi) \ggg (64 - p)$.
   - Tích hợp và hoàn thiện `BenchmarkRunner` CLI cho toàn bộ các kịch bản đo đạc của RQ3: hỗ trợ các cờ `--repeat`, `--query` (hit/miss/mixed), `--mode` (time/count), chuẩn hóa đúng schema 20 cột (Bảng 4), bảo vệ triệt để chống JIT Dead Code Elimination (DCE).
   - Tích hợp runner điều phối thực nghiệm tự động trong `bench/run_all.py` cho RQ3: quản lý tiến trình JVM độc lập (`-Xmx2g`), cơ chế timeout 60s an toàn, tự động ghi nhận vào `results/raw/rq3_results.csv`.
   - Hoàn thành chạy thử nghiệm 108 lượt đo thực tế qua ma trận đầy đủ của RQ3: $M = 262144, \alpha = 0.50$, 3 mốc churn $C \in \{65536, 131072, 262144\}$, 3 hạt giống chuẩn (`42, 1337, 20261019`), 3 thuật toán (`rh`, `rh-noearly`, `lp-backshift`). 100% lượt chạy đạt trạng thái `ok`.
@@ -66,8 +64,8 @@
     - Số mốc lỗi cần chạy lại: **0 mốc**. Dữ liệu thô hoàn toàn sạch và hợp lệ.
   - **Phân tích RQ3: tổng thời gian, median/max khối, số lần rebuild và bóc tách 3 cơ chế**:
     - Triển khai script đo đạc và điều phối phân tích khối tự động `bench/run_rq3_analysis.py`: ghi nhận chi tiết 3,356 khối $10^4$ thao tác cho $\alpha=0.50$ và 3,356 khối cho $\alpha=0.80$ xuyên suốt $4,194,304$ chu kỳ churn (lưu tại `results/raw/rq3_block_profiling_alpha050.csv` và `results/raw/rq3_block_profiling_alpha080.csv`).
-    - **Cơ chế 1 (Loại bỏ Tombstone)**: `lp-tomb` kích hoạt 14 lần rebuild ở $\alpha=0.50$ và 23 lần rebuild ở $\alpha=0.80$, gây đột biến thời gian khối (rebuild latency spikes) trung bình $10.14 - 13.34$ ms (tăng vọt $5.4\times - 6.1\times$ so với khối bình thường $\approx 1.87 - 2.18$ ms, đỉnh điểm lên tới $36.10$ ms). Ngược lại, `lp-backshift` và `rh` duy trì 0 lần rebuild, 0 tombstones và đường độ trễ phẳng lì ổn định.
-    - **Cơ chế 2 (Hoán đổi theo DIB)**: San phẳng phân phối chuỗi dò, cắt giảm Max DIB từ $41$ xuống $9$ ở $\alpha=0.50$ (giảm $78.0\%$) và từ $195$ xuống $25$ ở $\alpha=0.80$ (giảm $87.2\%$), kiểm soát chặt chẽ tail latency.
+    - **Cơ chế 1 (Loại bỏ Tombstone)**: `lp-tomb` kích hoạt 14 lần rebuild ở $\alpha=0.50$ và 23 lần rebuild ở $\alpha=0.80$, gây đột biến thời gian khối (rebuild latency spikes) trung bình $10.14 - 13.34$ ms (tăng vọt $5.4\times - 6.1\times$ so với khối bình thường $\approx 1.87 - 2.18$ ms, đỉnh điểm lên tới $36.10$ ms). Ngược lại, `lp-backshift` và `rh` duy trì 0 lần rebuild và 0 tombstone; thao tác xóa vẫn có thể tốn thời gian dịch chuyển cụm.
+    - **Cơ chế 2 (Hoán đổi theo DIB)**: San phẳng phân phối độ dời, cắt giảm Max DIB từ $41$ xuống $9$ ở $\alpha=0.50$ (giảm $78.0\%$) và từ $195$ xuống $25$ ở $\alpha=0.80$ (giảm $87.2\%$). Đây là chỉ số cực đại, không phải phép đo trực tiếp phương sai hoặc percentile tail latency.
     - **Cơ chế 3 (Dừng sớm Early Exit)**: Cắt giảm $30.0\%$ số bước dò miss ở $\alpha=0.50$ ($2.499 \to 1.751$) và cắt giảm tới **$73.8\%$** ở $\alpha=0.80$ ($12.933 \to 3.398$). So với `lp-tomb` có rebuild, Robin Hood giảm tới **$83.7\%$** số bước dò miss.
   - **Biểu đồ & Bài báo IEEE**:
     - Cập nhật `bench/plot_figures.py` hỗ trợ cờ `--plot-oct26`: xuất 3 biểu đồ độ phân giải cao tại `results/figures/rq3_20261026/` (`fig_rq3_rebuild_spikes.png`, `fig_rq3_max_dib_comparison.png`, `fig_rq3_mechanism_breakdown.png`).
@@ -100,8 +98,31 @@
       + **Fig. 6**: `rq3_20261026/fig_rq3_rebuild_spikes.png` (RQ3 Timeline độ trễ khối và đột biến do rebuild).
       + **Fig. 7**: `rq3_20261026/fig_rq3_mechanism_breakdown.png` (RQ3 Bóc tách định lượng 3 cơ chế Robin Hood).
   - Cập nhật toàn diện tài liệu hướng dẫn `results/figures/README.md`.
+<<<<<<< HEAD
 - [x] **Thứ Ba (27/10/2026) - Viết Paper IEEE (Nhiệm vụ Cặp 1 - C1)**:
   - Hoàn thiện Mục V-A (Results & Discussion RQ1) trong `paper/paper.tex`.
   - Trình bày Bảng kết quả so sánh đối chiếu số bước dò thực nghiệm với cận lý thuyết của Knuth [1] cho cả hai loại truy vấn `hit` và `miss`.
   - Phân tích chuyên sâu về sự suy giảm thảm họa của Linear Probing ở tải cao ($\alpha = 0.95$, miss probes lên tới $204.68$) và khi dữ liệu dồn cụm ($27,803$ probes).
   - Hoàn thành phần phân tích bắt buộc trong Discussion: Đánh giá chi phí cấp phát đối tượng `Node` của Separate Chaining trong Java (header đối tượng 16 bytes, con trỏ tham chiếu 8 bytes, phân tán trên bộ nhớ heap gây cache miss và áp lực GC) so với mảng nguyên thủy liên tục của Linear Probing (tiết kiệm $2.47\times$ bộ nhớ, tận dụng tối đa cơ chế nạp trước dòng cache L1/L2 của CPU).
+=======
+- [x] **Thứ Tư (28/10/2026) - Gộp, kiểm tra toàn diện và đóng gói (Nhiệm vụ Cặp 3 - C3 & Cả nhóm)**:
+  - **Sáng (Morning) - Kiểm chéo số liệu bài báo IEEE và đồng bộ hóa văn bản**:
+    - Xây dựng công cụ kiểm chéo số liệu tự động `scratch/verify_paper_c3_numbers.py`.
+    - Đối chiếu 100% các giá trị trong Table II (Tải vừa $\alpha=0.50$), Table III (Tải cao $\alpha=0.80$), Table IV (Profiling khối $10^4$ ops), và các khẳng định định lượng trong bài báo với các tệp CSV gốc (`rq3_20261024.csv`, `rq3_20261025.csv`, `rq3_workload_summary.csv`): Đạt độ chính xác tuyệt đối **100.0%**, 0 sai lệch.
+    - Hoàn thiện bài báo IEEE `paper/paper.tex`: Hoàn thiện Abstract, bổ sung phân tích chuyên sâu Threats to Validity (JIT warmup, GC pauses, đo độc lập trên 1 máy, hàm băm Fibonacci, hạt giống seed), chuẩn hóa trích dẫn [1]–[4] theo IEEE, và bổ sung tuyên bố sử dụng AI theo mục 7.7.
+  - **Chiều (Afternoon) - Nghiệm thu Checklist Mục 9 và Đóng gói nộp bài**:
+    - Xây dựng và thực thi bộ kiểm tra tự động Checklist Mục 9: `scratch/checklist_c3.py` và wrapper `scratch/checklist_c3.ps1`.
+    - Đạt chuẩn **18/18 tiêu chí bắt buộc** của Cặp 3: Cài đặt đúng `rh`, `rh-noearly`, `lp-backshift` (Knuth Algorithm R), Fibonacci hash; Test suite vượt qua 100% (Oracle $10^6$ ops, 6 ca bắt buộc, DIB invariant); Dữ liệu RQ3 sạch 100% không lỗi; Bài báo chuẩn IEEE; Tài liệu hướng dẫn đầy đủ.
+    - Cập nhật `README.md` và `results/raw/README.md` với đầy đủ thông số chạy lại, cờ lệnh JVM, và danh mục dataset.
+    - Triển khai script đóng gói `scratch/package_submission.py`, kiểm tra tính toàn vẹn và tạo gói phát hành `dist/Nhom1_CSD_DeTai2_Submission_20261028.zip` kèm mã SHA-256 manifest `dist/SUBMISSION_MANIFEST.txt`.
+  - **Tối (Evening) - Slide thuyết trình và Cẩm nang phản biện bảo vệ**:
+    - Cập nhật đề cương slide tổng thể 8 slide (thời lượng 5 phút) tại `slides/outline.md`, phân vai rõ ràng cho 6 thành viên (Cặp 3 chủ trì Slide 7 và Slide 8).
+    - Soạn thảo kịch bản thuyết trình chi tiết từng giây cho Cặp 3 tại `slides/rq3_slide_presentation.md` (SV 5 Nguyễn Đình Tiến trình bày Slide 7 trong 75s; SV 6 Lê Hoàng Cầu trình bày Slide 8 trong 30s).
+    - Soạn thảo cẩm nang bộ câu hỏi phản biện bảo vệ chuyên sâu cho Cặp 3 tại `slides/defense_qa_c3.md`: Giải thích cặn kẽ bản chất toán học giảm phương sai DIB, ưu thế vượt trội của Knuth Algorithm R so với Sedgewick và Rebuild, cơ chế dừng sớm Early Exit và mức tiết kiệm $73.8\%$ bước dò miss ở tải cao.
+- [x] **Thứ Năm (29/10/2026) - Chuẩn bị tập dượt vấn đáp (Cặp 3 - C3)**:
+  - Bổ sung câu trả lời miệng ngắn cho ba câu hỏi trọng tâm của nhóm: Robin Hood giảm độ dời cực đại như thế nào; vì sao tombstone làm miss chậm; vì sao probe count thấp của Separate Chaining không luôn đồng nghĩa thời gian thấp.
+  - Rà soát lời thoại Slide 7/8 và câu trả lời để phân biệt probe count, Max DIB, block latency và lookup time; bỏ các khẳng định chưa được phép đo xác nhận (phương sai/percentile trực tiếp, bảo đảm SLA, “không có spike” tuyệt đối).
+  - Tài liệu dùng để các thành viên tập dượt: `slides/defense_qa_c3.md`, `slides/rq3_slide_presentation.md`, `slides/outline.md`.
+  - **Phạm vi hoàn tất**: đã chuẩn bị và chỉnh tài liệu; buổi tập dượt trực tiếp của cả nhóm cần các thành viên thực hiện cùng nhau.
+
+>>>>>>> 7957f99a3b8fcc4ea26a3b0dd68e029dac9c1d4c

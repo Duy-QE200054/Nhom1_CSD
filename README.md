@@ -140,6 +140,34 @@ python bench/plot_figures.py --plot-oct26
 ```
 Ảnh đồ thị chất lượng cao được lưu tại: `results/figures/rq3_20261026/`.
 
+### Kiểm Chéo Toàn Bộ Số Liệu Bài Báo IEEE với CSV Gốc (Nhiệm vụ 28/10)
+- Tự động đối chiếu 100% các giá trị trong Table II, Table III, Table IV và các khẳng định định lượng trong bài báo với các file CSV gốc:
+```bash
+python scratch/verify_paper_c3_numbers.py
+```
+
+### Chạy Checklist Tự Kiểm Tra Mục 9 Trước Khi Nộp (Nhiệm vụ 28/10 - C3)
+- Kiểm tra toàn diện 18/18 tiêu chí cho Cặp 3 (Cài đặt, Bộ test, Oracle 1.000.000 ops, CSV, Bài báo, Đóng gói):
+```powershell
+# Chạy bằng PowerShell
+powershell -ExecutionPolicy Bypass -File scratch/checklist_c3.ps1
+
+# Hoặc bằng Python cross-platform
+python scratch/checklist_c3.py
+```
+
+### Đóng Gói Mã Nguồn & Sản Phẩm Nộp Đề Tài (Nhiệm vụ 28/10)
+- Kiểm tra danh mục tài liệu bắt buộc và sinh gói nén nộp bài kèm mã SHA-256 manifest:
+```bash
+python scratch/package_submission.py
+```
+Gói nén sinh ra tại: `dist/Nhom1_CSD_DeTai2_Submission_20261028.zip` cùng manifest `dist/SUBMISSION_MANIFEST.txt`.
+
+### Slide Báo Cáo & Bộ Câu Hỏi Phản Biện Bảo Vệ C3 (Nhiệm vụ 28/10)
+- **Đề cương phân vai slide nhóm (5 phút)**: [slides/outline.md](file:///C:/Users/Hi/.gemini/antigravity-ide/scratch/Nhom1_CSD/slides/outline.md)
+- **Kịch bản thuyết trình chi tiết cho Cặp 3 (Slide 7 & 8)**: [slides/rq3_slide_presentation.md](file:///C:/Users/Hi/.gemini/antigravity-ide/scratch/Nhom1_CSD/slides/rq3_slide_presentation.md)
+- **Cẩm nang câu hỏi phản biện chuyên sâu cho Cặp 3**: [slides/defense_qa_c3.md](file:///C:/Users/Hi/.gemini/antigravity-ide/scratch/Nhom1_CSD/slides/defense_qa_c3.md)
+
 ---
 
 

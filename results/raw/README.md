@@ -139,6 +139,7 @@ revision hiện tại của repository. SHA-256 của file:
 
 ---
 
+<<<<<<< HEAD
 ## 8. Dữ Liệu RQ1: Separate Chaining vs Linear Probing (Cặp 1 - C1, Thứ Sáu 23/10/2026)
 
 Các file lưu trữ:
@@ -184,3 +185,19 @@ Theo đúng yêu cầu kế hoạch ngày 23/10 và Mục 3 & 5 của đề tài
      - Hit probes: $\frac{1}{2}(1 + \frac{1}{1-\alpha})$ (thực nghiệm: $1.503$ tại $\alpha=0.50$; $2.507$ tại $\alpha=0.75$; $5.504$ tại $\alpha=0.90$; $10.626$ tại $\alpha=0.95$).
      - Miss probes: $\frac{1}{2}(1 + \frac{1}{(1-\alpha)^2})$ (thực nghiệm: $2.504$ tại $\alpha=0.50$; $8.526$ tại $\alpha=0.75$; $50.119$ tại $\alpha=0.90$; $204.682$ tại $\alpha=0.95$).
    - Sai số tương đối giữa thực nghiệm và lý thuyết $< 0.5\%$ trên toàn bộ các mức tải.
+=======
+## 8. Nghiệm Thu Kiểm Chéo Số Liệu & Hoàn Tất Checklist Mục 9 (Cặp 3 - C3, Ngày 28/10/2026)
+
+Theo đúng tiến độ ngày 28/10 của Đề tài 2 (`Gộp, kiểm tra và đóng gói`), Cặp 3 đã thực hiện kiểm định toàn diện chất lượng dữ liệu và tính nhất quán với bài báo khoa học:
+
+1. **Kiểm chéo số liệu bài báo IEEE (Table II, III, IV) với CSV gốc**:
+   - Triển khai script tự động `scratch/verify_paper_c3_numbers.py`.
+   - **Kết quả**: Khớp chính xác tuyệt đối 100% đối với toàn bộ các giá trị bước dò (hit/miss probes), thời gian trung vị (hit/miss ms), tổng thời gian churn, độ trễ khối trung vị/cực đại, số lần rebuild và Max DIB giữa `paper/paper.tex` và các tệp dữ liệu thô `rq3_20261024.csv`, `rq3_20261025.csv`, `rq3_workload_summary.csv`.
+2. **Nghiệm thu Checklist Mục 9 tự kiểm tra trước khi nộp**:
+   - Triển khai bộ kiểm tra tự động `scratch/checklist_c3.py` và wrapper `scratch/checklist_c3.ps1`.
+   - **Kết quả**: 18/18 tiêu chí bắt buộc của Cặp 3 đạt chuẩn (100% PASSED).
+3. **Đóng gói mã nguồn & sản phẩm nộp bài**:
+   - Triển khai script `scratch/package_submission.py`.
+   - Tạo gói nén phát hành `dist/Nhom1_CSD_DeTai2_Submission_20261028.zip` kèm mã SHA-256 manifest tại `dist/SUBMISSION_MANIFEST.txt`.
+
+>>>>>>> 7957f99a3b8fcc4ea26a3b0dd68e029dac9c1d4c
