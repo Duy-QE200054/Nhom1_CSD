@@ -136,3 +136,20 @@ CSV ghi nhận máy `DESKTOP-AQL5DFO` và revision nguồn `705cf48-dirty`; revi
 này thuộc nhánh local trước khi đồng bộ với lịch sử GitHub, nên không phải
 revision hiện tại của repository. SHA-256 của file:
 `74aa91e034274d04c25e424957892bc3bec06992bf950e9117fccb5e2bb089bc`.
+
+---
+
+## 8. Nghiệm Thu Kiểm Chéo Số Liệu & Hoàn Tất Checklist Mục 9 (Cặp 3 - C3, Ngày 28/10/2026)
+
+Theo đúng tiến độ ngày 28/10 của Đề tài 2 (`Gộp, kiểm tra và đóng gói`), Cặp 3 đã thực hiện kiểm định toàn diện chất lượng dữ liệu và tính nhất quán với bài báo khoa học:
+
+1. **Kiểm chéo số liệu bài báo IEEE (Table II, III, IV) với CSV gốc**:
+   - Triển khai script tự động `scratch/verify_paper_c3_numbers.py`.
+   - **Kết quả**: Khớp chính xác tuyệt đối 100% đối với toàn bộ các giá trị bước dò (hit/miss probes), thời gian trung vị (hit/miss ms), tổng thời gian churn, độ trễ khối trung vị/cực đại, số lần rebuild và Max DIB giữa `paper/paper.tex` và các tệp dữ liệu thô `rq3_20261024.csv`, `rq3_20261025.csv`, `rq3_workload_summary.csv`.
+2. **Nghiệm thu Checklist Mục 9 tự kiểm tra trước khi nộp**:
+   - Triển khai bộ kiểm tra tự động `scratch/checklist_c3.py` và wrapper `scratch/checklist_c3.ps1`.
+   - **Kết quả**: 18/18 tiêu chí bắt buộc của Cặp 3 đạt chuẩn (100% PASSED).
+3. **Đóng gói mã nguồn & sản phẩm nộp bài**:
+   - Triển khai script `scratch/package_submission.py`.
+   - Tạo gói nén phát hành `dist/Nhom1_CSD_DeTai2_Submission_20261028.zip` kèm mã SHA-256 manifest tại `dist/SUBMISSION_MANIFEST.txt`.
+
