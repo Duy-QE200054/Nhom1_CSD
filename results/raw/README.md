@@ -123,3 +123,16 @@ alpha,algorithm,block_index,start_cycle,end_cycle,ops_count,elapsed_ms,tombstone
 - **Giá trị `output_check`**: Khớp chính xác 100% giữa tất cả các cài đặt cùng seed và workload.
 - **Mốc lỗi cần chạy lại**: **0 mốc**.
 
+## 7. Bộ đo bổ sung RQ3 ngày 27/10/2026 (C3)
+
+File [RQ3_C3_20261027.csv](./RQ3_C3_20261027.csv) lưu 108 lượt đo bổ sung với
+`rh`, `rh-noearly` và `lp-backshift`, ở tải ban đầu $\alpha=0.50$ và
+$C=65{,}536$. Ma trận gồm hai loại truy vấn (`hit`, `miss`), hai chế độ
+(`count`, `time`), ba seed (`42`, `1337`, `20261019`) và ba lần lặp. Cả 108
+lượt có `status=ok`; file dùng schema 20 cột lịch sử, không có `build_ms`.
+
+Đây là phép đo bổ sung trên một máy Windows 11 / Java 24.0.2. Metadata trong
+CSV ghi nhận máy `DESKTOP-AQL5DFO` và revision nguồn `705cf48-dirty`; revision
+này thuộc nhánh local trước khi đồng bộ với lịch sử GitHub, nên không phải
+revision hiện tại của repository. SHA-256 của file:
+`74aa91e034274d04c25e424957892bc3bec06992bf950e9117fccb5e2bb089bc`.
