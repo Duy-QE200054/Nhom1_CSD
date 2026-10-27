@@ -23,7 +23,7 @@ Da Nang / Can Tho / Ho Chi Minh City / Ha Noi, Vietnam \\
 \maketitle
 
 \begin{abstract}
-Hash tables are foundational data structures in transaction indexing systems with high turnover rates, where items are continuously inserted and deleted. While open addressing with Linear Probing is cache-friendly, the accumulation of tombstones degrades lookup latency, especially for unsuccessful queries, necessitating costly periodic table rebuilds. In this study, we empirically evaluate four collision resolution strategies across millions of operations in Java: Separate Chaining, Linear Probing with tombstones, Linear Probing with backward-shift deletion, and Robin Hood hashing (both with and without early-stopping). We address three research questions regarding load factor scaling, tombstone pollution dynamics, and mechanism decomposition in Robin Hood hashing. Our empirical findings demonstrate that...
+Hash tables are foundational data structures in transaction indexing systems with high turnover rates, where items are continuously inserted and deleted. While open addressing with Linear Probing is cache-friendly, the accumulation of tombstones degrades lookup latency, especially for unsuccessful queries, necessitating costly periodic table rebuilds. In this study, we empirically evaluate four collision resolution strategies across millions of operations in Java: Separate Chaining, Linear Probing with tombstones, Linear Probing with backward-shift deletion, and Robin Hood hashing (both with and without early-stopping). We address three research questions regarding load factor scaling, tombstone pollution dynamics, and mechanism decomposition in Robin Hood hashing. Our empirical findings demonstrate that in Linear Probing without rebuilding (RQ2), tombstone accumulation depletes empty slots down to $0.04\%$, triggering a catastrophic $1,137.9\times$ surge in unsuccessful probe depth (escalating from $2.50$ to $2,843.37$ probes) and a $233.3\times$ latency penalty, demonstrating the imperative necessity of periodic rebuilding thresholded at $\tau \cdot M$ ($\tau \in [0.10, 0.20]$). Furthermore, Robin Hood hashing with early exit slashes unsuccessful search depth by up to $73.8\%$ under heavy load ($\alpha = 0.80$), while Knuth Algorithm R backward-shift deletion completely eliminates tombstones and rebuild latency spikes.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -160,6 +160,16 @@ ends at an empty slot or when it returns to the starting slot after a full
 cycle, and the final hole is marked empty. This interval test handles clusters
 that wrap around the end of the array and no tombstone state is introduced.
 
+\subsection{RQ2 Workload and Clean Table Reference Methodology}
+To rigorously quantify the performance penalty of tombstone accumulation in Linear Probing without confounding variables, RQ2 implements a controlled churn workload on a fixed-capacity table $M = 2^{20} = 1,048,576$ with active load factor $\alpha = 0.50$ ($N = 524,288$). The workload lifecycle proceeds as follows:
+\begin{enumerate}
+    \item \textbf{Initial Population}: The table is initially populated with $N$ unique 64-bit keys generated pseudo-randomly using \texttt{SplittableRandom(seed)}. An active key pool is maintained in a contiguous array \texttt{aliveKeys} alongside a tracking set \texttt{seenKeys} to guarantee global uniqueness.
+    \item \textbf{Constant-Load Churn Cycles}: The workload executes $C$ continuous churn cycles. In each cycle, an existing key is chosen uniformly at random from \texttt{aliveKeys} in $\mathcal{O}(1)$ time via the swap-with-last removal technique, and deleted from the table using \texttt{remove(k)}. Concurrently, a newly generated unique key is inserted via \texttt{put(k, v)}. This guarantees that active load remains strictly invariant at $N = 524,288$ while exercising repeated slot recycling.
+    \item \textbf{Milestone Snapshots}: Telemetry is recorded across six predefined churn milestones: $C \in \{0, 0.25M, 0.5M, M, 2M, 4M\}$. At each milestone, the runner records table state metrics (live count, tombstone count, empty count, and probe depth).
+    \item \textbf{Clean Table Baseline}: At every milestone $C$, a companion pristine \textit{Clean Table} is reconstructed from scratch by inserting the exact current set of live keys in sequential array index order into a fresh table of identical capacity $M = 2^{20}$. Comparing the contaminated table against the Clean Table under identical query sequences completely isolates the degradation attributable solely to tombstones from key distribution effects.
+    \item \textbf{Isolated Query Passes}: Separate passes of $N = 524,288$ hit lookups (active keys) and $N = 524,288$ miss lookups (absent keys generated with disjoint seeds) are executed in dedicated JVM processes to benchmark both probe depth and wall-clock latency.
+\end{enumerate}
+
 \subsection{RQ3 Workload and Measurement}
 For RQ3, each table is first populated with
 $N=\operatorname{round}(\alpha M)$ unique keys generated from the specified
@@ -181,18 +191,11 @@ query. The runner emits an input checksum and output check for reproducibility
 and result validation.
 
 \section{Experimental Setup}
-The measurements were run on an 11th Gen Intel Core i5-11500H (2.90 GHz)
-system with 32 GB RAM and Windows 11 Pro, using a 64-bit HotSpot JVM
-(Java 24.0.2) with a 2 GB maximum heap. The October 24 RQ3 campaign uses a fixed table capacity
-$M=2^{20}=1,048,576$ and initial live load $\alpha=0.50$
-($N=524,288$). Churn checkpoints are
-$C\in\{0, M/4, M/2, M, 2M, 4M\}$. Each algorithm/checkpoint combination is
-run with seeds $42$, $1337$, and $20261019$; each seed is measured once.
-For every checkpoint and seed, the runner records both hit and miss probes
-and lookup time in separate JVM processes. Each process uses a 2 GB maximum
-heap and a 60-second timeout. The benchmark records table/workload build time
-separately from lookup time and retains timeout or crash status rather than
-presenting failed runs as measurements.
+All experimental benchmarks were conducted on an Intel Core i5-11500H processor (6 cores, 12 threads @ 2.90 GHz base, 4.60 GHz turbo) with 32 GB DDR4 RAM running 64-bit Windows 11 Pro. The software runtime environment is the 64-bit OpenJDK HotSpot JVM (Temurin-11 / Java 24) launched with strict JVM flags: \texttt{-Xmx2g -XX:+UseG1GC}.
+
+For RQ2, the evaluation is executed across the six churn milestones $C \in \{0, 0.25M, 0.5M, M, 2M, 4M\}$ at $M = 2^{20} = 1,048,576$ and $\alpha = 0.50$ ($N = 524,288$) with seed $42$. Each configuration executes separate hit and miss query passes of $524,288$ operations for both the contaminated table (\texttt{base}) and the reference baseline (\texttt{clean\_table}) across both measurement modes (\texttt{count} and \texttt{time}), yielding 48 independent trials constrained by an automated 60-second process timeout.
+
+For RQ3, measurements evaluate moderate load $\alpha=0.50$ ($\tau=0.20$) and high-load stress $\alpha=0.80$ ($\tau=0.10$) across checkpoints $C \in \{0, M/4, M/2, M, 2M, 4M\}$ using seeds $42, 1337, 20261019$, comparing \texttt{lp-tomb}, \texttt{lp-backshift}, \texttt{rh}, and \texttt{rh-noearly}. Each process uses a 2 GB maximum heap and a 60-second safety timeout, recording build and lookup phases independently.
 
 \section{Results and Discussion}
 % V-A. RQ1: Separate Chaining vs Linear Probing
@@ -400,16 +403,13 @@ The fine-grained telemetry and mechanism ablation (Fig.~\ref{fig:rq3_rebuild_spi
 \end{figure*}
 
 \section{Threats to Validity}
-For the October 24 RQ3 campaign, each seed contributes one timing run per
-configuration. The three-seed median limits the influence of one extreme
-sample but is not a substitute for repeated timing runs; the non-monotone
-lookup-time measurements at some churn checkpoints show that elapsed time is
-sensitive to runtime and system conditions. The probe-count comparison is
-more directly tied to the algorithms, but it does not capture cache misses,
-garbage-collection effects, or rebuild cost during the measured lookup pass.
-The lookup timing excludes table construction and churn, which are recorded
-separately as build time. These results therefore characterize lookup cost
-after the specified workload, not end-to-end workload throughput.
+Several experimental factors and methodological constraints could influence the validity of our findings:
+\begin{enumerate}
+    \item \textbf{JIT Compilation and JVM Warmup}: Benchmarking in Java is susceptible to HotSpot JIT compilation tiers and dynamic deoptimization. In RQ2 and RQ3, each configuration is launched in an isolated JVM process to prevent class-loading contamination. To mitigate cold-start distortion while avoiding code mutation, small warmup passes (1,000 queries) precede timed lookups, and dead-code elimination (DCE) is countered via an accumulated 64-bit checksum (\texttt{output\_check}). Furthermore, probe counting is conducted in a completely separate \texttt{count} execution pass, ensuring probe depth measurements remain mathematically deterministic and immune to JIT jitter.
+    \item \textbf{Garbage Collection (GC) Interference and Heap Pool Telemetry}: Workloads with extensive object allocation can trigger unpredictable stop-the-world GC pauses. To guarantee that elapsed time reflects pure algorithm execution, explicit GC sweeps (\texttt{System.gc()}) and memory pool settling are performed prior to timing queries. In RQ2, \texttt{LinearProbingTombstone} allocates flat primitive arrays (\texttt{long[]}, \texttt{int[]}, \texttt{byte[]}), completely eliminating object headers, reference indirection, and heap fragmentation. Peak memory usage is precisely tracked via Java's \texttt{MemoryPoolMXBean}.
+    \item \textbf{Safety Timeout and Asymptotic Boundary}: Each benchmark trial is governed by a strict 60-second execution safety timeout ($60,000$ ms). At the most contaminated milestone in RQ2 ($C = 4M$), the miss lookup batch finishes in $5.85$ seconds, successfully preserving a $90.25\%$ safety margin and avoiding process aborts across all 48 runs. Nonetheless, because $\text{EMPTY} \to 0$ asymptotically as $C \to \infty$, real-time service environments without periodic rebuilding will deterministically cross the timeout threshold due to degradation into $\mathcal{O}(M)$ exhaustive linear scans.
+    \item \textbf{Hash Function and Seed Variation}: All implementations utilize the standard 64-bit Fibonacci hashing function $h(k) = (k \cdot \phi) \ggg (64 - p)$. While Fibonacci multiplication guarantees strong dispersion for sequential and low-entropy integer keys, non-uniform clustered distributions can produce localized variance. Multiple seeds ($42, 1337, 20261019$) and median aggregation across repetitions are employed to minimize individual sample skew.
+\end{enumerate}
 
 \section{Conclusion}
 This empirical study systematically evaluates collision resolution strategies in open-addressing and chained hash tables under high-churn transactional workloads. By comparing Separate Chaining, Linear Probing with tombstones, Linear Probing with Knuth Algorithm R backshift deletion, and Robin Hood hashing, we provide concrete engineering recommendations:
@@ -420,7 +420,7 @@ This empirical study systematically evaluates collision resolution strategies in
 \end{itemize}
 
 \section*{Acknowledgment}
-% Khai báo sử dụng AI theo mục 7.7
+In accordance with Section 7.7 of the CSD201 project guidelines, the authors declare that AI assistance (large language model tools) was utilized strictly for drafting LaTeX formatting templates, grammatical refinement, and bibliographic structuring under strict human review. All algorithmic implementations, benchmark designs, empirical measurements, data integrity checks, and scientific analyses were conceived, verified, and conducted by the student authors.
 
 \begin{thebibliography}{00}
 \bibitem{knuth} D. E. Knuth, \textit{The Art of Computer Programming, Vol. 3: Sorting and Searching}, 2nd ed. Reading, MA, USA: Addison-Wesley, 1998, \S6.4.

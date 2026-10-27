@@ -16,9 +16,12 @@
 - **Slide 5: Kết quả & Phân tích RQ1 (Separate Chaining vs Linear Probing)**
   - Đồ thị số lần dò và thời gian tra cứu theo $\alpha$ và $M$.
   - So sánh lý thuyết Knuth. Phân tích chi phí cấp phát đối tượng `Node` của Java.
-- **Slide 6: Kết quả & Phân tích RQ2 (Cái giá của Tombstone khi không Rebuild)**
-  - Đồ thị suy giảm hiệu năng qua chu kỳ $C \to 4M$.
-  - Hiện tượng cạn kiệt ô `EMPTY`, số lần dò vọt lên và timeout ở các mốc lớn so với Clean Table đối chứng.
+- **Slide 6: Kết quả & Phân tích RQ2 (Cái giá của Tombstone khi không Rebuild - Cặp 2)**
+  - Đồ thị 3 panel `fig_rq2_tombstone_dynamics.png`: Động học tích tụ tombstone, bùng nổ bước dò và biên an toàn timeout.
+  - Hiện tượng cạn kiệt ô `EMPTY` ($50\% \to 0.04\%$), số lần dò miss tăng vọt $1,137.9\times$ ($2.5 \to 2843.4$) và độ trễ tăng $233.3\times$.
+  - Bảng đối chứng Clean Table giữ nguyên $1.50$ hit / $2.50$ miss probes (khớp Knuth), chứng minh $100\%$ suy thoái là do tombstone.
+  - Phân tích tiệm cận $O(M)$ khi $C \to \infty$ và vai trò bắt buộc của Rebuild định kỳ ($\tau \in [0.10, 0.20]$).
+  - *(Chi tiết kịch bản thuyết trình và slide layout có tại `slides/Slide_RQ2_Thuyet_Trinh.md`)*.
 - **Slide 7: Kết quả & Phân tích RQ3 (Đóng góp của từng cơ chế trong Robin Hood)**
   - Phân tích bóc tách 3 cơ chế: Bỏ tombstone (Backshift) vs Hoán đổi theo DIB vs Dừng sớm (Early exit).
   - Đột biến thời gian do Rebuild trong `lp-tomb` (median vs max khối $10^4$ ops).
