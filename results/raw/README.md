@@ -199,9 +199,12 @@ Theo đúng yêu cầu kế hoạch ngày 23/10 và Mục 3 & 5 của đề tài
      - Hit probes: $\frac{1}{2}(1 + \frac{1}{1-\alpha})$ (thực nghiệm: $1.503$ tại $\alpha=0.50$; $2.507$ tại $\alpha=0.75$; $5.504$ tại $\alpha=0.90$; $10.626$ tại $\alpha=0.95$).
      - Miss probes: $\frac{1}{2}(1 + \frac{1}{(1-\alpha)^2})$ (thực nghiệm: $2.504$ tại $\alpha=0.50$; $8.526$ tại $\alpha=0.75$; $50.119$ tại $\alpha=0.90$; $204.682$ tại $\alpha=0.95$).
    - Sai số tương đối giữa thực nghiệm và lý thuyết $< 0.5\%$ trên toàn bộ các mức tải.
+<<<<<<< HEAD
 
 ---
 
+=======
+>>>>>>> 41756df94e3db764e82bbf6a0428654fdfb587c6
 ## 9. Nghiệm Thu Kiểm Chéo Số Liệu & Hoàn Tất Checklist Mục 9 (Cặp 3 - C3, Ngày 28/10/2026)
 
 Theo đúng tiến độ ngày 28/10 của Đề tài 2 (`Gộp, kiểm tra và đóng gói`), Cặp 3 đã thực hiện kiểm định toàn diện chất lượng dữ liệu và tính nhất quán với bài báo khoa học:

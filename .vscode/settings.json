@@ -1,4 +1,14 @@
 {
+    "terminal.integrated.defaultProfile.windows": "Command Prompt (UTF-8)",
+    "terminal.integrated.profiles.windows": {
+        "Command Prompt (UTF-8)": {
+            "path": "${env:windir}\\System32\\cmd.exe",
+            "args": [
+                "/k",
+                "chcp 65001 >nul"
+            ]
+        }
+    },
     "java.project.sourcePaths": [
         "HashTableProject/src",
         "HashTableProject/test"
