@@ -18,7 +18,9 @@ import java.util.SplittableRandom;
 public final class C3HashTableTest {
     private static final int CAPACITY = 16;
 
-    private C3HashTableTest() {}
+    public static void main(String[] args) {
+        runAllTests();
+    }
 
     public static void runAllTests() {
         testLinearProbingRandomCollisions();

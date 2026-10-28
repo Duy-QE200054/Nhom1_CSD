@@ -23,6 +23,10 @@ import java.util.SplittableRandom;
  */
 public class LinearProbingTombstoneTest {
 
+    public static void main(String[] args) {
+        runAllTests();
+    }
+
     public static void runAllTests() {
         System.out.println("--- Bắt đầu Unit Test cho LinearProbingTombstone (Cặp 2 - C2) ---");
         testBasicOperations();
