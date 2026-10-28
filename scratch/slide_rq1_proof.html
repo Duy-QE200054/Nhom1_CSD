@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {
+    margin: 0;
+    padding: 40px;
+    background: #f7fafc;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #1a202c;
+  }
+  .slide-card {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 32px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+    border-top: 6px solid #2b6cb0;
+  }
+  h1 { margin: 0 0 6px 0; font-size: 24px; color: #2b6cb0; text-transform: uppercase; }
+  .meta { font-size: 13px; color: #718096; margin-bottom: 20px; font-weight: 500; }
+  h2 { font-size: 16px; color: #2d3748; margin: 18px 0 8px 0; border-bottom: 2px solid #edf2f7; padding-bottom: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 20px 0; font-size: 13.5px; }
+  th, td { border: 1px solid #cbd5e0; padding: 8px 12px; text-align: left; }
+  th { background-color: #ebf8ff; color: #2b6cb0; font-weight: 700; }
+  tr:nth-child(even) { background-color: #f7fafc; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card { background: #edf2f7; border-radius: 6px; padding: 14px 16px; border-left: 4px solid #3182ce; }
+  .card-title { font-weight: bold; color: #2b6cb0; margin-bottom: 6px; font-size: 14px; }
+  .verified-badge { background: #c6f6d5; color: #22543d; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+  <div class="slide-card">
+    <div class="verified-badge">✔ VERIFIED LAB DATA (PC_LAB_01, 100% STATUS=OK, 21 COLS)</div>
+    <h1>Slide 5: Kết Quả RQ1 - Separate Chaining vs Linear Probing</h1>
+    <div class="meta">Đề tài 2 - CSD201 FA26 - Nhóm 1 | Người trình bày: Nguyễn Duy & Nguyễn Tuấn Hưng (Cặp 1)</div>
+    
+    <h2>1. Đối Chiếu Thực Nghiệm Phòng Lab (PC_LAB_01) Với Tiệm Cận Knuth (M = 2²⁰)</h2>
+    <table>
+      <tr>
+        <th>Hệ số tải &alpha;</th>
+        <th>Knuth LP Hit</th>
+        <th>Lab LP Hit</th>
+        <th>Knuth SC Hit</th>
+        <th>Lab SC Hit</th>
+        <th>Lab LP Time</th>
+        <th>Lab SC Time</th>
+        <th>So sánh hiệu năng</th>
+      </tr>
+      <tr>
+        <td><strong>&alpha; = 0.50</strong></td>
+        <td>1.500</td>
+        <td><strong>1.503</strong></td>
+        <td>1.250</td>
+        <td><strong>1.250</strong></td>
+        <td>30.92 ms</td>
+        <td>19.81 ms</td>
+        <td>SC nhanh hơn 1.56x</td>
+      </tr>
+      <tr>
+        <td><strong>&alpha; = 0.75</strong></td>
+        <td>2.500</td>
+        <td><strong>2.507</strong></td>
+        <td>1.375</td>
+        <td><strong>1.375</strong></td>
+        <td><strong>36.10 ms</strong></td>
+        <td>50.81 ms</td>
+        <td><strong>LP nhanh hơn 1.41x (Nghịch lý!)</strong></td>
+      </tr>
+      <tr>
+        <td><strong>&alpha; = 0.90</strong></td>
+        <td>5.500</td>
+        <td><strong>5.504</strong></td>
+        <td>1.450</td>
+        <td><strong>1.450</strong></td>
+        <td>60.15 ms</td>
+        <td>31.70 ms</td>
+        <td>SC nhanh hơn 1.90x</td>
+      </tr>
+      <tr>
+        <td><strong>&alpha; = 0.95</strong></td>
+        <td>10.500</td>
+        <td><strong>10.626</strong></td>
+        <td>1.475</td>
+        <td><strong>1.476</strong></td>
+        <td>73.26 ms</td>
+        <td>78.66 ms</td>
+        <td>Tương đương (~75 ms)</td>
+      </tr>
+    </table>
+
+    <h2>2. Luận Giải Nghịch Lý Bước Dò vs Thời Gian Thực Thi (The Java Memory Gap)</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Mô hình bộ nhớ & Cache Line 64 Bytes</div>
+        <p>Mỗi Node của SC tốn <strong>32 bytes</strong> trên Heap. Duyệt chuỗi liên kết gây <em>pointer chasing</em> và liên tục L1/L2 cache miss. LP lưu 3 mảng phẳng (13 bytes/slot), nạp gọn trong CPU Cache Line, kích hoạt <strong>Hardware Stream Prefetcher</strong>!</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Thử nghiệm dồn cụm (10% khóa dồn vào M/64)</div>
+        <p>Tại M=2²⁰, cụm sơ cấp của LP nối tầng khiến bước dò tăng <strong>4,493x</strong> (11,264 bước), thời gian bùng nổ <strong>315x</strong> (7.48s). SC chỉ tăng 17% bước dò (1.61) do đụng độ bị cô lập trong từng bucket.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -7,6 +7,11 @@
 
 ### 1. Danh sách 21 Cột Bắt Buộc (Theo Thứ Tự)
 
+> **Lưu ý về dữ liệu Sandbox:** Dữ liệu sandbox thiếu cột uild_ms do môi trường ảo không đo được thời gian dựng bảng (chỉ có 20 cột). Nhóm giữ nguyên 20 cột gốc trong file lưu trữ đối chiếu và không điền số 0 giả tạo để đảm bảo tính trung thực học thuật tuyệt đối. Toàn bộ các file CSV thực nghiệm chính thức (
+q1, 
+q2, 
+q3) đều có đầy đủ 21 cột chuẩn hóa.
+
 Header dòng đầu tiên của mọi file CSV:
 ```csv
 run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version,repeat,elapsed_ms,build_ms,heap_before_bytes,heap_peak_bytes,ops_count,output_check,status,xmx,machine_id,git_commit

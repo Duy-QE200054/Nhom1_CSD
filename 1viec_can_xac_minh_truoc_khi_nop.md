@@ -86,12 +86,12 @@ Tài liệu mô tả ghi **20 cột**, bản mới ghi **21 cột** (thêm `buil
   - [x] Discussion RQ1 phân tích chi phí cấp phát Node: header đối tượng (16B), con trỏ (4B), cache miss phi tuần tự L1/L2, áp lực GC so với mảng nguyên thủy phẳng (13B/slot).
   - [x] Có mô tả máy, JVM, cờ chạy trong paper (`PC_LAB_01`, `-Xmx2g -XX:+UseG1GC`).
   - Đã lưu kết quả tại `checklists/checklist_c1.md` và `scratch/checklist_c1_rq1.txt` kèm commit `98438d5`, `5af3c50`, `8b678b0`.
-- [x] **3.2. Ghi nhận review chéo C1 → C2.** C1 review module `lp-tomb` của C2 và lưu biên bản tại `checklists/review_c1_to_c2_lptomb.md` (Commit: `f3b706b`), kiểm tra đầy đủ 5 điểm kỹ thuật:
-  - `put` nhớ TOMB đầu tiên (`firstTomb`) và chỉ chèn vào đó khi khóa chưa tồn tại ([L123-L174](HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L123-L174)).
-  - `get` dừng ngay ở EMPTY và tiếp tục duyệt qua TOMB ([L177-L198](HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L177-L198)).
-  - Bộ đếm `tombstoneCount` và điều kiện tự động rebuild theo ngưỡng $\tau \times M$ ([L158-L160, L220-L226](HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L158-L160)).
-  - Rebuild quét mảng theo đúng thứ tự chỉ số ô, xóa sạch tombstones và đưa bộ đếm về 0 ([L241-L269](HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L241-L269)).
-  - Chỉ số vòng `(idx + 1) & mask` với mặt nạ lũy thừa 2 ([L78-L79, L151, L194](HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L78-L79)).
+- [x] **3.2. Ghi nhận review chéo C1 → C2.** C1 review module `lp-tomb` của C2 và lưu biên bản tại `checklists/review_c1_to_c2_lptomb.md` (Commit: `f3b706b` & `719ff86`), kiểm tra đầy đủ 5 điểm kỹ thuật cốt lõi:
+  - `firstTomb`: `put` nhớ TOMB đầu tiên (`firstTomb`) và chỉ chèn vào đó khi khóa chưa tồn tại ([L123-L174](HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L123-L174)).
+  - `EMPTY stop`: `get` dừng ngay ở EMPTY và tiếp tục duyệt qua TOMB ([L177-L198](HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L177-L198)).
+  - `tau * M rebuild`: Bộ đếm `tombstoneCount` và điều kiện tự động rebuild theo ngưỡng $\tau \times M$ ([L158-L160, L220-L226](HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L158-L160)).
+  - `index wrap`: Chỉ số vòng `(idx + 1) & mask` với mặt nạ lũy thừa 2 ([L78-L79, L151, L194](HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L78-L79)).
+  - `size update`: Cập nhật biến `size` chính xác (tăng khi chèn mới, không đổi khi cập nhật, giảm khi xóa), bảo toàn bất biến trong `validateInvariants()` ([L146, L171, L219, L436-L439](HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L146)).
 - [x] **3.3. Quy tắc tick:** Toàn bộ 100% mục được tick đều có bằng chứng vật lý xác thực (file, commit hash, dòng code, log checksum).
 
 ---
