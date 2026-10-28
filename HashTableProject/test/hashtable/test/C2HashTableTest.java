@@ -22,7 +22,9 @@ import java.util.SplittableRandom;
 public final class C2HashTableTest {
     private static final int CAPACITY = 16;
 
-    private C2HashTableTest() {}
+    public static void main(String[] args) {
+        runAllTests();
+    }
 
     public static void runAllTests() {
         System.out.println("--- Bắt đầu 6 ca bắt buộc và Oracle cho lp-tomb (Cặp 2 - C2) ---");
