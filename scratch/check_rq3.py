@@ -90,7 +90,7 @@ def main():
     f24 = os.path.join(root, "results", "raw", "rq3_20261024.csv")
     f25 = os.path.join(root, "results", "raw", "rq3_20261025.csv")
     f25_bak = os.path.join(root, "results", "raw", "rq3_results_backup_20261025.csv")
-    f_rq2 = os.path.join(root, "results", "raw", "rq2_results.csv")
+    f_rq2 = os.path.join(root, "results", "raw", "rq2_results_backup.csv")
 
     print("=" * 64)
     print("      RQ3 COMPREHENSIVE DATA INTEGRITY & ZERO-RERUN CHECK       ")

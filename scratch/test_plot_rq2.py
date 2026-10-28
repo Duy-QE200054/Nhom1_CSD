@@ -93,7 +93,7 @@ def plot_rq2_tomb_empty_ratio(out_dir):
 
     plt.suptitle("Fig. 1. RQ2: Tombstone Accumulation and EMPTY Slot Depletion ($M = 2^{20}, \\alpha = 0.50$)",
                  fontsize=13, fontweight="bold", y=0.99)
-    fig.text(0.5, 0.01, "Source: results/raw/rq2_results.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
+    fig.text(0.5, 0.01, "Source: results/raw/rq2_results_1m.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
              ha="center", fontsize=9, style="italic", color="#555555")
 
     out_file = os.path.join(out_dir, "fig_rq2_tomb_empty_ratio.png")
@@ -155,7 +155,7 @@ def plot_rq2_probes_vs_clean(csv_path, out_dir):
 
     plt.suptitle("Fig. 2. RQ2: Probe Count Divergence between Contaminated Table and Clean Table",
                  fontsize=13, fontweight="bold", y=0.99)
-    fig.text(0.5, 0.01, "Source: results/raw/rq2_results.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
+    fig.text(0.5, 0.01, "Source: results/raw/rq2_results_1m.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
              ha="center", fontsize=9, style="italic", color="#555555")
 
     out_file = os.path.join(out_dir, "fig_rq2_probes_vs_clean.png")
@@ -217,7 +217,7 @@ def plot_rq2_lookup_latency(csv_path, out_dir):
 
     plt.suptitle("Fig. 3. RQ2: Lookup Latency and Safety Timeout Margin across Churn Milestones",
                  fontsize=13, fontweight="bold", y=0.99)
-    fig.text(0.5, 0.01, "Source: results/raw/rq2_results.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
+    fig.text(0.5, 0.01, "Source: results/raw/rq2_results_1m.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
              ha="center", fontsize=9, style="italic", color="#555555")
 
     out_file = os.path.join(out_dir, "fig_rq2_lookup_latency.png")
@@ -290,7 +290,7 @@ def plot_rq2_tombstone_dynamics(csv_path, out_dir):
     ax3.grid(True, which="both", linestyle=":", alpha=0.6)
     ax3.legend(loc="lower right", fontsize=9.5)
 
-    fig.text(0.5, 0.01, "Source: results/raw/rq2_results.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
+    fig.text(0.5, 0.01, "Source: results/raw/rq2_results_1m.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
              ha="center", fontsize=9, style="italic", color="#555555")
 
     out_file = os.path.join(out_dir, "fig_rq2_tombstone_dynamics.png")
@@ -301,7 +301,7 @@ def plot_rq2_tombstone_dynamics(csv_path, out_dir):
 
 if __name__ == "__main__":
     out = "results/figures"
-    csv_p = "results/raw/rq2_results.csv"
+    csv_p = "results/raw/rq2_results_1m.csv"
     os.makedirs(out, exist_ok=True)
     plot_rq2_tomb_empty_ratio(out)
     plot_rq2_probes_vs_clean(csv_p, out)

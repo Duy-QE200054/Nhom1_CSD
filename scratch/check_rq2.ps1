@@ -1,7 +1,7 @@
 # Check RQ2 Data Integrity, output_check, and anomalies
 
-$f1 = "results\raw\rq2_results.csv"
-$f2 = "results\raw\rq2_results_backup.csv"
+$f1 = "results\raw\rq2_results_1m.csv"
+$f2 = "results\raw\rq2_results_1m_backup.csv"
 
 $h1 = (Get-FileHash -Algorithm SHA256 $f1).Hash
 $h2 = (Get-FileHash -Algorithm SHA256 $f2).Hash
@@ -16,7 +16,7 @@ Write-Host "SHA-256    : $h2"
 Write-Host "Khớp nhau 100%: $($h1 -eq $h2)"
 
 $rows = Import-Csv $f1
-Write-Host "`nTổng số dòng dữ liệu trong rq2_results.csv: $($rows.Count)"
+Write-Host "`nTổng số dòng dữ liệu trong rq2_results_1m.csv: $($rows.Count)"
 
 Write-Host "`n================================================================"
 Write-Host "             KIỂM TRA TRẠNG THÁI (STATUS / TIMEOUT / LỖI)        "

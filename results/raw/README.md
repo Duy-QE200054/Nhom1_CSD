@@ -83,9 +83,7 @@ Chiến dịch hoàn tất dữ liệu ngày 25/10 thực hiện đo đạc 4 c�
 
 ## 5. Dữ Liệu RQ2: Tích Tụ Tombstone & Clean Table (Cặp 2 - C2)
 
-CSV lịch sử với 524.288 truy vấn/lượt: [rq2_results.csv](./rq2_results.csv)
-(bản sao lưu [rq2_results_backup.csv](./rq2_results_backup.csv)).
-CSV hiệu chỉnh dùng trong paper với 1.000.000 truy vấn/lượt:
+CSV RQ2 dùng cho phân tích và paper, với 1.000.000 truy vấn/lượt:
 [rq2_results_1m.csv](./rq2_results_1m.csv) (bản sao lưu
 [rq2_results_1m_backup.csv](./rq2_results_1m_backup.csv)).
 - **Mục tiêu nghiên cứu**: Câu hỏi RQ2 - Định lượng sự suy giảm hiệu năng do tích tụ tombstone khi không rebuild ($\tau = \infty$) so với bảng đối chứng sạch (*Clean Table*) qua các chu kỳ xóa-thêm (churn).
@@ -95,16 +93,11 @@ CSV hiệu chỉnh dùng trong paper với 1.000.000 truy vấn/lượt:
   - Ngưỡng rebuild: $\tau = \infty$ (không tự động rebuild)
   - 6 mốc churn: $C \in \{0, 262144, 524288, 1048576, 2097152, 4194304\}$ ($0, 0.25M, 0.5M, M, 2M, 4M$)
   - Biến thể: `base` (bảng tích tụ tombstone) và `clean_table` (bảng sạch đối chứng chứa đúng tập khóa sống)
-  - CSV lịch sử: `hit` quét toàn bộ 524.288 khóa sống; `miss` kiểm tra 524.288 khóa vắng mặt.
-  - CSV hiệu chỉnh: mỗi lượt có 1.000.000 truy vấn. `hit` lấy mẫu khóa sống có hoàn lại; `miss` dùng khóa không xuất hiện trong tập workload.
+  - Mỗi lượt có 1.000.000 truy vấn. `hit` lấy mẫu khóa sống có hoàn lại; `miss` dùng khóa không xuất hiện trong tập workload.
   - Chế độ đo: `count` (đo số bước dò `ops_count`) và `time` (đo thời gian `elapsed_ms`)
-  - Cả hai campaign có 48 cấu hình: $6 \text{ mốc } \times 2 \text{ biến thể } \times 2 \text{ query } \times 2 \text{ mode}$.
+  - Có 48 cấu hình: $6 \text{ mốc } \times 2 \text{ biến thể } \times 2 \text{ query } \times 2 \text{ mode}$.
 
-- **CSV lịch sử `rq2_results.csv`**:
-  - Lưu campaign 524.288 truy vấn/lượt để bảo toàn số liệu đã dùng trước đây; đây không phải dữ liệu nguồn cho các con số RQ2 hiện tại trong paper.
-  - SHA-256 hiện tại của cả bản gốc và backup: `61464807dd0b43985e9a7509a303c137e699d2b12e14bfa90e0084d687f75345`.
-
-- **CSV hiệu chỉnh `rq2_results_1m.csv` (28/10/2026)**:
+- **CSV `rq2_results_1m.csv` (28/10/2026)**:
   1. **Kiểm tra chéo `output_check`**:
      - 100% khớp giữa `base` và `clean_table` trên cả 6 mốc C, hai loại query, và hai chế độ đo.
      - Với `miss`, `output_check = 1,000,000`, xác nhận số truy vấn vắng mặt cho mỗi lượt.

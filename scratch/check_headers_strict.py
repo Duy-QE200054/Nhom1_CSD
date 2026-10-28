@@ -2,7 +2,7 @@ import csv
 
 files = [
     ('RQ1', 'results/raw/rq1_runner_results.csv'),
-    ('RQ2', 'results/raw/rq2_results.csv'),
+    ('RQ2', 'results/raw/rq2_results_1m.csv'),
     ('RQ3', 'results/raw/rq3_results.csv'),
 ]
 

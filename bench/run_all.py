@@ -310,7 +310,7 @@ def run_rq2_benchmarks(jar_path, output_csv=None, quick=False, timeout_sec=60, c
 
     if output_csv is None:
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        output_csv = os.path.join(os.path.dirname(script_dir), "results", "raw", "rq2_results.csv")
+        output_csv = os.path.join(os.path.dirname(script_dir), "results", "raw", "rq2_results_1m.csv")
 
     ensure_csv_header(output_csv)
 
@@ -338,6 +338,7 @@ def run_rq2_benchmarks(jar_path, output_csv=None, quick=False, timeout_sec=60, c
 
     variants = ["base", "clean_table"]
     queries = ["hit", "miss"]
+    query_count = 1_000_000
 
     comparison_results = []
     timeout_milestones = []
@@ -380,6 +381,7 @@ def run_rq2_benchmarks(jar_path, output_csv=None, quick=False, timeout_sec=60, c
                         "--seed", str(seeds[0]),
                         "--repeat", "1",
                         "--query", query,
+                        "--queries", str(query_count),
                         "--mode", mode
                     ]
                     code_b, out_b = run_single_benchmark(jar_path, bench_args, timeout_sec=timeout_sec)

@@ -34,7 +34,7 @@ REQUIRED_ITEMS = [
     # Raw Data CSVs
     "results/raw/rq1_runner_results.csv",
     "results/raw/rq1_runner_results_lab.csv",
-    "results/raw/rq2_results.csv",
+    "results/raw/rq2_results_1m.csv",
     "results/raw/rq3_20261024.csv",
     "results/raw/rq3_20261025.csv",
     "results/raw/rq3_block_profiling_alpha050.csv",
@@ -122,6 +122,8 @@ def package():
                     continue
                 full_path = os.path.join(root, file)
                 rel_path = os.path.relpath(full_path, ".")
+                if rel_path == os.path.join("results", "raw", "rq2_results_backup.csv"):
+                    continue
                 zipf.write(full_path, rel_path)
                 checksum = sha256_file(full_path)
                 manifest_lines.append(f"{checksum}  {rel_path}")

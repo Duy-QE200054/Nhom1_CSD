@@ -1,6 +1,6 @@
 import csv
 
-with open('results/raw/rq2_results.csv', mode='r', encoding='utf-8') as f:
+with open('results/raw/rq2_results_1m.csv', mode='r', encoding='utf-8') as f:
     rows = list(csv.DictReader(f))
 
 data = {}

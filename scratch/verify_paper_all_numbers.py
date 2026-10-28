@@ -3,7 +3,7 @@ Comprehensive Numerical Cross-Verification Suite for CSD201 FA26 - Group 1 (All 
 Date: October 28, 2026
 Validates 100% of numerical data between paper/paper.tex and all raw CSVs:
 - RQ1: Table I against results/raw/rq1_runner_results_lab.csv (PC_LAB_01, 44 rows, 21 cols) & rq1_driver_results.csv
-- RQ2: Table II against results/raw/rq2_results.csv
+- RQ2: Table II against results/raw/rq2_results_1m.csv
 - RQ3: Table III, IV against results/raw/rq3_20261024.csv, rq3_20261025.csv
 - Global Claims: Abstract, Threats to Validity, and Conclusion speedup/reduction percentages
 """
@@ -129,7 +129,7 @@ def verify_rq2():
     print(">>> [2/4] KIỂM TRA CHÉO SỐ LIỆU RQ2: TOMBSTONE CONTAMINATION & REBUILDING")
     print("=" * 75)
     
-    csv_path = 'results/raw/rq2_results.csv'
+    csv_path = 'results/raw/rq2_results_1m.csv'
     if not os.path.exists(csv_path):
         print(f"[FAIL] Missing {csv_path}")
         return False

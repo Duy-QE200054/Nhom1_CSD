@@ -64,7 +64,7 @@ Tài liệu mô tả ghi **20 cột**, bản mới ghi **21 cột** (thêm `buil
   - `results/raw/README.md`: Mô tả chi tiết schema 21 cột chuẩn hóa cho cả RQ1, RQ2, RQ3.
 - [x] **2.3. Kiểm tra header của ba file CSV gốc** (`rq1_*`, `rq2_*`, `rq3_*`):
   - Đã bổ sung cột `build_ms` cho `rq3_results.csv` và `RQ3_C3_20261027.csv`.
-  - Cả 3 file CSV chính (`rq1_runner_results.csv`, `rq2_results.csv`, `rq3_results.csv`) cùng các file mở rộng đều có 21 cột với thứ tự header hoàn toàn giống nhau.
+  - Cả 3 file CSV chính (`rq1_runner_results.csv`, `rq2_results_1m.csv`, `rq3_results.csv`) cùng các file mở rộng đều có 21 cột với thứ tự header hoàn toàn giống nhau.
 
 ---
 
@@ -105,6 +105,6 @@ Tài liệu mô tả ghi **20 cột**, bản mới ghi **21 cột** (thêm `buil
 | 1.3 Slide RQ1 dùng số lab | file slide đã cập nhật | ✅ ĐÃ XONG | `slides/slide_rq1_c1.md`, `slides/Phân tích RQ1 – Separate Chaining vs Linear Probing (C1).pdf`, `slides.pdf` |
 | 1.4 ZIP chứa CSV lab | kết quả `unzip -l` và `sha256sum -c` | ✅ ĐÃ XONG | `dist/Nhom1_CSD_DeTai2_Submission_20261028.zip` (9.58 MB) & `dist/SUBMISSION_MANIFEST.txt` (118/118 file khớp 100%) |
 | 2.1–2.2 Schema 21 cột đồng bộ | diff của `csv_schema.md`, README, paper | ✅ ĐÃ XONG | `bench/csv_schema.md#L12`, `README.md#L28`, `paper/paper.tex#L201`, `PHAN_CONG.md#L35`, `results/raw/README.md#L43` |
-| 2.3 Header 3 file CSV khớp | kết quả lệnh kiểm tra header | ✅ ĐÃ XONG | Header của `rq1_runner_results.csv`, `rq2_results.csv`, `rq3_results.csv` trùng khớp 100% (21 cột) |
+| 2.3 Header 3 file CSV khớp | kết quả lệnh kiểm tra header | ✅ ĐÃ XONG | Header của `rq1_runner_results.csv`, `rq2_results_1m.csv`, `rq3_results.csv` trùng khớp 100% (21 cột) |
 | 3.1 Checklist C1 | `checklists/checklist_c1.md` | ✅ ĐÃ XONG | `checklists/checklist_c1.md` (8 tiêu chí RQ1, commit `98438d5`, `5af3c50`) |
 | 3.2 Review C1 → C2 | commit, issue hoặc comment PR | ✅ ĐÃ XONG | `checklists/review_c1_to_c2_lptomb.md` (commit `f3b706b`, review 5 điểm mã nguồn `LinearProbingTombstone.java`) |

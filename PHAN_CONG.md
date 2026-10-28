@@ -51,7 +51,7 @@
 - [x] **Chủ Nhật (25/10/2026) - Hoàn tất dữ liệu & Nghiệm thu mốc [Cả nhóm] cho RQ2 (Nhiệm vụ Cặp 2 - C2)**:
   - **Kiểm tra chéo `output_check`**: Đã đối chiếu chéo 100% giữa bảng tích tụ tombstone (`base`) và bảng đối chứng sạch (`clean_table`) trên toàn bộ 6 mốc churn $C \in \{0, 262144, 524288, 1048576, 2097152, 4194304\}$ và 2 loại query (`hit, miss`). Giá trị `output_check` khớp chính xác tuyệt đối giữa hai biến thể và giữa 2 chế độ (`count, time`), cũng như khớp với các thuật toán RQ3 cùng seed 42 và workload.
   - **Danh sách mốc lỗi/timeout/ngoại lệ**: Toàn bộ 48/48 lượt chạy lịch sử của RQ2 đều đạt trạng thái `ok`; mốc miss nặng nhất mất 5.85s đo riêng phần truy vấn. Thời gian này không phải wall time của toàn tiến trình benchmark.
-  - **Mốc cứng dữ liệu thô & Sao lưu CSV**: CSV lịch sử 48 bản ghi lưu tại `results/raw/rq2_results.csv`; SHA-256 hiện tại của file gốc và backup là `61464807dd0b43985e9a7509a303c137e699d2b12e14bfa90e0084d687f75345`. Campaign này dùng 524,288 truy vấn mỗi loại.
+  - **Lưu trữ campaign lịch sử**: Bản sao lưu của CSV 48 bản ghi với 524.288 truy vấn mỗi loại được giữ tại `results/raw/rq2_results_backup.csv` để tham khảo; campaign này không dùng làm nguồn kết quả RQ2 hiện tại.
 - [x] **Thứ Hai (26/10/2026) - Ngày đệm và phân tích chuyên sâu RQ3 (Nhiệm vụ Cặp 3 - C3)**:
   - **Kiểm định dữ liệu thô & xác nhận không có mốc lỗi (Nhiệm vụ [Từng cặp])**:
     - Xây dựng bộ công cụ kiểm thử toàn diện `scratch/check_rq3.ps1` và `scratch/check_rq3.py`.
