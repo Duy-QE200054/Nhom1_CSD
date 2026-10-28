@@ -112,6 +112,8 @@ function Run-BenchmarkProcess {
     $pinfo.RedirectStandardError = $true
     $pinfo.UseShellExecute = $false
     $pinfo.WorkingDirectory = $repoRoot
+    $pinfo.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+    $pinfo.StandardErrorEncoding = [System.Text.Encoding]::UTF8
 
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     $p = New-Object System.Diagnostics.Process
@@ -167,7 +169,7 @@ foreach ($item in $milestones) {
 
     # This compact comparison uses at most 10,000 queries; the CSV benchmark below uses 1,000,000.
     Write-Host "`n[KIỂM TRA NHANH] Bảng so sánh phụ dùng tối đa 10.000 truy vấn; không phải lượt lấy số liệu CSV 1 triệu."
-    $compArgs = "-Xmx2g -jar $jarPath --rq RQ2 --algo lp-tomb --m $m --alpha $alpha --c $c --tau $tau --seed $seed --compare-clean"
+    $compArgs = "-Xmx2g -Dfile.encoding=UTF-8 -jar $jarPath --rq RQ2 --algo lp-tomb --m $m --alpha $alpha --c $c --tau $tau --seed $seed --compare-clean"
     $compRes = Run-BenchmarkProcess -Arguments $compArgs -Timeout $timeoutSec
     if ($compRes.Status -eq "ok") {
         Write-Host $compRes.Output
@@ -187,7 +189,7 @@ foreach ($item in $milestones) {
                 Write-Host "  Bảng: $variant | Query: $queryDescription | Số query: $queryCount | Phép đo: $modeDescription"
                 Write-Host "  Cách diễn giải: $queryCount lần gọi get(key); churn và dựng bảng nằm ngoài vùng bấm giờ truy vấn."
 
-                $benchArgs = "-Xmx2g -jar $jarPath --rq RQ2 --algo lp-tomb --variant $variant --m $m --alpha $alpha --c $c --tau $tau --seed $seed --repeat $repeat --query $query --queries $queryCount --mode $mode --csv-only"
+                $benchArgs = "-Xmx2g -Dfile.encoding=UTF-8 -jar $jarPath --rq RQ2 --algo lp-tomb --variant $variant --m $m --alpha $alpha --c $c --tau $tau --seed $seed --repeat $repeat --query $query --queries $queryCount --mode $mode --csv-only"
                 Write-Host "  Tham số Java: --rq RQ2 --algo lp-tomb --variant $variant --m $m --alpha $alpha --c $c --tau $tau --seed $seed --query $query --queries $queryCount --mode $mode"
                 $benchRes = Run-BenchmarkProcess -Arguments $benchArgs -Timeout $timeoutSec
 
