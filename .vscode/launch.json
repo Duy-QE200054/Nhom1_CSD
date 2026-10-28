@@ -6,6 +6,16 @@
             "name": "RQ1Analysis",
             "request": "launch",
             "mainClass": "hashtable.bench.RQ1Analysis",
+<<<<<<< HEAD
+            "projectName": "Nhom1_CSD_81a69936"
+        },
+        {
+            "type": "java",
+            "name": "C1SeparateChainingTest",
+            "request": "launch",
+            "mainClass": "hashtable.test.C1SeparateChainingTest",
+            "projectName": "Nhom1_CSD_81a69936"
+=======
             "projectName": "Nhom1_CSD_d860bb4b"
         },
         {
@@ -14,6 +24,7 @@
             "request": "launch",
             "mainClass": "hashtable.bench.BenchmarkRunner",
             "projectName": "Nhom1_CSD_d860bb4b"
+>>>>>>> 0803e133fbf5c812ee3561810feb947e806f1b68
         },
         {
             "type": "java",
