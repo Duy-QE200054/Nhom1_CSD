@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "▶️ Run TestRunner (Tất cả bài Test)",
+            "request": "launch",
+            "mainClass": "hashtable.test.TestRunner",
+            "projectName": "HashTableProject"
+        },
+        {
+            "type": "java",
+            "name": "▶️ Run C2HashTableTest (Riêng Cặp 2)",
+            "request": "launch",
+            "mainClass": "hashtable.test.C2HashTableTest",
+            "projectName": "HashTableProject"
+        },
+        {
+            "type": "java",
+            "name": "▶️ Run BenchmarkRunner",
+            "request": "launch",
+            "mainClass": "hashtable.bench.BenchmarkRunner",
+            "projectName": "HashTableProject"
+        }
+    ]
+}
