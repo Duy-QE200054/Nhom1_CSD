@@ -9,11 +9,11 @@ Nhóm sinh viên thực hiện: Nhóm 1 - Lớp SE20C - FPT University
 - **Ngôn ngữ**: Java (Tương thích JDK 1.8+)
 - **IDE**: NetBeans 17 / Dòng lệnh (CLI)
 - **Cấu hình phần cứng máy đo chính**:
-  - CPU: (Điền thông tin CPU máy đo chính, ví dụ: Intel Core i7 / AMD Ryzen)
-  - Số nhân / Luồng: ...
-  - RAM: 16 GB (hoặc 8 GB)
-  - Hệ điều hành: Windows 11 / Linux
-  - Tham số khởi động JVM bắt buộc: `-Xmx2g` (hoặc `-Xmx1g` nếu máy dưới 8GB RAM)
+  - CPU: 11th Gen Intel(R) Core(TM) i5-11500H @ 2.90 GHz (Turbo Boost 4.60 GHz, 12 MB L3 Cache)
+  - Số nhân / Luồng: 6 Cores / 12 Threads
+  - RAM: 32 GB DDR4-3200
+  - Hệ điều hành: Windows 11 Pro 64-bit
+  - Máy ảo Java (JVM): OpenJDK 64-bit Server VM (Temurin-11 / JDK 24) với cờ `-Xmx2g` và `-XX:+UseG1GC`
 
 ---
 
@@ -76,10 +76,38 @@ Khóa va chạm của ca 1 và ca 5 được tìm bằng thử ngẫu nhiên có
 
 Tại buổi bảo vệ, theo mục 10.1 của Quy định chung, giảng viên sẽ chọn ngẫu nhiên một cấu hình để chạy lại và đối chiếu `status`, `output_check` và thời gian (trong biên độ 0.5x - 2.0x median).
 
-### RQ1: Separate Chaining vs Linear Probing (M = 2^18, α = 0.75)
+### RQ1: Separate Chaining vs Linear Probing (Cặp 1 - C1)
+- **Đo thời gian tra cứu thành công (Hit Time, dưới 60s)**:
 ```bash
-java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo sc --m 262144 --alpha 0.75 --seed 42 --mode time
-java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --seed 42 --mode time
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo sc --m 1048576 --alpha 0.75 --seed 42 --mode time --query hit
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --seed 42 --mode time --query hit
+```
+
+- **Đo số bước dò đối chiếu công thức Donald Knuth (Hit & Miss Probes)**:
+```bash
+# Separate Chaining (Knuth: Hit = 1 + alpha/2 = 1.375, Miss = alpha = 0.750)
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo sc --m 1048576 --alpha 0.75 --seed 42 --mode count --query hit
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo sc --m 1048576 --alpha 0.75 --seed 42 --mode count --query miss
+
+# Linear Probing (Knuth: Hit = 0.5*(1 + 1/(1-alpha)) = 2.500, Miss = 0.5*(1 + 1/(1-alpha)^2) = 8.500)
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --seed 42 --mode count --query hit
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo lp-tomb --m 1048576 --alpha 0.75 --seed 42 --mode count --query miss
+```
+
+- **Thực nghiệm phân bố khóa dồn cụm bất lợi (10% khóa dồn vào cụm M/64)**:
+```bash
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo sc --m 262144 --alpha 0.75 --dataset clustered --seed 42 --mode count --query hit
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo lp-tomb --m 262144 --alpha 0.75 --dataset clustered --seed 42 --mode count --query hit
+```
+
+- **Chạy phân tích lý thuyết Knuth & mô hình bộ nhớ đối tượng Java (RQ1 Analysis)**:
+```bash
+java -cp HashTableProject/build/classes hashtable.bench.RQ1Analysis
+```
+
+- **Điều phối chạy toàn bộ 88 kịch bản RQ1 qua tiến trình JVM độc lập (BenchmarkWrapper)**:
+```bash
+java -cp HashTableProject/build/classes hashtable.bench.BenchmarkWrapper --jobs results/raw/rq1_jobs.txt --out results/raw/rq1_runner_results.csv --timeout 60 --xmx 2g
 ```
 
 ### RQ2: Linear Probing Tombstone tích tụ (M = 2^18, C = 65536)
@@ -141,7 +169,11 @@ python bench/plot_figures.py --plot-oct26
 Ảnh đồ thị chất lượng cao được lưu tại: `results/figures/rq3_20261026/`.
 
 ### Kiểm Chéo Toàn Bộ Số Liệu Bài Báo IEEE với CSV Gốc (Nhiệm vụ 28/10)
-- Tự động đối chiếu 100% các giá trị trong Table II, Table III, Table IV và các khẳng định định lượng trong bài báo với các file CSV gốc:
+- Tự động đối chiếu 100% các giá trị trong toàn bộ bài báo (Table I, II, III, IV, Abstract, Conclusion) với các tệp CSV gốc của cả 3 RQ:
+```bash
+python scratch/verify_paper_all_numbers.py
+```
+- Kiểm chéo riêng cho phân hệ RQ3 (Cặp 3):
 ```bash
 python scratch/verify_paper_c3_numbers.py
 ```

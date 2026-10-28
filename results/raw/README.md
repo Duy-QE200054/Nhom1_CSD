@@ -37,19 +37,16 @@ File lưu trữ: [rq1_runner_results.csv](./rq1_runner_results.csv) (bản sao l
 
 ---
 
-## 2. Schema 20 Cột Của File RQ3 Lịch Sử
-Tất cả các dòng dữ liệu đều tuân thủ nghiêm ngặt 20 cột:
+## 2. Schema 21 Cột Chuẩn Hóa Của File RQ3
+Tất cả các dòng dữ liệu đều tuân thủ nghiêm ngặt 21 cột (bao gồm `build_ms` đồng bộ với Bảng 4 Quy định chung):
 ```csv
-run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version,repeat,elapsed_ms,heap_before_bytes,heap_peak_bytes,ops_count,output_check,status,xmx,machine_id,git_commit
+run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version,repeat,elapsed_ms,build_ms,heap_before_bytes,heap_peak_bytes,ops_count,output_check,status,xmx,machine_id,git_commit
 ```
 
 - **Mã hash đầu vào (`input_sha256`)**: SHA-256 mảng byte Big-Endian của các khóa nạp vào bảng, đảm bảo đối chiếu công bằng giữa các thuật toán.
+- **Thời gian dựng bảng (`build_ms`)**: Được chuẩn hóa theo schema chung 21 cột của repo; để trống trong các lượt đo chỉ khảo sát độ trễ truy vấn (`query`).
 - **Tổng kiểm tra đầu ra (`output_check`)**: Tích lũy giá trị tra cứu trong vòng lặp đo để triệt tiêu tối ưu hóa loại bỏ mã chết (Dead Code Elimination - DCE) của HotSpot JIT.
 - **Trạng thái (`status`)**: Toàn bộ các lượt đo đều đạt `ok` và hoàn thành dưới ngưỡng timeout 60 giây.
-
-File `rq3_results.csv` giữ nguyên schema lịch sử này. Campaign mới có thêm cột
-`build_ms`, vì vậy được lưu riêng theo schema 21 cột ở mục 3; không trộn hai
-định dạng CSV trong cùng một file.
 
 ## 3. RQ3 Campaign ngày 24/10/2026 (C3)
 
@@ -144,22 +141,23 @@ File [RQ3_C3_20261027.csv](./RQ3_C3_20261027.csv) lưu 108 lượt đo bổ sung
 `rh`, `rh-noearly` và `lp-backshift`, ở tải ban đầu $\alpha=0.50$ và
 $C=65{,}536$. Ma trận gồm hai loại truy vấn (`hit`, `miss`), hai chế độ
 (`count`, `time`), ba seed (`42`, `1337`, `20261019`) và ba lần lặp. Cả 108
-lượt có `status=ok`; file dùng schema 20 cột lịch sử, không có `build_ms`.
+lượt có `status=ok`; file đã được chuẩn hóa theo đúng schema 21 cột chung (bổ sung trường `build_ms`).
 
 Đây là phép đo bổ sung trên một máy Windows 11 / Java 24.0.2. Metadata trong
 CSV ghi nhận máy `DESKTOP-AQL5DFO` và revision nguồn `705cf48-dirty`; revision
 này thuộc nhánh local trước khi đồng bộ với lịch sử GitHub, nên không phải
-revision hiện tại của repository. SHA-256 của file:
-`74aa91e034274d04c25e424957892bc3bec06992bf950e9117fccb5e2bb089bc`.
+revision hiện tại của repository.
 
 ---
 
 ## 8. Dữ Liệu RQ1: Separate Chaining vs Linear Probing (Cặp 1 - C1, Thứ Sáu 23/10/2026)
 
 Các file lưu trữ:
-- **[rq1_runner_results.csv](./rq1_runner_results.csv)**: Dữ liệu đo đạc chính thức từ Benchmark Runner CLI (208 lượt chạy đầy đủ, tuân thủ nghiêm ngặt schema 21 cột).
-- **[rq1_results_backup.csv](./rq1_results_backup.csv)**: Bản sao lưu nguyên gốc đạt mốc kiểm soát M5 (SHA-256: `F12E2AB61CC4789B7757D2865EE6758FF05BBC13498A3B6EE0CB14D9A6CC1684`, kích thước 46,678 bytes).
-- **[rq1_jobs.txt](./rq1_jobs.txt)**: Danh sách 88 cấu hình công việc chuẩn chạy qua tiến trình JVM độc lập với `BenchmarkWrapper`.
+- **[rq1_runner_results_lab.csv](./rq1_runner_results_lab.csv)**: Dữ liệu đo đạc gốc chính thức từ phòng máy lab (44 lượt chạy chuẩn trên `PC_LAB_01`, tuân thủ nghiêm ngặt schema 21 cột có `build_ms`).
+- **[rq1_runner_results.csv](./rq1_runner_results.csv)**: Ma trận thực nghiệm chính thức đồng bộ 100% với dữ liệu phòng máy lab (44 lượt chạy chuẩn trên `PC_LAB_01`, chuẩn hóa 21 cột).
+- **[rq1_runner_results_sandbox.csv](./rq1_runner_results_sandbox.csv)**: Dữ liệu đo đạc lịch sử trên môi trường ảo hóa sandbox 1 vCPU (88 dòng), được lưu riêng để đối chiếu, không trộn lẫn vào dữ liệu lab.
+- **[rq1_results_backup.csv](./rq1_results_backup.csv)**: Bản sao lưu nguyên gốc đạt mốc kiểm soát M5 (44 dòng, 21 cột).
+- **[rq1_jobs.txt](./rq1_jobs.txt)**: Danh sách các cấu hình công việc chuẩn chạy qua tiến trình JVM độc lập với `BenchmarkWrapper`.
 - **[rq1_driver_results.csv](./rq1_driver_results.csv)**: Dữ liệu đối chiếu tóm tắt ban đầu từ RQ1 Driver cũ ghi nhận các chỉ số ns/op, probes và bytes/key.
 
 ### 8.1. Thiết Kế Ma Trận Thực Nghiệm RQ1

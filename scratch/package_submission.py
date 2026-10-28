@@ -51,8 +51,15 @@ REQUIRED_ITEMS = [
     
     # Paper & Documentation
     "paper/paper.tex",
+    "paper/paper.pdf",
     "README.md",
     "PHAN_CONG.md",
+    "checklists/checklist_c1.md",
+    "checklists/review_c1_to_c2_lptomb.md",
+    "scratch/checklist_c1_rq1.txt",
+    "results/notes/rq1_count_check.txt",
+    "slides/slides_final.md",
+    "slides/slide_rq1_c1.md",
     "slides/outline.md"
 ]
 

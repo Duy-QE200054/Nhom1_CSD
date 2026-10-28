@@ -1,0 +1,58 @@
+================================================================================
+      CHECKLIST MỤC 9 TỰ KIỂM TRA TRƯỚC KHI NỘP - CẶP 1 (C1)
+         RQ1: Separate Chaining vs Linear Probing (Knuth & Memory)
+================================================================================
+Ngày kiểm tra: 28/10/2026
+Người thực hiện: Cặp 1 (C1) - SE20C - FPT University
+
+>>> [1/8] THÍ NGHIỆM A: ĐỘ NHẠY HỆ SỐ TẢI (alpha in [0.50, 0.95] at M = 2^20)
+[PASSED] Dữ liệu: results/raw/rq1_runner_results_lab.csv (dòng 2-5, 13-16, 24-27, 35-38)
+[PASSED] Bài báo: paper/paper.tex (Mục V-A1, Bảng I: Table tab:rq1_results)
+[PASSED] Khớp Knuth: LP hit 1.503 vs 1.500; SC hit 1.250 vs 1.250; sai số < 0.5%
+[COMMIT] Commit vật lý: 98438d5
+
+>>> [2/8] THÍ NGHIỆM B: KHẢ NĂNG MỞ RỘNG THEO DUNG LƯỢNG M (2^18 đến 2^23, alpha = 0.75)
+[PASSED] Dữ liệu: results/raw/rq1_runner_results_lab.csv (dòng 6-10, 17-21, 28-32, 39-43)
+[PASSED] Bài báo: paper/paper.tex (Mục V-A2, phân tích suy thoái L3 cache 12MB tại M >= 2^21)
+[PASSED] Số bước dò bất biến theo quy mô bảng: LP hit = 2.51 +- 0.02, SC hit = 1.38 +- 0.01
+[COMMIT] Commit vật lý: 98438d5
+
+>>> [3/8] THÍ NGHIỆM BIÊN DỒN CỤM BẤT LỢI (10% khóa dồn vào cụm M/64)
+[PASSED] Dữ liệu: results/raw/rq1_runner_results_lab.csv (dòng 11-12, 22-23, 33-34, 44-45)
+[PASSED] Bài báo: paper/paper.tex (Mục V-A3, phân tích bùng nổ 412% bước dò ở LP do chuỗi nối tầng)
+[COMMIT] Commit vật lý: 98438d5
+
+>>> [4/8] TÁCH BẠCH CHẾ ĐỘ ĐO (--mode count vs --mode time)
+[PASSED] BenchmarkRunner.java & BenchmarkWrapper.java hỗ trợ độc lập hai chế độ
+[PASSED] Lượt --mode count ghi nhận ops_count, elapsed_ms để trống
+[PASSED] Lượt --mode time ghi nhận elapsed_ms, ops_count để trống
+[COMMIT] Commit vật lý: 5af3c50
+
+>>> [5/8] LUẬN GIẢI CHUYÊN SÂU MÔ HÌNH BỘ NHỚ ĐỐI TƯỢNG JAVA (DISCUSSION)
+[PASSED] paper/paper.tex (Mục V-A4: The Java Memory Gap and Probe Count vs Latency Paradox)
+[PASSED] RQ1Analysis.java: Node 32 bytes (16B header + 8B key + 4B val + 4B next) vs mảng nguyên thủy 13 bytes
+[PASSED] Pointer chasing gây L1/L2 cache misses và áp lực GC so với sequential stream prefetch của LP
+[COMMIT] Commit vật lý: 8b678b0
+
+>>> [6/8] MÔ TẢ ĐẦY ĐỦ CẤU HÌNH PHẦN CỨNG MÁY ĐO & MÁY ẢO JVM
+[PASSED] CPU: 11th Gen Intel Core i5-11500H @ 2.90 GHz (6 Cores / 12 Threads, 12MB L3 Cache)
+[PASSED] RAM: 32 GB DDR4-3200, OS: Windows 11 Pro 64-bit
+[PASSED] JVM: OpenJDK 64-bit Server VM với cờ bắt buộc -Xmx2g và -XX:+UseG1GC
+[COMMIT] Commit vật lý: 6ffad4b
+
+>>> [7/8] ĐỐI CHIẾU LÝ THUYẾT KNUTH VOLUME 3 (Fidelity to Knuth Asymptotics)
+[PASSED] Table I: LP hit = 0.5*(1 + 1/(1-a)), LP miss = 0.5*(1 + 1/(1-a)^2)
+[PASSED] Table I: SC hit = 1 + a/2, SC miss = a
+[PASSED] scratch/verify_paper_all_numbers.py kiểm chéo tự động: 100% PASSED
+[PASSED] Log file ghi nhận: results/notes/verify_paper_all_numbers.log
+[COMMIT] Commit vật lý: 98438d5
+
+>>> [8/8] TÍNH TOÀN VẸN MÃ NGUỒN VÀ TEST SUITE
+[PASSED] SeparateChaining.java: Cài đặt chuẩn singly-linked list bucket
+[PASSED] C1SeparateChainingTest.java & TestRunner.java: 0 failures, 0 errors
+[PASSED] Oracle HashMap 1,000,000 Ops: Khớp tuyệt đối 100% với java.util.HashMap
+[COMMIT] Commit vật lý: 5af3c50
+
+================================================================================
+TỔNG KẾT: 8/8 TIÊU CHÍ CỦA CẶP 1 ĐỀU ĐẠT CHUẨN 100%. SẴN SÀNG NỘP BÀI!
+================================================================================
