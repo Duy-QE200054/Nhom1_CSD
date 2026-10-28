@@ -83,7 +83,11 @@ Chiến dịch hoàn tất dữ liệu ngày 25/10 thực hiện đo đạc 4 c�
 
 ## 5. Dữ Liệu RQ2: Tích Tụ Tombstone & Clean Table (Cặp 2 - C2)
 
-File lưu trữ: [rq2_results.csv](./rq2_results.csv) (bản sao lưu nguyên gốc: [rq2_results_backup.csv](./rq2_results_backup.csv)).
+CSV lịch sử với 524.288 truy vấn/lượt: [rq2_results.csv](./rq2_results.csv)
+(bản sao lưu [rq2_results_backup.csv](./rq2_results_backup.csv)).
+CSV hiệu chỉnh dùng trong paper với 1.000.000 truy vấn/lượt:
+[rq2_results_1m.csv](./rq2_results_1m.csv) (bản sao lưu
+[rq2_results_1m_backup.csv](./rq2_results_1m_backup.csv)).
 - **Mục tiêu nghiên cứu**: Câu hỏi RQ2 - Định lượng sự suy giảm hiệu năng do tích tụ tombstone khi không rebuild ($\tau = \infty$) so với bảng đối chứng sạch (*Clean Table*) qua các chu kỳ xóa-thêm (churn).
 - **Môi trường đo**:
   - Dung lượng bảng: $M = 2^{20} = 1,048,576$ slots
@@ -91,22 +95,28 @@ File lưu trữ: [rq2_results.csv](./rq2_results.csv) (bản sao lưu nguyên g�
   - Ngưỡng rebuild: $\tau = \infty$ (không tự động rebuild)
   - 6 mốc churn: $C \in \{0, 262144, 524288, 1048576, 2097152, 4194304\}$ ($0, 0.25M, 0.5M, M, 2M, 4M$)
   - Biến thể: `base` (bảng tích tụ tombstone) và `clean_table` (bảng sạch đối chứng chứa đúng tập khóa sống)
-  - Loại truy vấn: `hit` (tra cứu toàn bộ khóa sống) và `miss` (tra cứu khóa vắng mặt)
+  - CSV lịch sử: `hit` quét toàn bộ 524.288 khóa sống; `miss` kiểm tra 524.288 khóa vắng mặt.
+  - CSV hiệu chỉnh: mỗi lượt có 1.000.000 truy vấn. `hit` lấy mẫu khóa sống có hoàn lại; `miss` dùng khóa không xuất hiện trong tập workload.
   - Chế độ đo: `count` (đo số bước dò `ops_count`) và `time` (đo thời gian `elapsed_ms`)
-  - Tổng số cấu hình đo: $6 \text{ mốc } \times 2 \text{ biến thể } \times 2 \text{ query } \times 2 \text{ mode } = 48$ lượt chạy độc lập.
+  - Cả hai campaign có 48 cấu hình: $6 \text{ mốc } \times 2 \text{ biến thể } \times 2 \text{ query } \times 2 \text{ mode}$.
 
-- **Kết quả nghiệm thu nhiệm vụ [Cả nhóm] đối với RQ2 (Chủ Nhật 25/10/2026)**:
+- **CSV lịch sử `rq2_results.csv`**:
+  - Lưu campaign 524.288 truy vấn/lượt để bảo toàn số liệu đã dùng trước đây; đây không phải dữ liệu nguồn cho các con số RQ2 hiện tại trong paper.
+  - SHA-256 hiện tại của cả bản gốc và backup: `61464807dd0b43985e9a7509a303c137e699d2b12e14bfa90e0084d687f75345`.
+
+- **CSV hiệu chỉnh `rq2_results_1m.csv` (28/10/2026)**:
   1. **Kiểm tra chéo `output_check`**:
-     - 100% khớp chính xác giữa `base` và `clean_table` cho tất cả các mốc churn $C$ ở cả truy vấn `hit` và `miss`.
-     - 100% khớp chính xác giữa chế độ `count` và `time`.
-     - Đối chiếu chéo với các thuật toán RQ3 (`lp-backshift`, `rh`, `rh-noearly`) cùng seed 42 và workload: `output_check` khớp hoàn toàn ở tất cả các mốc $C > 0$.
+     - 100% khớp giữa `base` và `clean_table` trên cả 6 mốc C, hai loại query, và hai chế độ đo.
+     - Với `miss`, `output_check = 1,000,000`, xác nhận số truy vấn vắng mặt cho mỗi lượt.
   2. **Trạng thái mốc lỗi/timeout/ngoại lệ**:
-     - 48/48 lượt chạy đạt trạng thái `ok`.
-     - 0 lượt bị `timeout` (giới hạn 60s), 0 lượt bị `crash`, 0 lượt bị `oom`. Mốc tải nặng nhất ($C = 4M$, miss search) chỉ mất 5.85s. Không có mốc nào cần chạy lại.
-  3. **Mốc cứng sao lưu CSV gốc**:
-     - Bản gốc: `rq2_results.csv` (SHA-256: `1327c822969670835e30b8aae1b541488ef092d79b4c8646d00d6d70ac68d62b`)
-     - Bản sao lưu: `rq2_results_backup.csv` (SHA-256: `1327c822969670835e30b8aae1b541488ef092d79b4c8646d00d6d70ac68d62b`)
-     - Hai file đồng nhất 100% về mã băm và kích thước (12,109 bytes).
+     - 48/48 lượt chạy đạt `ok`, không timeout/crash/oom. Thời gian query miss lớn nhất là 18.224 giây ở $C=4M$; thời gian toàn tiến trình benchmark lớn nhất là 46.044 giây, dưới giới hạn 60 giây.
+  3. **Tính duy nhất và bản sao lưu**:
+     - 48 dòng có 48 `run_id` khác nhau; CSV có đủ 21 cột.
+     - SHA-256 của file gốc và backup đều là `90948b676c321a85d4d6816dace23838706cef1b490105dffd87437ac0fd9539`.
+  4. **Phạm vi suy luận**:
+     - Campaign này dùng seed `42`, repeat `1`. Không có nhiều seed/repeat nên không tính median hoặc độ biến thiên giữa các seed; kết quả RQ2 được diễn giải như một case study có kiểm soát, không phải ước lượng thống kê đa seed.
+     - `heap_peak_bytes` đo high-water mark của toàn heap JVM, bao gồm cấu trúc workload như `aliveKeys` và `seenKeys`, không chỉ riêng hash table.
+     - Tạo lại bốn biểu đồ RQ2 từ CSV hiệu chỉnh bằng lệnh: `python bench/plot_figures.py --plot-rq2 --rq2-csv results/raw/rq2_results_1m.csv --outdir results/figures`.
 
 ---
 

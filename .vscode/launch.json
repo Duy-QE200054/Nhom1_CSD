@@ -3,6 +3,27 @@
     "configurations": [
         {
             "type": "java",
+            "name": "BenchmarkWrapper",
+            "request": "launch",
+            "mainClass": "hashtable.bench.BenchmarkWrapper",
+            "projectName": "Nhom1_CSD_d860bb4b"
+        },
+        {
+            "type": "java",
+            "name": "LinearProbingTombstoneTest",
+            "request": "launch",
+            "mainClass": "hashtable.test.LinearProbingTombstoneTest",
+            "projectName": "Nhom1_CSD_d860bb4b"
+        },
+        {
+            "type": "java",
+            "name": "TestRunner",
+            "request": "launch",
+            "mainClass": "hashtable.test.TestRunner",
+            "projectName": "Nhom1_CSD_d860bb4b"
+        },
+        {
+            "type": "java",
             "name": "▶️ Run TestRunner (Tất cả bài Test)",
             "request": "launch",
             "mainClass": "hashtable.test.TestRunner",

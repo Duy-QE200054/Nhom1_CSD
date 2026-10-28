@@ -30,16 +30,21 @@ public final class BenchmarkRunnerTest {
             String[] countArgs = append(commonArgs, "--count");
             BenchmarkRunner.main(countArgs);
             BenchmarkRunner.main(append(commonArgs, "--mode", "time"));
+            BenchmarkRunner.main(append(commonArgs, "--mode", "count", "--query", "miss"));
 
             List<String> lines = Files.readAllLines(csv, StandardCharsets.UTF_8);
             assertEquals(BenchmarkRunner.CSV_HEADER, lines.get(0), "CSV header");
-            assertEquals(3, lines.size(), "CSV row count");
+            assertEquals(4, lines.size(), "CSV row count");
 
             Map<String, Integer> column = columns(lines.get(0));
             String[] countRow = lines.get(1).split(",", -1);
             String[] timeRow = lines.get(2).split(",", -1);
+            String[] missCountRow = lines.get(3).split(",", -1);
             assertEquals(21, countRow.length, "count column count");
             assertEquals(21, timeRow.length, "time column count");
+            assertEquals(21, missCountRow.length, "miss count column count");
+            assertTrue(!countRow[0].equals(timeRow[0]), "count and time run IDs must be unique");
+            assertTrue(!countRow[0].equals(missCountRow[0]), "hit and miss run IDs must be unique");
 
             assertEquals("", value(countRow, column, "elapsed_ms"), "count elapsed_ms");
             assertTrue(!value(countRow, column, "ops_count").isEmpty(), "count ops_count");

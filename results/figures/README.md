@@ -56,7 +56,7 @@ Bộ 5 biểu đồ cốt lõi cho Câu hỏi Nghiên cứu 1 (Separate Chaining
 
 Lệnh tái tạo toàn bộ biểu đồ RQ2:
 ```powershell
-python bench\plot_figures.py --plot-rq2
+python bench\plot_figures.py --plot-rq2 --rq2-csv results\raw\rq2_results_1m.csv --outdir results\figures
 ```
 
 ### 1. `fig_rq2_tomb_empty_ratio.png`
@@ -64,25 +64,27 @@ python bench\plot_figures.py --plot-rq2
 - **Phát hiện chính**:
   - Tỷ lệ tombstone tăng phi mã từ $0.00\%$ lên $49.96\%$ ($523,876$ ô), bão hòa $99.92\%$ khoảng trống khả dụng ngoài khóa sống.
   - Số ô EMPTY suy giảm theo hàm mũ, từ $524,288$ ô ($50.00\%$) rơi tự do xuống chỉ còn **$412$ ô ($0.04\%$)** tại $C=4M$.
-- **Nguồn dữ liệu**: `results/raw/rq2_results.csv`
+- Các mốc trung gian dùng cùng seed `42`: TOMB = 197,035; 316,211; 439,432; 510,008; EMPTY = 327,253; 208,077; 84,856; 14,280.
+- **Nguồn dữ liệu**: `results/raw/rq2_results_1m.csv` (trạng thái được tái lập từ workload `RQ2Workload`, vì CSV benchmark không có cột TOMB/EMPTY).
 
 ### 2. `fig_rq2_probes_vs_clean.png`
 - **Mục đích**: So sánh số bước dò trung bình (Hit và Miss) giữa bảng tích tụ tombstone (`base`) và bảng đối chứng sạch (`clean_table`).
 - **Phát hiện chính**:
-  - Tra cứu thành công (Hit): Chỉ tăng nhẹ từ $1.502$ lên $2.345$ bước dò ($1.56\times$) do dừng ngay khi thấy khóa.
-  - Tra cứu thất bại (Miss): Bùng nổ thảm họa từ $2.499$ lên **$2,843.37$ bước dò** (tăng vọt **$1,137.9\times$**) vì phải duyệt qua hàng ngàn ô tombstone mới gặp ô rỗng.
-  - Clean Table duy trì cố định $1.50$ hit probes và $2.50$ miss probes (khớp chính xác lý thuyết Knuth).
-- **Nguồn dữ liệu**: `results/raw/rq2_results.csv`
+  - Tra cứu thành công (Hit): Bảng base tăng từ $1.500$ lên $2.346$ bước dò; Clean Table ở $C=4M$ đạt $1.502$.
+  - Tra cứu thất bại (Miss): Bảng base tăng từ $2.503$ lên **$2,848.989$ bước dò**; Clean Table ở $C=4M$ đạt $2.496$ (chênh lệch **$1,141.51\times$**).
+- Mỗi điểm trung bình được tính từ 1,000,000 truy vấn; các giá trị Clean Table có thể thay đổi nhẹ giữa mốc do cách sắp xếp khóa.
+- **Nguồn dữ liệu**: `results/raw/rq2_results_1m.csv`
 
 ### 3. `fig_rq2_lookup_latency.png`
-- **Mục đích**: Phân tích độ trễ tra cứu thực tế trên $524,288$ truy vấn và xác thực mốc an toàn timeout.
+- **Mục đích**: Phân tích độ trễ tra cứu thực tế trên 1,000,000 truy vấn mỗi loại và xác thực mốc an toàn timeout.
 - **Phát hiện chính**:
-  - Độ trễ tra cứu miss tăng từ $22.75$ ms lên **$5,847.48$ ms** (tăng **$233.3\times$**), trong khi Clean Table chỉ mất $25.06$ ms.
-  - Biên an toàn timeout: Tại mốc nặng nhất $C=4M$, thời gian chạy hết $5.85$ giây, nằm an toàn dưới ngưỡng timeout $60$ giây ($90.25\%$ safety margin).
-- **Nguồn dữ liệu**: `results/raw/rq2_results.csv`
+  - Độ trễ tra cứu miss tăng từ $48.05$ ms lên **$18,223.54$ ms**; Clean Table tại $C=4M$ mất $89.39$ ms (base/clean = $203.87\times$).
+  - Mỗi điểm đo dùng 1,000,000 truy vấn. Timeout 60 giây giới hạn toàn JVM; lần chạy chậm nhất mất 46.044 giây tính cả khởi tạo và churn, còn 13.956 giây trước timeout.
+- **Nguồn dữ liệu**: `results/raw/rq2_results_1m.csv`
 
 ### 4. `fig_rq2_tombstone_dynamics.png`
 - **Mục đích**: Biểu đồ 3 panel hợp nhất (khổ 2 cột IEEE) phục vụ trực tiếp Figure 1 của bài báo khoa học.
+- **Nguồn dữ liệu**: probes và latency lấy từ `results/raw/rq2_results_1m.csv`; chuỗi TOMB/EMPTY được tái lập với seed `42` từ `RQ2Workload` (CSV benchmark không lưu hai bộ đếm này).
 
 ---
 

@@ -19,7 +19,7 @@ run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version
 
 | STT | Tên cột | Kiểu dữ liệu | Đơn vị / Định dạng | Ví dụ | Quy tắc đặc biệt |
 |:---:|---|---|---|---|---|
-| 1 | `run_id` | String | Chuỗi duy nhất | `RUN_RQ1_SC_001` | Không trùng lặp giữa các lượt |
+| 1 | `run_id` | String | Chuỗi duy nhất | `RUN_RQ2_LP_TOMB_M1048576_A0.50_C262144_S42_R1_UNIFORM_MISS_TIME` | Duy nhất cho mỗi cấu hình gồm thuật toán/biến thể, M, alpha, C, seed, repeat, dataset, query và mode |
 | 2 | `rq` | String | Danh mục | `RQ1`, `RQ2`, `RQ3`, `TEST` | Đúng tên RQ |
 | 3 | `algorithm` | String | Tên thuật toán | `sc`, `lp-tomb`, `lp-backshift`, `rh` | Theo quy ước Bảng 2 của đề |
 | 4 | `variant` | String | Biến thể | `base`, `noearly`, `clean_table` | Bắt buộc cho việc bóc tách cơ chế |
@@ -40,6 +40,8 @@ run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version
 | 19 | `xmx` | String | Dung lượng RAM JVM | `2g` (hoặc `1g`) | Cùng một RQ phải dùng cùng một giá trị -Xmx |
 | 20 | `machine_id` | String | Tên định danh máy | `PC_MAIN_LAB` | Đảm bảo tính nhất quán của môi trường đo |
 | 21 | `git_commit` | String | Mã commit Git | `a1b2c3d` | 7 ký tự commit hash |
+
+`run_id` phải phân biệt từng lượt đo, bao gồm cả mốc churn, loại truy vấn và chế độ đo vì schema không có cột `mode` riêng. `heap_peak_bytes` là high-water mark của toàn bộ heap JVM trong lượt chạy, gồm cả workload và các cấu trúc theo dõi khóa; không diễn giải nó như bộ nhớ riêng của hash table.
 
 ---
 

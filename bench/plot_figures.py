@@ -570,6 +570,7 @@ def load_rq2_data(csv_path):
 
     probes = defaultdict(dict)  # (variant, query) -> {c: ops}
     latency = defaultdict(dict) # (variant, query) -> {c: ms}
+    query_count = None
 
     for r in rows:
         if r.get("rq") == "RQ2" and r.get("status") == "ok":
@@ -581,17 +582,22 @@ def load_rq2_data(csv_path):
                 probes[(v, q)][c] = float(r["ops_count"])
             if r.get("elapsed_ms"):
                 latency[(v, q)][c] = float(r["elapsed_ms"])
-    return probes, latency
+            if q == "miss" and r.get("output_check"):
+                current_count = int(r["output_check"])
+                if query_count is not None and query_count != current_count:
+                    raise ValueError("RQ2 miss query count differs between CSV rows")
+                query_count = current_count
+    return probes, latency, query_count
 
-def plot_rq2_tomb_empty_ratio(out_dir):
+def plot_rq2_tomb_empty_ratio(csv_path, out_dir):
     """
     Biểu đồ 1 RQ2: Tỷ lệ ô TOMB/EMPTY và sự suy kiệt ô trống qua 6 mốc churn C.
     """
     cycles = [0, 262144, 524288, 1048576, 2097152, 4194304]
     c_labels = ["0", "0.25M", "0.5M", "1M", "2M", "4M"]
     M = 1048576
-    tomb_counts = [0, 197035, 316233, 439451, 510042, 523876]
-    empty_counts = [524288, 327253, 208055, 84837, 14246, 412]
+    tomb_counts = [0, 197035, 316211, 439432, 510008, 523876]
+    empty_counts = [524288, 327253, 208077, 84856, 14280, 412]
     live_counts = [524288] * 6
 
     tomb_pct = [t / M * 100 for t in tomb_counts]
@@ -641,7 +647,7 @@ def plot_rq2_tomb_empty_ratio(out_dir):
 
     plt.suptitle("Fig. 1. RQ2: Tombstone Accumulation and EMPTY Slot Depletion ($M = 2^{20}, \\alpha = 0.50$)",
                  fontsize=13, fontweight="bold", y=0.99)
-    fig.text(0.5, 0.01, "Source: results/raw/rq2_results.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
+    fig.text(0.5, 0.01, f"Source: {os.path.basename(csv_path)} | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
              ha="center", fontsize=9, style="italic", color="#555555")
 
     out_file = os.path.join(out_dir, "fig_rq2_tomb_empty_ratio.png")
@@ -654,7 +660,7 @@ def plot_rq2_probes_vs_clean(csv_path, out_dir):
     """
     Biểu đồ 2 RQ2: Phân kỳ số bước dò (Hit & Miss) giữa Contaminated Table và Clean Table.
     """
-    probes, _ = load_rq2_data(csv_path)
+    probes, _, _ = load_rq2_data(csv_path)
     cycles = [0, 262144, 524288, 1048576, 2097152, 4194304]
     c_labels = ["0", "0.25M", "0.5M", "1M", "2M", "4M"]
     x = np.arange(len(cycles))
@@ -686,7 +692,9 @@ def plot_rq2_probes_vs_clean(csv_path, out_dir):
     ax2.semilogy(x, clean_miss, label="Clean Table Reference", color="#2ca02c", marker="s", linestyle="--", linewidth=2.2, markersize=7)
     ax2.axhline(y=2.50, color="#555555", linestyle=":", linewidth=1.5, label="Knuth Bound $\\mathbb{E}[P_{miss}] \\approx 2.50$")
 
-    ax2.annotate("1,137.9x Probe Explosion!\n(2,843.37 probes vs 2.50)", xy=(5, base_miss[-1]), xytext=(2.6, 600),
+    probe_surge = base_miss[-1] / clean_miss[-1]
+    ax2.annotate(f"{probe_surge:,.1f}x Probe Explosion!\n({base_miss[-1]:,.2f} vs {clean_miss[-1]:.2f})",
+                 xy=(5, base_miss[-1]), xytext=(2.6, 600),
                  arrowprops=dict(facecolor="#d62728", shrink=0.08, width=1.5, headwidth=6),
                  fontsize=9.5, fontweight="bold", color="#d62728")
 
@@ -704,7 +712,7 @@ def plot_rq2_probes_vs_clean(csv_path, out_dir):
 
     plt.suptitle("Fig. 2. RQ2: Probe Count Divergence between Contaminated Table and Clean Table",
                  fontsize=13, fontweight="bold", y=0.99)
-    fig.text(0.5, 0.01, "Source: results/raw/rq2_results.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
+    fig.text(0.5, 0.01, f"Source: {os.path.basename(csv_path)} | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
              ha="center", fontsize=9, style="italic", color="#555555")
 
     out_file = os.path.join(out_dir, "fig_rq2_probes_vs_clean.png")
@@ -717,7 +725,7 @@ def plot_rq2_lookup_latency(csv_path, out_dir):
     """
     Biểu đồ 3 RQ2: Thời gian tra cứu và giải thích mốc timeout.
     """
-    _, latency = load_rq2_data(csv_path)
+    _, latency, query_count = load_rq2_data(csv_path)
     cycles = [0, 262144, 524288, 1048576, 2097152, 4194304]
     c_labels = ["0", "0.25M", "0.5M", "1M", "2M", "4M"]
     x = np.arange(len(cycles))
@@ -735,21 +743,23 @@ def plot_rq2_lookup_latency(csv_path, out_dir):
     for idx, (b, cl) in enumerate(zip(base_hit, clean_hit)):
         ax1.text(idx, b + 2.5, f"{b:.1f} ms", ha="center", fontsize=8.5, color="#d62728", fontweight="bold")
 
-    ax1.set_title("(a) Successful Lookup Latency (Hit Time for 524,288 queries)", fontsize=12, fontweight="bold")
+    ax1.set_title(f"(a) Successful Lookup Latency (Hit Time for {query_count:,} queries)", fontsize=12, fontweight="bold")
     ax1.set_xlabel("Churn Cycles $C$ ($M = 2^{20}, \\alpha = 0.50$)", fontsize=11)
     ax1.set_ylabel("Elapsed Time (ms)", fontsize=11)
     ax1.set_xticks(x)
     ax1.set_xticklabels(c_labels, fontsize=10)
-    ax1.set_ylim(15, 105)
+    ax1.set_ylim(0, max(base_hit + clean_hit) * 1.2)
     ax1.grid(True, linestyle=":", alpha=0.6)
     ax1.legend(loc="upper left", fontsize=10)
 
     ax2.semilogy(x, base_miss, label="Contaminated Table (base)", color="#d62728", marker="o", linewidth=2.5, markersize=7)
     ax2.semilogy(x, clean_miss, label="Clean Table Reference", color="#2ca02c", marker="s", linestyle="--", linewidth=2.2, markersize=7)
-    ax2.axhline(y=60000, color="#9467bd", linestyle=":", linewidth=1.5, label="Safety Timeout Limit (60s = 60,000 ms)")
+    ax2.axhline(y=60000, color="#9467bd", linestyle=":", linewidth=1.5,
+                label="60s process timeout (lookup time shown)")
 
-    ax2.annotate("233.3x Latency Surge!\n(5,847.5 ms vs 25.1 ms)\nSafety Margin: 5.85s / 60s",
-                 xy=(5, base_miss[-1]), xytext=(2.3, 1200),
+    latency_surge = base_miss[-1] / clean_miss[-1]
+    ax2.annotate(f"{latency_surge:,.1f}x Latency Surge!\n({base_miss[-1]:,.1f} ms vs {clean_miss[-1]:,.1f} ms)",
+                 xy=(5, base_miss[-1]), xytext=(2.3, max(base_miss) * 0.2),
                  arrowprops=dict(facecolor="#d62728", shrink=0.08, width=1.5, headwidth=6),
                  fontsize=9.5, fontweight="bold", color="#d62728")
 
@@ -767,7 +777,7 @@ def plot_rq2_lookup_latency(csv_path, out_dir):
 
     plt.suptitle("Fig. 3. RQ2: Lookup Latency and Safety Timeout Margin across Churn Milestones",
                  fontsize=13, fontweight="bold", y=0.99)
-    fig.text(0.5, 0.01, "Source: results/raw/rq2_results.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
+    fig.text(0.5, 0.01, f"Source: {os.path.basename(csv_path)} | 60s limit applies to full JVM process | Script: bench/plot_figures.py | IEEE CSD201 FA26",
              ha="center", fontsize=9, style="italic", color="#555555")
 
     out_file = os.path.join(out_dir, "fig_rq2_lookup_latency.png")
@@ -780,14 +790,14 @@ def plot_rq2_tombstone_dynamics(csv_path, out_dir):
     """
     Biểu đồ tổng hợp 3 panel RQ2 cho khổ 2 cột IEEE.
     """
-    probes, latency = load_rq2_data(csv_path)
+    probes, latency, _ = load_rq2_data(csv_path)
     cycles = [0, 262144, 524288, 1048576, 2097152, 4194304]
     c_labels = ["0", "0.25M", "0.5M", "1M", "2M", "4M"]
     x = np.arange(len(cycles))
 
     M = 1048576
-    tomb_pct = [c / M * 100 for c in [0, 197035, 316233, 439451, 510042, 523876]]
-    empty_pct = [c / M * 100 for c in [524288, 327253, 208055, 84837, 14246, 412]]
+    tomb_pct = [c / M * 100 for c in [0, 197035, 316211, 439432, 510008, 523876]]
+    empty_pct = [c / M * 100 for c in [524288, 327253, 208077, 84856, 14280, 412]]
 
     base_miss_p = [probes[("base", "miss")][c] for c in cycles]
     clean_miss_p = [probes[("clean_table", "miss")][c] for c in cycles]
@@ -813,7 +823,7 @@ def plot_rq2_tombstone_dynamics(csv_path, out_dir):
     ax2.semilogy(x, base_miss_p, label="Contaminated Table", color="#d62728", marker="o", linewidth=2.2)
     ax2.semilogy(x, clean_miss_p, label="Clean Table Reference", color="#2ca02c", marker="s", linestyle="--", linewidth=2)
     ax2.axhline(y=2.50, color="#555555", linestyle=":", linewidth=1.5, label="Knuth Bound (2.50)")
-    ax2.set_title("(b) Miss Probes Surge ($1,137.9\\times$)", fontsize=12, fontweight="bold")
+    ax2.set_title(f"(b) Miss Probes Surge (${base_miss_p[-1] / clean_miss_p[-1]:,.1f}\\times$)", fontsize=12, fontweight="bold")
     ax2.set_xlabel("Churn Cycles $C$", fontsize=11)
     ax2.set_ylabel("Average Probes (Log Scale)", fontsize=11)
     ax2.set_xticks(x)
@@ -824,7 +834,8 @@ def plot_rq2_tombstone_dynamics(csv_path, out_dir):
 
     ax3.semilogy(x, base_miss_t, label="Contaminated Table", color="#d62728", marker="o", linewidth=2.2)
     ax3.semilogy(x, clean_miss_t, label="Clean Table Reference", color="#2ca02c", marker="s", linestyle="--", linewidth=2)
-    ax3.axhline(y=60000, color="#9467bd", linestyle=":", linewidth=1.5, label="Safety Timeout (60s)")
+    ax3.axhline(y=60000, color="#9467bd", linestyle=":", linewidth=1.5,
+                label="60s process timeout (lookup time shown)")
     ax3.set_title("(c) Miss Latency & Safety Margin", fontsize=12, fontweight="bold")
     ax3.set_xlabel("Churn Cycles $C$", fontsize=11)
     ax3.set_ylabel("Latency (ms, Log Scale)", fontsize=11)
@@ -834,7 +845,7 @@ def plot_rq2_tombstone_dynamics(csv_path, out_dir):
     ax3.grid(True, which="both", linestyle=":", alpha=0.6)
     ax3.legend(loc="lower right", fontsize=9.5)
 
-    fig.text(0.5, 0.01, "Source: results/raw/rq2_results.csv | Script: bench/plot_figures.py (C2 Milestone) | IEEE CSD201 FA26",
+    fig.text(0.5, 0.01, f"Source: {os.path.basename(csv_path)} | 60s limit applies to full JVM process | Script: bench/plot_figures.py | IEEE CSD201 FA26",
              ha="center", fontsize=9, style="italic", color="#555555")
 
     out_file = os.path.join(out_dir, "fig_rq2_tombstone_dynamics.png")
@@ -852,6 +863,7 @@ def main():
     parser.add_argument("--outdir", type=str, default=None, help="Thư mục xuất ảnh đồ thị")
     parser.add_argument("--plot-oct26", action="store_true", help="Vẽ bộ biểu đồ chuyên sâu ngày 26/10 cho RQ3 (Rebuild spikes, Max DIB, Mechanism ablation)")
     parser.add_argument("--plot-rq2", action="store_true", help="Vẽ bộ biểu đồ thực nghiệm ngày 26/10 cho RQ2 (Tomb/Empty ratio, Probes vs Clean, Latency vs Clean, Tombstone dynamics)")
+    parser.add_argument("--rq2-csv", type=str, default=None, help="File CSV nguồn dùng khi có --plot-rq2")
     args = parser.parse_args()
 
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -859,7 +871,7 @@ def main():
     if args.plot_rq2:
         rq2_outdir = args.outdir or os.path.join(repo_root, "results", "figures")
         os.makedirs(rq2_outdir, exist_ok=True)
-        csv_rq2 = os.path.join(repo_root, "results", "raw", "rq2_results.csv")
+        csv_rq2 = args.rq2_csv or os.path.join(repo_root, "results", "raw", "rq2_results_1m.csv")
 
         print("========================================================")
         print("  FIGURE GENERATOR - OCTOBER 26 MILESTONE (Cặp 2 - C2)  ")
@@ -867,7 +879,7 @@ def main():
         print(f"File CSV nguồn: {csv_rq2}")
         print(f"Thư mục xuất ảnh: {rq2_outdir}\n")
 
-        plot_rq2_tomb_empty_ratio(rq2_outdir)
+        plot_rq2_tomb_empty_ratio(csv_rq2, rq2_outdir)
         plot_rq2_probes_vs_clean(csv_rq2, rq2_outdir)
         plot_rq2_lookup_latency(csv_rq2, rq2_outdir)
         plot_rq2_tombstone_dynamics(csv_rq2, rq2_outdir)
@@ -964,4 +976,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

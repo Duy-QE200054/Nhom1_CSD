@@ -291,8 +291,11 @@ public class BenchmarkRunner {
         String seed = getArg(args, "--seed", "42");
         String repeat = getArg(args, "--repeat", "1");
         String xmx = getArg(args, "--xmx", "2g");
-        String runId = "RUN_" + rq + "_" + algo.toUpperCase().replace('-', '_') + "_"
-                + (variant.equals("base") ? "" : variant.toUpperCase() + "_") + repeat;
+        String queryType = getArg(args, "--query", "hit");
+        String mode = hasFlag(args, "--count") ? "count" : getArg(args, "--mode", "time");
+        String runId = createRunId(rq, algo, variant, dataset, Integer.parseInt(m),
+                Double.parseDouble(alpha), Integer.parseInt(c), Long.parseLong(seed),
+                Integer.parseInt(repeat), queryType, mode);
 
         return String.join(",",
                 runId, rq, algo, variant, dataset, "",
@@ -385,7 +388,8 @@ public class BenchmarkRunner {
                 ? String.format(java.util.Locale.US, "M=%d;alpha=%.2f;c=%d;tau=%s", m, alpha, c, tauStr)
                 : String.format(java.util.Locale.US, "M=%d;alpha=%.2f;c=%d;tau=%s;query=%s", m, alpha, c, tauStr, queryType);
 
-        String runId = "RUN_" + rq + "_" + algo.toUpperCase().replace('-', '_') + "_" + (variant.equals("base") ? "" : variant.toUpperCase() + "_") + repeat;
+        String mode = elapsed != null && !elapsed.toString().isEmpty() ? "time" : "count";
+        String runId = createRunId(rq, algo, variant, dataset, m, alpha, c, seed, repeat, queryType, mode);
         String line = String.format(java.util.Locale.US, "%s,%s,%s,%s,%s,%d,%s,%d,%s,%s,%d,%s,%.3f,%d,%d,%s,%d,%s,%s,%s,%s",
                 runId, rq, algo, variant, dataset, n, params, seed, sha, genVer, repeat,
                 elapsed, buildMs, heapBefore, heapPeak, opsCount, outputCheck, status, xmx, machineId, gitCommit);
@@ -410,5 +414,15 @@ public class BenchmarkRunner {
                 System.err.println("Cannot write " + outFile + ": " + e.getMessage());
             }
         }
+    }
+
+    private static String createRunId(String rq, String algo, String variant, String dataset,
+                                      int m, double alpha, int c, long seed, int repeat,
+                                      String queryType, String mode) {
+        String variantPart = variant.equals("base") ? "" : "_" + variant.toUpperCase();
+        return String.format(java.util.Locale.US,
+                "RUN_%s_%s%s_M%d_A%.2f_C%d_S%d_R%d_%s_%s_%s",
+                rq, algo.toUpperCase().replace('-', '_'), variantPart, m, alpha, c, seed, repeat,
+                dataset.toUpperCase(), queryType.toUpperCase(), mode.toUpperCase());
     }
 }

@@ -8,11 +8,13 @@ $ErrorActionPreference = "Continue"
 $m = 1048576
 $alpha = 0.50
 $seed = 42
+$repeat = 1
+$queryCount = 1000000
 $tau = "Infinity"
 $timeoutSec = 60
 $jarPath = "HashTableProject/dist/HashTableProject.jar"
-$csvFile = "results/raw/rq2_results.csv"
-$backupCsvFile = "results/raw/rq2_results_backup.csv"
+$csvFile = "results/raw/rq2_results_1m.csv"
+$backupCsvFile = "results/raw/rq2_results_1m_backup.csv"
 
 $csvHeader = "run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version,repeat,elapsed_ms,build_ms,heap_before_bytes,heap_peak_bytes,ops_count,output_check,status,xmx,machine_id,git_commit"
 
@@ -39,9 +41,12 @@ $needHeader = $true
 if (Test-Path $csvFile) {
     $existing = Get-Content $csvFile -TotalCount 1 -Encoding UTF8
     if ($existing -eq $csvHeader) {
-        $needHeader = $false
+        $existingRows = @(Import-Csv $csvFile -Encoding UTF8)
+        if ($existingRows.Count -gt 0) {
+            throw "Output already contains benchmark rows: $csvFile. Preserve it and choose a new output filename before rerunning."
+        }
     } else {
-        Remove-Item $csvFile -Force
+        throw "Existing output has a different CSV schema: $csvFile. Preserve it and choose a new output filename."
     }
 }
 if ($needHeader) {
@@ -122,7 +127,7 @@ foreach ($item in $milestones) {
                 $currentConfig++
                 Write-Host "  [$currentConfig/$totalConfigs] variant=$variant, query=$query, mode=$mode ... " -NoNewline
 
-                $benchArgs = "-Xmx2g -jar $jarPath --rq RQ2 --algo lp-tomb --variant $variant --m $m --alpha $alpha --c $c --tau $tau --seed $seed --repeat 1 --query $query --mode $mode --csv-only"
+                $benchArgs = "-Xmx2g -jar $jarPath --rq RQ2 --algo lp-tomb --variant $variant --m $m --alpha $alpha --c $c --tau $tau --seed $seed --repeat $repeat --query $query --queries $queryCount --mode $mode --csv-only"
                 $benchRes = Run-BenchmarkProcess -Arguments $benchArgs -Timeout $timeoutSec
 
                 if ($benchRes.Status -eq "ok") {
@@ -130,7 +135,7 @@ foreach ($item in $milestones) {
                     $csvRow = ""
                     foreach ($l in $lines) {
                         $l = $l.Trim()
-                        if ($l -and -not $l.StartsWith("run_id,") -and ($l -split ",").Count -ge 20) {
+                        if ($l -and -not $l.StartsWith("run_id,") -and ($l -split ",").Count -eq 21) {
                             $csvRow = $l
                         }
                     }
@@ -147,12 +152,10 @@ foreach ($item in $milestones) {
                     Write-Host "TIMEOUT (> ${timeoutSec}s)" -ForegroundColor Red
                     $varPrefix = ""
                     if ($variant -ne "base") { $varPrefix = $variant.ToUpper() + "_" }
-                    $runId = "RUN_RQ2_LP_TOMB_${varPrefix}1"
+                    $runId = "RUN_RQ2_LP_TOMB_${varPrefix}M${m}_A0.50_C${c}_S${seed}_R${repeat}_UNIFORM_${query.ToUpper()}_${mode.ToUpper()}"
                     $params = "M=$m;alpha=$alpha;c=$c;tau=inf"
                     if ($query -eq "miss") { $params += ";query=miss" }
-                    $opsField = ""
-                    if ($mode -eq "count") { $opsField = "1.0000" }
-                    $timeoutRow = "$runId,RQ2,lp-tomb,$variant,uniform,524288,$params,$seed,,1.0.0,1,,,,$opsField,,timeout,2g,PC_LAB_01,8b19d6d"
+                    $timeoutRow = "$runId,RQ2,lp-tomb,$variant,uniform,524288,$params,$seed,,1.0.0,$repeat,,,,,,timeout,2g,PC_LAB_01,8b19d6d"
                     [System.IO.File]::AppendAllText($csvFile, $timeoutRow + "`r`n", [System.Text.Encoding]::UTF8)
                 } else {
                     $errorCount++
@@ -174,6 +177,8 @@ Write-Host "1. Tổng số dòng dữ liệu thu thập được: $($records.Cou
 Write-Host "   - Thành công: $successCount"
 Write-Host "   - Timeout: $timeoutCount"
 Write-Host "   - Lỗi / Crash: $errorCount"
+$duplicateRunIds = @($records | Group-Object run_id | Where-Object { !$_.Name -or $_.Count -gt 1 })
+Write-Host "   - run_id trùng/rỗng: $($duplicateRunIds.Count)"
 
 # Kiểm tra output_check chéo giữa base và clean_table
 Write-Host "`n2. Kiểm tra output_check chéo giữa base và clean_table:"
@@ -212,6 +217,10 @@ if (Test-Path $backupCsvFile) {
     Write-Host ('   [ĐÃ SAO LƯU THÀNH CÔNG] File sao lưu: ' + $backupCsvFile + ' - Dung lượng: ' + $bakSize + ' bytes') -ForegroundColor Green
 } else {
     Write-Host '   [LỖI] Không thể tạo file sao lưu!' -ForegroundColor Red
+}
+
+if ($successCount -ne $totalConfigs -or $timeoutCount -gt 0 -or $errorCount -gt 0 -or $mismatchCount -gt 0 -or $duplicateRunIds.Count -gt 0) {
+    throw "RQ2 run incomplete: success=$successCount/$totalConfigs, timeout=$timeoutCount, errors=$errorCount, checksum mismatches=$mismatchCount, duplicate/empty run_ids=$($duplicateRunIds.Count)."
 }
 
 Write-Host ''

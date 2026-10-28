@@ -14,7 +14,8 @@ import java.util.SplittableRandom;
  * - Khởi tạo bảng với N = round(alpha * M) khóa ban đầu.
  * - Mảng khóa đang có aliveKeys hỗ trợ chọn ngẫu nhiên O(1) bằng kỹ thuật swap-with-last.
  * - Khối 10^4 thao tác ghi nhận thời gian từng khối (đo sự suy giảm hiệu năng theo thời gian).
- * - Đo đạc tại mốc C: 10^4 truy vấn có mặt, 10^4 truy vấn vắng mặt, tỷ lệ TOMB/EMPTY, số lần dò.
+ * - Đo đạc tại mốc C: truy vấn hit/miss, tỷ lệ TOMB/EMPTY và số lần dò.
+ *   API đo mốc mặc định 10^4 truy vấn; chiến dịch CLI có thể truyền số khác qua --queries.
  * - Xây dựng và đánh giá Bảng đối chứng sạch (Clean Table) cho RQ2.
  */
 public class RQ2Workload {
@@ -83,7 +84,7 @@ public class RQ2Workload {
     }
 
     /**
-     * Kết quả đo đạc tại mốc C cho 10^4 truy vấn có mặt và 10^4 truy vấn vắng mặt.
+     * Kết quả đo đạc tại mốc C cho các tập truy vấn hit và miss.
      */
     public static class MilestoneCMeasurement {
         public final int milestoneC;
@@ -322,8 +323,7 @@ public class RQ2Workload {
 
     /**
      * Thực hiện đo đạc tại mốc C:
-     * - 10^4 truy vấn có mặt (thời gian + số lần dò).
-     * - 10^4 truy vấn vắng mặt (thời gian + số lần dò).
+     * - Truy vấn có mặt và vắng mặt (thời gian + số lần dò).
      * - Thống kê tỷ lệ TOMB/EMPTY.
      *
      * @param table Bảng đang xét (base hoặc clean_table)
