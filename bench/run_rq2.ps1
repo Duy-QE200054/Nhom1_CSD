@@ -43,6 +43,22 @@ if ($Demo) {
     $demoStamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $csvFile = Join-Path $repoRoot "results/raw/rq2_demo_C${DemoMilestoneC}_${demoStamp}.csv"
     $backupCsvFile = Join-Path $repoRoot "results/raw/rq2_demo_C${DemoMilestoneC}_${demoStamp}_backup.csv"
+} elseif (Test-Path $csvFile) {
+    $existingHeader = Get-Content $csvFile -TotalCount 1 -Encoding UTF8
+    $hasBenchmarkRows = $false
+    if ($existingHeader -eq $csvHeader) {
+        $hasBenchmarkRows = @(Import-Csv $csvFile -Encoding UTF8).Count -gt 0
+    }
+
+    if ($existingHeader -ne $csvHeader -or $hasBenchmarkRows) {
+        do {
+            $rerunStamp = Get-Date -Format "yyyyMMdd_HHmmss_fff"
+            $csvFile = Join-Path $repoRoot "results/raw/rq2_results_1m_full_${rerunStamp}.csv"
+            $backupCsvFile = Join-Path $repoRoot "results/raw/rq2_results_1m_full_${rerunStamp}_backup.csv"
+            Start-Sleep -Milliseconds 1
+        } while ((Test-Path $csvFile) -or (Test-Path $backupCsvFile))
+        Write-Host "CSV kết quả chuẩn đã có dữ liệu hoặc schema khác; giữ nguyên file cũ và ghi lần chạy đầy đủ vào file mới." -ForegroundColor Yellow
+    }
 }
 
 if (!(Test-Path $jarPath -PathType Leaf)) {
