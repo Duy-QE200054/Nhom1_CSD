@@ -1,0 +1,158 @@
+Repo root used: D:\csd2\Nhom1_CSD
+
+======== 1. Every CSV in results/raw: column count, row count, rows with wrong field count ========
+RQ3_C3_20261027.csv | columns=21 | data_rows=108 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq1_driver_results.csv | columns=14 | data_rows=20 | rows_with_wrong_field_count=0 | has_build_ms=false
+rq1_results_backup.csv | columns=21 | data_rows=44 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq1_runner_results.csv | columns=21 | data_rows=44 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq1_runner_results_lab.csv | columns=21 | data_rows=44 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq1_runner_results_lab_backup.csv | columns=21 | data_rows=44 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq2_results.csv | columns=21 | data_rows=48 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq2_results_1m.csv | columns=21 | data_rows=48 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq2_results_1m_backup.csv | columns=21 | data_rows=48 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq2_results_backup.csv | columns=21 | data_rows=48 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq3_20261024.csv | columns=21 | data_rows=288 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq3_20261025.csv | columns=21 | data_rows=288 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq3_block_profiling_alpha050.csv | columns=15 | data_rows=3356 | rows_with_wrong_field_count=0 | has_build_ms=false
+rq3_block_profiling_alpha080.csv | columns=15 | data_rows=3356 | rows_with_wrong_field_count=0 | has_build_ms=false
+rq3_results.csv | columns=21 | data_rows=108 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq3_results_backup_20261025.csv | columns=21 | data_rows=288 | rows_with_wrong_field_count=0 | has_build_ms=true
+rq3_workload_summary.csv | columns=15 | data_rows=8 | rows_with_wrong_field_count=0 | has_build_ms=false
+test_rq1.csv | columns=21 | data_rows=88 | rows_with_wrong_field_count=0 | has_build_ms=true
+
+======== 2. RQ1 files: machine_id, status and the build_ms column ========
+results/raw/rq1_runner_results.csv | data_rows: 44 | machine_id: {PC_LAB_01=44} | status: {ok=44}
+  build_ms: distinct_values=44 | empty=0 | equal_to_0=0 | min=11.112 | max=14450.417
+results/raw/rq1_runner_results_lab.csv | data_rows: 44 | machine_id: {PC_LAB_01=44} | status: {ok=44}
+  build_ms: distinct_values=44 | empty=0 | equal_to_0=0 | min=11.112 | max=14450.417
+
+======== 3. RQ1 lab file: configurations (expected 22 configurations x 2 rows) ========
+configurations: 20 | distribution (rows per configuration -> number of configurations): {2=18, 4=2}
+
+======== 4. SHA-256 of current files versus dist/SUBMISSION_MANIFEST.txt ========
+results/raw/rq1_runner_results.csv | sha256: AED222025B6138D2... | manifest lines containing this hash: [95, 96, 97, 98]
+results/raw/rq1_runner_results_lab.csv | sha256: AED222025B6138D2... | manifest lines containing this hash: [95, 96, 97, 98]
+paper/paper.pdf | sha256: DA452E63406AD71A... | manifest lines containing this hash: [61]
+Manifest lines mentioning rq1_runner_results: 4
+
+======== 5. ZIP files in dist/: RQ1 files and paper.pdf compared with the current files ========
+dist/Nhom1_CSD_DeTai2_Submission_20261028.zip | size_bytes: 10178707
+   HashTableProject/src/hashtable/bench/RQ1Analysis.java | DIFFERENT from current file
+   HashTableProject/src/hashtable/core/RQ1DataGenerator.java | DIFFERENT from current file
+   paper/paper.pdf | SAME as current file
+   results/figures/slide_rq1_lab_verified.png | DIFFERENT from current file
+   results/notes/rq1_count_check.txt | DIFFERENT from current file
+   results/notes/rq1_runner_results_sandbox_archive.csv | DIFFERENT from current file
+   results/raw/rq1_driver_results.csv | SAME as current file
+   results/raw/rq1_jobs.txt | DIFFERENT from current file
+   results/raw/rq1_results_backup.csv | SAME as current file
+   results/raw/rq1_runner_results.csv | SAME as current file
+   results/raw/rq1_runner_results_lab.csv | SAME as current file
+   results/raw/rq1_runner_results_lab_backup.csv | SAME as current file
+   scratch/checklist_c1_rq1.txt | DIFFERENT from current file
+   scratch/slide_rq1_proof.html | DIFFERENT from current file
+   slides/Phân tích RQ1 – Separate Chaining vs Linear Probing (C1).pdf | DIFFERENT from current file
+   slides/slide_rq1_c1.md | DIFFERENT from current file
+   slides/slide_rq1_lab_verified.png | DIFFERENT from current file
+
+======== 6. What verify_paper_all_numbers.py and paper.tex reference (sandbox or lab data) ========
+scratch/verify_paper_all_numbers.py:5: - RQ1: Table I against results/raw/rq1_runner_results_lab.csv (PC_LAB_01, 44 rows, 21 cols) & rq1_driver_results.csv
+scratch/verify_paper_all_numbers.py:31: def verify_rq1():
+scratch/verify_paper_all_numbers.py:33: print(">>> [1/4] KIỂM TRA CHÉO SỐ LIỆU RQ1: SEPARATE CHAINING VS LINEAR PROBING")
+scratch/verify_paper_all_numbers.py:36: lab_csv_path = 'results/raw/rq1_runner_results_lab.csv'
+scratch/verify_paper_all_numbers.py:37: driver_csv_path = 'results/raw/rq1_driver_results.csv'
+scratch/verify_paper_all_numbers.py:40: main_csv_path = 'results/raw/rq1_runner_results.csv'
+scratch/verify_paper_all_numbers.py:42: print(f"[FAIL] Missing required RQ1 CSV files")
+scratch/verify_paper_all_numbers.py:45: # Verify main rq1_runner_results.csv matches rq1_runner_results_lab.csv 100%
+scratch/verify_paper_all_numbers.py:48: h_lab = hashlib.sha256(open(lab_csv_path, 'rb').read()).hexdigest().upper()
+scratch/verify_paper_all_numbers.py:49: if h_main != h_lab:
+scratch/verify_paper_all_numbers.py:50: print(f"[FAIL] rq1_runner_results.csv does NOT match rq1_runner_results_lab.csv ({h_main} != {h_lab})")
+scratch/verify_paper_all_numbers.py:52: print(f"[SYNCHRONIZED] rq1_runner_results.csv is 100% binary identical to rq1_runner_results_lab.csv")
+scratch/verify_paper_all_numbers.py:60: print(f"[LAB SOURCE VERIFIED]    {lab_csv_path}: {len(lab_rows)} rows, 21 columns, machine_id=PC_LAB_01")
+scratch/verify_paper_all_numbers.py:67: table1_match = re.search(r'\\begin\{table\}.*?\\label\{tab:rq1_results\}.*?\\begin\{tabular\}\{\|c\|cc\|cc\|cc\|cc\|\}(.*?)\\end\{tabular\}', paper_text, re.DOT...
+scratch/verify_paper_all_numbers.py:69: print("[FAIL] Could not locate Table I (tab:rq1_results) in paper/paper.tex")
+scratch/verify_paper_all_numbers.py:107: sc_hit_lab = round(float(sc_l['ops_count']), 3)
+scratch/verify_paper_all_numbers.py:108: lp_hit_lab = round(float(lp_l['ops_count']), 3)
+scratch/verify_paper_all_numbers.py:114: match_latex = (math.isclose(sc_hit_lab, p_row['emp_sc_hit'], abs_tol=0.001) and
+scratch/verify_paper_all_numbers.py:116: math.isclose(lp_hit_lab, p_row['emp_lp_hit'], abs_tol=0.001) and
+scratch/verify_paper_all_numbers.py:123: print(f"[PASSED] alpha={a:4.2f} | LP Hit (Lab): {lp_hit_lab:6.3f} (Knuth {knuth_lp_hit[a]:6.3f}) | LP Miss: {lp_miss_d:7.3f} (Knuth {knuth_lp_miss[a]:7.3f}) | S...
+scratch/verify_paper_all_numbers.py:274: print("  Machine: PC_LAB_01 | Group 1 (CSD201 FA26)")
+scratch/verify_paper_all_numbers.py:277: ok1 = verify_rq1()
+scratch/verify_paper_all_numbers.py:284: print(">>> TỔNG KẾT: 100% SỐ LIỆU TOÀN BÀI BÁO (RQ1, RQ2, RQ3) KHỚP CHÍNH XÁC VỚI CSV GỐC! <<<")
+paper/paper.tex:264: At fixed load factor $\alpha = 0.75$, table capacity was scaled from $M = 2^{18}$ to $M = 2^{23}$ ($2.62\times 10^5$ to $8.38\times 10^6$ slots). Average probe ...
+paper/paper.tex:496: \item \textbf{Machine and Hardware Workload Isolation}: All official measurements were performed on a single dedicated machine (11th Gen Intel Core i5-11500H @ ...
+
+======== 7. Slides: look for the word SANDBOX ========
+slides/defense_qa_c3.md -> no line matches pattern: sandbox
+slides/outline.md -> no line matches pattern: sandbox
+slides/rq3_slide_presentation.md -> no line matches pattern: sandbox
+slides/slides_final.md -> no line matches pattern: sandbox
+slides/slide_rq1_c1.md -> no line matches pattern: sandbox
+slides/Slide_RQ2_Thuyet_Trinh.md -> no line matches pattern: sandbox
+Files in slides/: [slides/defense_qa_c3.md, slides/outline.md, slides/Phân tích RQ1 – Separate Chaining vs Linear Probing (C1).pdf, slides/rq3_slide_presentation.md, slides/slides_final.md, slides/slides_final.pdf, slides/slide_rq1_c1.md, slides/slide_rq1_lab_verified.png, slides/Slide_RQ2_Thuyet_Trinh.md]
+
+======== 8. C1 -> C2 review and C1 checklist (first 30 lines of each file) ========
+--- checklists/review_c1_to_c2_lptomb.md
+# Biên Bản Review Chéo Mã Nguồn (Peer Code Review): C1 → C2
+## Module Được Review: `LinearProbingTombstone.java` (Cặp 2 - C2)
+**Người review:** Cặp 1 (C1) - Phụ trách RQ1 & Đối chứng thuật toán  
+**Người được review:** Cặp 2 (C2) - Phụ trách Thuật toán Linear Probing Tombstone & Rebuild (RQ2)  
+**Thời gian review:** 28/10/2026  
+**File mã nguồn đối chiếu:** [LinearProbingTombstone.java](../HashTableProject/src/hashtable/core/LinearProbingTombstone.java)  
+**Mã commit xác thực:** `f3b706b` và `719ff86`  
+
+---
+
+### Tóm Tắt Kết Quả Review
+- **Trạng thái chung:** ✅ **APPROVED (ĐẠT CHUẨN 100% CẢ 5 ĐIỂM KỸ THUẬT BẮT BUỘC)**
+- **Đánh giá:** Module được lập trình chuẩn mực, tuân thủ nghiêm ngặt đặc tả kỹ thuật của Đề tài 2, sử dụng mảng phẳng nguyên thủy song song tối ưu hiệu năng và...
+
+---
+
+### Chi Tiết Kiểm Định 5 Điểm Kỹ Thuật Bắt Buộc
+
+#### 1. Cơ chế `firstTomb`: Ghi nhớ ô TOMB đầu tiên và chống trùng lặp khóa
+- **Tiêu chí:** `put()` phải ghi nhớ vị trí ô `TOMB` đầu tiên gặp phải trên chuỗi dò (`firstTomb`), nhưng chỉ được chèn vào `firstTomb` sau khi duyệt hết cụm mà...
+- **Dòng mã đối chiếu trong repo:** [LinearProbingTombstone.java#L123-L174](../HashTableProject/src/hashtable/core/LinearProbingTombstone.java#L123-L174)
+- **Đánh giá:**
+  ```java
+  // Dòng 138-142: Ghi nhớ ô TOMB đầu tiên
+  else if (s == TOMB) {
+      if (firstTomb == -1) {
+          firstTomb = idx;
+      }
+  } else { // OCCUPIED
+      if (keys[idx] == key) {
+--- checklists/checklist_c1.md
+# Checklist Mục 9 Tự Kiểm Tra Trước Khi Nộp - Cặp 1 (C1)
+## Đề tài 2 - Hash Table: Separate Chaining vs Linear Probing (RQ1)
+**Ngày nghiệm thu:** 28/10/2026  
+**Người thực hiện:** Cặp 1 (C1) - Nguyễn Duy & Nguyễn Tuấn Hưng - Lớp SE20C - FPT University  
+**Máy đo chính thức:** `PC_LAB_01` (Intel Core i5-11500H @ 2.90GHz, 32GB RAM, Windows 11 Pro, JDK 24, `-Xmx2g`)  
+
+---
+
+### Bảng Tổng Hợp Kiểm Định 6 Tiêu Chí Cốt Lõi Cho Cặp 1 (RQ1)
+
+| STT | Tiêu chí RQ1 | Trạng thái | Bằng chứng vật lý trong repo (File, Dòng, Commit, Log) |
+|:---:|---|:---:|---|
+| 1 | **Thí nghiệm A (Ảnh hưởng của hệ số tải $\alpha$)**:<br>Dung lượng cố định $M = 2^{20} = 1,048,576$, đo đạc 4 mức tải $\alpha \in \{0.50, 0.75, 0.90, 0.95...
+| 2 | **Thí nghiệm B (Độ mở rộng dung lượng bảng $M$)**:<br>Hệ số tải cố định $\alpha = 0.75$, mở rộng dung lượng $M \in \{2^{18}, 2^{20}, 2^{21}, 2^{22}, 2^{23...
+| 3 | **Bộ test dồn cụm bất lợi (Clustered Edge Test)**:<br>10% số khóa bị ép dồn vào cụm $h(k) < M/64$, 90% phân phối đều; $\alpha = 0.75$; $M \in \{2^{18}, 2^...
+| 4 | **Tách biệt chế độ đo (`--mode count` vs `--mode time`)**:<br>Số lần dò đo bằng lượt `--count` riêng, không lẫn với lượt đo thời gian (wall-clock latency ...
+| 5 | **Discussion chuyên sâu về mô hình bộ nhớ đối tượng Java (The Java Memory Gap)**:<br>Phân tích chi phí cấp phát `Node`: Object header (16B), con trỏ (4B),...
+| 6 | **Mô tả môi trường phần cứng và JVM**:<br>Mô tả chi tiết CPU (Intel Core i5-11500H @ 2.90GHz), 32GB RAM, Windows 11 Pro, JDK 24, cờ JVM `-Xmx2g -XX:+UseG1...
+
+---
+
+### Tiêu Chí Bổ Sung Đã Nghiệm Thu
+- **Kiểm thử Unit Test & Oracle:** [C1SeparateChainingTest.java](../HashTableProject/test/hashtable/test/C1SeparateChainingTest.java) và [HashTableOracleTest.ja...
+- **Đối chiếu số liệu tự động:** Script [verify_paper_all_numbers.py](../scratch/verify_paper_all_numbers.py) đọc trực tiếp dữ liệu lab và ghi log tại [verify_p...
+
+---
+
+### Kết luận nghiệm thu C1
+Toàn bộ **6/6 tiêu chí bắt buộc** của Cặp 1 (C1) theo Kế hoạch thực hiện Đề tài 2 và Mục 9 đã được hoàn thành, kiểm định và đối chiếu với bằng chứng vật lý đầy ...
+
+
+Done. The program only reads files; it only creates check_all_output.txt.
