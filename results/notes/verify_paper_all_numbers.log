@@ -6,6 +6,8 @@
 ===========================================================================
 >>> [1/4] KIỂM TRA CHÉO SỐ LIỆU RQ1: SEPARATE CHAINING VS LINEAR PROBING
 ===========================================================================
+[SYNCHRONIZED] rq1_runner_results.csv is 100% binary identical to rq1_runner_results_lab.csv
+               SHA-256: AED222025B6138D206B225416BE44B6EB4386033FE607F63E5197BE24D74B2A0
 [LAB SOURCE VERIFIED]    results/raw/rq1_runner_results_lab.csv: 44 rows, 21 columns, machine_id=PC_LAB_01
 [DRIVER SOURCE VERIFIED] results/raw/rq1_driver_results.csv: 20 rows (miss probes & memory)
 [PASSED] alpha=0.50 | LP Hit (Lab):  1.503 (Knuth  1.500) | LP Miss:   2.506 (Knuth   2.500) | SC Hit (Lab): 1.250 (Knuth 1.250) | SC Miss: 0.498 (Knuth 0.500) [LaTeX Match: 100%]

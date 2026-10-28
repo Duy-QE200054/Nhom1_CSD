@@ -33,6 +33,7 @@ REQUIRED_ITEMS = [
     
     # Raw Data CSVs
     "results/raw/rq1_runner_results.csv",
+    "results/raw/rq1_runner_results_lab.csv",
     "results/raw/rq2_results.csv",
     "results/raw/rq3_20261024.csv",
     "results/raw/rq3_20261025.csv",

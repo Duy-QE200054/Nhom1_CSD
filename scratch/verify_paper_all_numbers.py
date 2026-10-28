@@ -37,9 +37,20 @@ def verify_rq1():
     driver_csv_path = 'results/raw/rq1_driver_results.csv'
     paper_path = 'paper/paper.tex'
     
-    if not os.path.exists(lab_csv_path) or not os.path.exists(driver_csv_path):
-        print(f"[FAIL] Missing {lab_csv_path} or {driver_csv_path}")
+    main_csv_path = 'results/raw/rq1_runner_results.csv'
+    if not os.path.exists(lab_csv_path) or not os.path.exists(driver_csv_path) or not os.path.exists(main_csv_path):
+        print(f"[FAIL] Missing required RQ1 CSV files")
         return False
+        
+    # Verify main rq1_runner_results.csv matches rq1_runner_results_lab.csv 100%
+    import hashlib
+    h_main = hashlib.sha256(open(main_csv_path, 'rb').read()).hexdigest().upper()
+    h_lab = hashlib.sha256(open(lab_csv_path, 'rb').read()).hexdigest().upper()
+    if h_main != h_lab:
+        print(f"[FAIL] rq1_runner_results.csv does NOT match rq1_runner_results_lab.csv ({h_main} != {h_lab})")
+        return False
+    print(f"[SYNCHRONIZED] rq1_runner_results.csv is 100% binary identical to rq1_runner_results_lab.csv")
+    print(f"               SHA-256: {h_main}")
         
     with open(driver_csv_path, 'r', encoding='utf-8') as f:
         driver_rows = list(csv.DictReader(f))

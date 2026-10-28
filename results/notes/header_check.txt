@@ -1,0 +1,31 @@
+=====================================================================================
+              STRICT 21-COLUMN CSV SCHEMA HEADER AUDIT (RQ1, RQ2, RQ3)
+=====================================================================================
+STT  |        RQ1 Header        |        RQ2 Header        |        RQ3 Header        |  Status 
+-------------------------------------------------------------------------------------
+ 1   |          run_id          |          run_id          |          run_id          |    OK   
+ 2   |            rq            |            rq            |            rq            |    OK   
+ 3   |        algorithm         |        algorithm         |        algorithm         |    OK   
+ 4   |         variant          |         variant          |         variant          |    OK   
+ 5   |         dataset          |         dataset          |         dataset          |    OK   
+ 6   |            n             |            n             |            n             |    OK   
+ 7   |          params          |          params          |          params          |    OK   
+ 8   |           seed           |           seed           |           seed           |    OK   
+ 9   |       input_sha256       |       input_sha256       |       input_sha256       |    OK   
+ 10  |    generator_version     |    generator_version     |    generator_version     |    OK   
+ 11  |          repeat          |          repeat          |          repeat          |    OK   
+ 12  |        elapsed_ms        |        elapsed_ms        |        elapsed_ms        |    OK   
+ 13  |         build_ms         |         build_ms         |         build_ms         |    OK   
+ 14  |    heap_before_bytes     |    heap_before_bytes     |    heap_before_bytes     |    OK   
+ 15  |     heap_peak_bytes      |     heap_peak_bytes      |     heap_peak_bytes      |    OK   
+ 16  |        ops_count         |        ops_count         |        ops_count         |    OK   
+ 17  |       output_check       |       output_check       |       output_check       |    OK   
+ 18  |          status          |          status          |          status          |    OK   
+ 19  |           xmx            |           xmx            |           xmx            |    OK   
+ 20  |        machine_id        |        machine_id        |        machine_id        |    OK   
+ 21  |        git_commit        |        git_commit        |        git_commit        |    OK   
+-------------------------------------------------------------------------------------
+Total Columns: RQ1=21, RQ2=21, RQ3=21
+Header match across all 3 files: True
+>>> RESULT: ALL 3 PRODUCTION CSV FILES MATCH THE 21-COLUMN SCHEMA 100% PERFECTLY! <<<
+=====================================================================================
