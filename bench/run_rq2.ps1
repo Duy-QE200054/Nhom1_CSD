@@ -1,3 +1,8 @@
+﻿param(
+    [switch]$Demo,
+    [int]$DemoMilestoneC = 4194304
+)
+
 # PowerShell Runner cho RQ2 - Cặp 2 (C2)
 # M = 2^20 (1,048,576), alpha = 0.50, tau = Infinity, 6 mốc C
 # Ghi nhận dữ liệu chuẩn 21 cột (csv_schema.md), kiểm tra output_check chéo, sao lưu CSV gốc.
@@ -5,6 +10,7 @@
 $ErrorActionPreference = "Continue"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $m = 1048576
 $alpha = 0.50
 $seed = 42
@@ -12,9 +18,9 @@ $repeat = 1
 $queryCount = 1000000
 $tau = "Infinity"
 $timeoutSec = 60
-$jarPath = "HashTableProject/dist/HashTableProject.jar"
-$csvFile = "results/raw/rq2_results_1m.csv"
-$backupCsvFile = "results/raw/rq2_results_1m_backup.csv"
+$jarPath = Join-Path $repoRoot "HashTableProject/dist/HashTableProject.jar"
+$csvFile = Join-Path $repoRoot "results/raw/rq2_results_1m.csv"
+$backupCsvFile = Join-Path $repoRoot "results/raw/rq2_results_1m_backup.csv"
 
 $csvHeader = "run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version,repeat,elapsed_ms,build_ms,heap_before_bytes,heap_peak_bytes,ops_count,output_check,status,xmx,machine_id,git_commit"
 
@@ -27,9 +33,34 @@ $milestones = @(
     @{ C = 4194304; Label = "C = 4.00M (4,194,304)" }
 )
 
+if ($Demo) {
+    $selectedMilestones = @($milestones | Where-Object { $_.C -eq $DemoMilestoneC })
+    if ($selectedMilestones.Count -ne 1) {
+        throw "Demo milestone C=$DemoMilestoneC is not supported. Choose one of: $($milestones.C -join ', ')."
+    }
+
+    $milestones = $selectedMilestones
+    $demoStamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $csvFile = Join-Path $repoRoot "results/raw/rq2_demo_C${DemoMilestoneC}_${demoStamp}.csv"
+    $backupCsvFile = Join-Path $repoRoot "results/raw/rq2_demo_C${DemoMilestoneC}_${demoStamp}_backup.csv"
+}
+
+if (!(Test-Path $jarPath -PathType Leaf)) {
+    throw "Benchmark JAR not found: $jarPath. Build it first with ant jar from the HashTableProject folder."
+}
+
 Write-Host "=========================================================="
-Write-Host "   BENCHMARK RUNNER RQ2: 6 MỐC C TẠI M = 2^20 (CẶP 2 - C2)"
+Write-Host "   BENCHMARK RUNNER RQ2: $($milestones.Count) MỐC C TẠI M = 2^20 (CẶP 2 - C2)"
 Write-Host "=========================================================="
+Write-Host "Mục tiêu: đo ảnh hưởng của tombstone lên tra cứu Linear Probing."
+Write-Host "Cấu hình: M=$m ô; alpha=$alpha => N=$([int]($m * $alpha)) khóa sống ban đầu; tau=$tau."
+Write-Host "Mỗi lượt chạy $queryCount truy vấn; C là số chu kỳ, mỗi chu kỳ gồm 1 lần xóa + 1 lần thêm."
+Write-Host "Count đo probe trung bình/truy vấn; Time đo tổng thời gian truy vấn (ms)."
+if ($Demo) {
+    Write-Host "CHẾ ĐỘ DEMO: chỉ chạy C=$DemoMilestoneC để quay video; CSV được ghi vào file mới: $csvFile" -ForegroundColor Yellow
+} else {
+    Write-Host "Chạy đủ $($milestones.Count) mốc; CSV mới sẽ được ghi tại: $csvFile"
+}
 
 # Đảm bảo thư mục tồn tại và khởi tạo file CSV với header chuẩn 21 cột
 $csvDir = Split-Path -Parent $csvFile
@@ -64,6 +95,7 @@ function Run-BenchmarkProcess {
     $pinfo.RedirectStandardOutput = $true
     $pinfo.RedirectStandardError = $true
     $pinfo.UseShellExecute = $false
+    $pinfo.WorkingDirectory = $repoRoot
 
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     $p = New-Object System.Diagnostics.Process
@@ -108,16 +140,24 @@ $successCount = 0
 foreach ($item in $milestones) {
     $c = $item.C
     $lbl = $item.Label
-    Write-Host "`n>>> [MỐC $lbl] (C = $c) ..." -ForegroundColor Cyan
+    Write-Host "`n==========================================================" -ForegroundColor Cyan
+    Write-Host "MỐC $lbl" -ForegroundColor Cyan
+    if ($c -eq 0) {
+        Write-Host "Diễn giải: chưa chạy chu kỳ xóa-thêm; đây là trạng thái ban đầu để đối chứng."
+    } else {
+        Write-Host "Diễn giải: chạy $c chu kỳ = $c lần xóa + $c lần thêm khóa mới (xấp xỉ $($c * 2) thao tác cập nhật)."
+    }
+    Write-Host "Sau churn, so sánh base (giữ tombstone) với clean_table (dựng lại sạch từ cùng các khóa sống)."
 
-    # 1. Chạy so sánh đối chứng --compare-clean
-    Write-Host "  -> Đang chạy so sánh đối chứng (--compare-clean)..."
+    # This compact comparison uses at most 10,000 queries; the CSV benchmark below uses 1,000,000.
+    Write-Host "`n[KIỂM TRA NHANH] Bảng so sánh phụ dùng tối đa 10.000 truy vấn; không phải lượt lấy số liệu CSV 1 triệu."
     $compArgs = "-Xmx2g -jar $jarPath --rq RQ2 --algo lp-tomb --m $m --alpha $alpha --c $c --tau $tau --seed $seed --compare-clean"
     $compRes = Run-BenchmarkProcess -Arguments $compArgs -Timeout $timeoutSec
     if ($compRes.Status -eq "ok") {
         Write-Host $compRes.Output
     } else {
-        Write-Host "  [CẢNH BÁO] Compare-clean thất bại hoặc timeout: $($compRes.Status)" -ForegroundColor Yellow
+        Write-Host "  [LỖI] Compare-clean thất bại: status=$($compRes.Status), exit=$($compRes.ExitCode), $($compRes.Error)" -ForegroundColor Red
+        throw "RQ2 quick comparison failed at C=$c."
     }
 
     # 2. Chạy ma trận 8 lượt chuẩn cho mốc này: variant (base, clean_table) x query (hit, miss) x mode (count, time)
@@ -125,9 +165,14 @@ foreach ($item in $milestones) {
         foreach ($query in $queries) {
             foreach ($mode in $modes) {
                 $currentConfig++
-                Write-Host "  [$currentConfig/$totalConfigs] variant=$variant, query=$query, mode=$mode ... " -NoNewline
+                $queryDescription = if ($query -eq "hit") { "tìm khóa CÓ trong bảng" } else { "tìm khóa KHÔNG có trong workload" }
+                $modeDescription = if ($mode -eq "count") { "đếm số probe trung bình" } else { "đo thời gian tra cứu" }
+                Write-Host "`n[$currentConfig/$totalConfigs] BẮT ĐẦU LƯỢT ĐO"
+                Write-Host "  Bảng: $variant | Query: $queryDescription | Số query: $queryCount | Phép đo: $modeDescription"
+                Write-Host "  Cách diễn giải: $queryCount lần gọi get(key); churn và dựng bảng nằm ngoài vùng bấm giờ truy vấn."
 
                 $benchArgs = "-Xmx2g -jar $jarPath --rq RQ2 --algo lp-tomb --variant $variant --m $m --alpha $alpha --c $c --tau $tau --seed $seed --repeat $repeat --query $query --queries $queryCount --mode $mode --csv-only"
+                Write-Host "  Tham số Java: --rq RQ2 --algo lp-tomb --variant $variant --m $m --alpha $alpha --c $c --tau $tau --seed $seed --query $query --queries $queryCount --mode $mode"
                 $benchRes = Run-BenchmarkProcess -Arguments $benchArgs -Timeout $timeoutSec
 
                 if ($benchRes.Status -eq "ok") {
@@ -142,14 +187,27 @@ foreach ($item in $milestones) {
                     if ($csvRow) {
                         [System.IO.File]::AppendAllText($csvFile, $csvRow + "`r`n", [System.Text.Encoding]::UTF8)
                         $successCount++
-                        Write-Host "OK ($($benchRes.ElapsedMs) ms)" -ForegroundColor Green
+                        $result = $csvRow | ConvertFrom-Csv -Header ($csvHeader -split ",") | Select-Object -First 1
+                        Write-Host "  KẾT QUẢ ĐÃ GHI CSV: $csvFile" -ForegroundColor Green
+                        Write-Host "  status=$($result.status); build_ms=$($result.build_ms); output_check/checksum=$($result.output_check)"
+                        if ($mode -eq "count") {
+                            Write-Host "  ops_count=$($result.ops_count) probe/truy vấn trung bình; elapsed_ms để trống."
+                        } else {
+                            Write-Host "  elapsed_ms=$($result.elapsed_ms) cho $queryCount truy vấn; ops_count để trống."
+                        }
+                        if ($query -eq "miss") {
+                            Write-Host "  Kiểm tra miss: output_check=$($result.output_check); nếu bằng $queryCount thì toàn bộ truy vấn đều trả về không tìm thấy."
+                        } else {
+                            Write-Host "  Kiểm tra hit: output_check là checksum tổng giá trị trả về, không phải số lượng truy vấn."
+                        }
+                        Write-Host "  Thời gian tiến trình JVM bên ngoài (gồm khởi động và dựng dữ liệu): $($benchRes.ElapsedMs) ms."
                     } else {
-                        Write-Host "LỖI PARSE CSV OUTPUT" -ForegroundColor Red
+                        Write-Host "  [LỖI] Java trả về thành công nhưng không tìm thấy dòng CSV 21 cột." -ForegroundColor Red
                         $errorCount++
                     }
                 } elseif ($benchRes.Status -eq "timeout") {
                     $timeoutCount++
-                    Write-Host "TIMEOUT (> ${timeoutSec}s)" -ForegroundColor Red
+                    Write-Host "  [TIMEOUT] Vượt giới hạn ${timeoutSec}s; lượt này không được tính là kết quả thành công." -ForegroundColor Red
                     $varPrefix = ""
                     if ($variant -ne "base") { $varPrefix = $variant.ToUpper() + "_" }
                     $runId = "RUN_RQ2_LP_TOMB_${varPrefix}M${m}_A0.50_C${c}_S${seed}_R${repeat}_UNIFORM_${query.ToUpper()}_${mode.ToUpper()}"
@@ -159,7 +217,7 @@ foreach ($item in $milestones) {
                     [System.IO.File]::AppendAllText($csvFile, $timeoutRow + "`r`n", [System.Text.Encoding]::UTF8)
                 } else {
                     $errorCount++
-                    Write-Host "CRASH (Exit: $($benchRes.ExitCode))" -ForegroundColor Red
+                    Write-Host "  [CRASH] Exit=$($benchRes.ExitCode); $($benchRes.Error)" -ForegroundColor Red
                 }
             }
         }
@@ -180,8 +238,45 @@ Write-Host "   - Lỗi / Crash: $errorCount"
 $duplicateRunIds = @($records | Group-Object run_id | Where-Object { !$_.Name -or $_.Count -gt 1 })
 Write-Host "   - run_id trùng/rỗng: $($duplicateRunIds.Count)"
 
+Write-Host "`n4. TÓM TẮT SỐ LIỆU VÀ CÁCH SO SÁNH:"
+$summary = @()
+foreach ($item in $milestones) {
+    foreach ($query in $queries) {
+        $baseRows = @($records | Where-Object {
+            $_.variant -eq "base" -and $_.params -like "*c=$($item.C)*" -and
+            (($query -eq "miss" -and $_.params -like "*query=miss*") -or
+             ($query -eq "hit" -and $_.params -notlike "*query=miss*"))
+        })
+        $cleanRows = @($records | Where-Object {
+            $_.variant -eq "clean_table" -and $_.params -like "*c=$($item.C)*" -and
+            (($query -eq "miss" -and $_.params -like "*query=miss*") -or
+             ($query -eq "hit" -and $_.params -notlike "*query=miss*"))
+        })
+        $baseCount = $baseRows | Where-Object { $_.ops_count -ne "" } | Select-Object -First 1
+        $cleanCount = $cleanRows | Where-Object { $_.ops_count -ne "" } | Select-Object -First 1
+        $baseTime = $baseRows | Where-Object { $_.elapsed_ms -ne "" } | Select-Object -First 1
+        $cleanTime = $cleanRows | Where-Object { $_.elapsed_ms -ne "" } | Select-Object -First 1
+        if ($baseCount -and $cleanCount -and $baseTime -and $cleanTime) {
+            $summary += [PSCustomObject]@{
+                C = $item.C
+                Query = $query
+                BaseProbes = [double]$baseCount.ops_count
+                CleanProbes = [double]$cleanCount.ops_count
+                ProbeRatio = "{0:N2}x" -f ([double]$baseCount.ops_count / [double]$cleanCount.ops_count)
+                BaseMs = [double]$baseTime.elapsed_ms
+                CleanMs = [double]$cleanTime.elapsed_ms
+                TimeRatio = "{0:N2}x" -f ([double]$baseTime.elapsed_ms / [double]$cleanTime.elapsed_ms)
+            }
+        }
+    }
+}
+$summary | Format-Table -AutoSize
+Write-Host "BaseProbes/CleanProbes: probe trung bình mỗi truy vấn; BaseMs/CleanMs: thời gian của $queryCount truy vấn."
+Write-Host "Ratio = base chia clean_table; ratio > 1 nghĩa là base tốn nhiều probe/thời gian hơn."
+Write-Host "Chỉ diễn giải như kết quả của seed=$seed, repeat=$repeat; không suy rộng thành thống kê nhiều seed."
+
 # Kiểm tra output_check chéo giữa base và clean_table
-Write-Host "`n2. Kiểm tra output_check chéo giữa base và clean_table:"
+Write-Host "`n5. KIỂM TRA CHECKSUM GIỮA base VÀ clean_table:"
 $mismatchCount = 0
 foreach ($item in $milestones) {
     $c = $item.C
@@ -209,7 +304,7 @@ foreach ($item in $milestones) {
 }
 
 # Sao lưu CSV gốc
-Write-Host "`n3. Tiến hành sao lưu CSV gốc..."
+Write-Host "`n6. Tiến hành sao lưu CSV vừa tạo..."
 Copy-Item -Path $csvFile -Destination $backupCsvFile -Force
 if (Test-Path $backupCsvFile) {
     $origSize = (Get-Item $csvFile).Length

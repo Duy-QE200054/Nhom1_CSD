@@ -96,6 +96,8 @@ CSV RQ2 dùng cho phân tích và paper, với 1.000.000 truy vấn/lượt:
   - Mỗi lượt có 1.000.000 truy vấn. `hit` lấy mẫu khóa sống có hoàn lại; `miss` dùng khóa không xuất hiện trong tập workload.
   - Chế độ đo: `count` (đo số bước dò `ops_count`) và `time` (đo thời gian `elapsed_ms`)
   - Có 48 cấu hình: $6 \text{ mốc } \times 2 \text{ biến thể } \times 2 \text{ query } \times 2 \text{ mode}$.
+  - **Quay video giải thích luồng chạy**: mở PowerShell tại thư mục gốc repo rồi chạy `.\bench\run_rq2.ps1 -Demo`. Mặc định chế độ này chạy riêng mốc $C=4M$ với đủ 1.000.000 truy vấn mỗi lượt, in từng bước, từng kết quả count/time và bảng so sánh `base`/`clean_table`; file demo được ghi tên mới `rq2_demo_...csv`, không ghi đè CSV chính thức. Có thể đổi mốc bằng `-DemoMilestoneC 1048576`.
+  - Để chạy toàn bộ sáu mốc, dùng `.\bench\run_rq2.ps1`; script giữ nguyên cơ chế từ chối ghi đè CSV RQ2 đã có dữ liệu. Phần `--compare-clean` là kiểm tra phụ tối đa 10.000 truy vấn; các dòng CSV chính dùng 1.000.000 truy vấn.
 
 - **CSV `rq2_results_1m.csv` (28/10/2026)**:
   1. **Kiểm tra chéo `output_check`**:

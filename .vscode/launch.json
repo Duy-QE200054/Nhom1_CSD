@@ -3,6 +3,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "RQ1Analysis",
+            "request": "launch",
+            "mainClass": "hashtable.bench.RQ1Analysis",
+            "projectName": "Nhom1_CSD_d860bb4b"
+        },
+        {
+            "type": "java",
+            "name": "BenchmarkRunner",
+            "request": "launch",
+            "mainClass": "hashtable.bench.BenchmarkRunner",
+            "projectName": "Nhom1_CSD_d860bb4b"
+        },
+        {
+            "type": "java",
             "name": "BenchmarkWrapper",
             "request": "launch",
             "mainClass": "hashtable.bench.BenchmarkWrapper",
