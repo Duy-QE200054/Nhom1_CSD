@@ -155,7 +155,7 @@ revision hiện tại của repository.
 Các file lưu trữ:
 - **[rq1_runner_results_lab.csv](./rq1_runner_results_lab.csv)**: Dữ liệu đo đạc gốc chính thức từ phòng máy lab (44 lượt chạy chuẩn trên `PC_LAB_01`, tuân thủ nghiêm ngặt schema 21 cột có `build_ms`).
 - **[rq1_runner_results.csv](./rq1_runner_results.csv)**: Ma trận thực nghiệm chính thức đồng bộ 100% với dữ liệu phòng máy lab (44 lượt chạy chuẩn trên `PC_LAB_01`, chuẩn hóa 21 cột).
-- **[rq1_runner_results_sandbox.csv](./rq1_runner_results_sandbox.csv)**: Dữ liệu đo đạc lịch sử trên môi trường ảo hóa sandbox 1 vCPU (88 dòng), được lưu riêng để đối chiếu, không trộn lẫn vào dữ liệu lab.
+- **[rq1_runner_results_sandbox_archive.csv](../notes/rq1_runner_results_sandbox_archive.csv)**: Dữ liệu đo đạc lịch sử trên môi trường ảo hóa sandbox 1 vCPU (88 dòng), được lưu riêng để đối chiếu, không trộn lẫn vào dữ liệu lab.
 - **[rq1_results_backup.csv](./rq1_results_backup.csv)**: Bản sao lưu nguyên gốc đạt mốc kiểm soát M5 (44 dòng, 21 cột).
 - **[rq1_jobs.txt](./rq1_jobs.txt)**: Danh sách các cấu hình công việc chuẩn chạy qua tiến trình JVM độc lập với `BenchmarkWrapper`.
 - **[rq1_driver_results.csv](./rq1_driver_results.csv)**: Dữ liệu đối chiếu tóm tắt ban đầu từ RQ1 Driver cũ ghi nhận các chỉ số ns/op, probes và bytes/key.
@@ -197,12 +197,8 @@ Theo đúng yêu cầu kế hoạch ngày 23/10 và Mục 3 & 5 của đề tài
      - Hit probes: $\frac{1}{2}(1 + \frac{1}{1-\alpha})$ (thực nghiệm: $1.503$ tại $\alpha=0.50$; $2.507$ tại $\alpha=0.75$; $5.504$ tại $\alpha=0.90$; $10.626$ tại $\alpha=0.95$).
      - Miss probes: $\frac{1}{2}(1 + \frac{1}{(1-\alpha)^2})$ (thực nghiệm: $2.504$ tại $\alpha=0.50$; $8.526$ tại $\alpha=0.75$; $50.119$ tại $\alpha=0.90$; $204.682$ tại $\alpha=0.95$).
    - Sai số tương đối giữa thực nghiệm và lý thuyết $< 0.5\%$ trên toàn bộ các mức tải.
-<<<<<<< HEAD
-
 ---
 
-=======
->>>>>>> 41756df94e3db764e82bbf6a0428654fdfb587c6
 ## 9. Nghiệm Thu Kiểm Chéo Số Liệu & Hoàn Tất Checklist Mục 9 (Cặp 3 - C3, Ngày 28/10/2026)
 
 Theo đúng tiến độ ngày 28/10 của Đề tài 2 (`Gộp, kiểm tra và đóng gói`), Cặp 3 đã thực hiện kiểm định toàn diện chất lượng dữ liệu và tính nhất quán với bài báo khoa học:

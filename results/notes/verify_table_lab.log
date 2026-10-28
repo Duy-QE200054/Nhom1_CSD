@@ -1,0 +1,58 @@
+===========================================================================
+  AUTOMATED NUMERICAL CROSS-VERIFICATION AUDIT FOR PAPER.TEX
+  Machine: PC_LAB_01 | Group 1 (CSD201 FA26)
+===========================================================================
+
+===========================================================================
+>>> [1/4] KIỂM TRA CHÉO SỐ LIỆU RQ1: SEPARATE CHAINING VS LINEAR PROBING
+===========================================================================
+[SYNCHRONIZED] rq1_runner_results.csv is 100% binary identical to rq1_runner_results_lab.csv
+               SHA-256: AED222025B6138D206B225416BE44B6EB4386033FE607F63E5197BE24D74B2A0
+[LAB SOURCE VERIFIED]    results/raw/rq1_runner_results_lab.csv: 44 rows, 21 columns, machine_id=PC_LAB_01
+[DRIVER SOURCE VERIFIED] results/raw/rq1_driver_results.csv: 20 rows (miss probes & memory)
+[PASSED] alpha=0.50 | LP Hit (Lab):  1.503 (Knuth  1.500) | LP Miss:   2.506 (Knuth   2.500) | SC Hit (Lab): 1.250 (Knuth 1.250) | SC Miss: 0.498 (Knuth 0.500) [LaTeX Match: 100%]
+[PASSED] alpha=0.75 | LP Hit (Lab):  2.507 (Knuth  2.500) | LP Miss:   8.530 (Knuth   8.500) | SC Hit (Lab): 1.375 (Knuth 1.375) | SC Miss: 0.748 (Knuth 0.750) [LaTeX Match: 100%]
+[PASSED] alpha=0.90 | LP Hit (Lab):  5.504 (Knuth  5.500) | LP Miss:  50.068 (Knuth  50.500) | SC Hit (Lab): 1.450 (Knuth 1.450) | SC Miss: 0.898 (Knuth 0.900) [LaTeX Match: 100%]
+[PASSED] alpha=0.95 | LP Hit (Lab): 10.626 (Knuth 10.500) | LP Miss: 204.738 (Knuth 200.500) | SC Hit (Lab): 1.476 (Knuth 1.475) | SC Miss: 0.949 (Knuth 0.950) [LaTeX Match: 100%]
+
+===========================================================================
+>>> [2/4] KIỂM TRA CHÉO SỐ LIỆU RQ2: TOMBSTONE CONTAMINATION & REBUILDING
+===========================================================================
+[PASSED] C=      0 | Hit Probes: 1.502 vs 1.502 | Miss Probes:    2.499 vs 2.499 | Miss Time:   22.75ms vs  21.93ms
+[PASSED] C= 262144 | Hit Probes: 1.852 vs 1.498 | Miss Probes:    4.622 vs 2.499 | Miss Time:   28.04ms vs  20.85ms
+[PASSED] C= 524288 | Hit Probes: 2.043 vs 1.495 | Miss Probes:    7.461 vs 2.488 | Miss Time:   32.50ms vs  21.90ms
+[PASSED] C=1048576 | Hit Probes: 2.229 vs 1.500 | Miss Probes:   17.235 vs 2.502 | Miss Time:   51.21ms vs  24.57ms
+[PASSED] C=2097152 | Hit Probes: 2.330 vs 1.502 | Miss Probes:   86.089 vs 2.501 | Miss Time:  297.37ms vs  50.69ms
+[PASSED] C=4194304 | Hit Probes: 2.345 vs 1.503 | Miss Probes: 2843.372 vs 2.499 | Miss Time: 5847.48ms vs  25.06ms
+
+===========================================================================
+>>> [3/4] KIỂM TRA CHÉO SỐ LIỆU RQ3: ROBIN HOOD & BACKSHIFT (TABLE II & III)
+===========================================================================
+
+--- Table II (alpha=0.50, C=4M, tau=0.20) ---
+[PASSED] lp-tomb          (var=base   ): Actual={'hit_probes': 1.804, 'miss_probes': 4.22, 'hit_ms': 83.89, 'miss_ms': 35.14} | Expected={'hit_probes': 1.804, 'miss_probes': 4.22, 'hit_ms': 83.89, 'miss_ms': 35.14}
+[PASSED] lp-backshift     (var=base   ): Actual={'hit_probes': 1.501, 'miss_probes': 2.499, 'hit_ms': 69.4, 'miss_ms': 29.44} | Expected={'hit_probes': 1.501, 'miss_probes': 2.499, 'hit_ms': 69.4, 'miss_ms': 29.44}
+[PASSED] rh-noearly       (var=noearly): Actual={'hit_probes': 1.501, 'miss_probes': 2.499, 'hit_ms': 50.01, 'miss_ms': 32.82} | Expected={'hit_probes': 1.501, 'miss_probes': 2.499, 'hit_ms': 50.01, 'miss_ms': 32.82}
+[PASSED] rh               (var=base   ): Actual={'hit_probes': 1.501, 'miss_probes': 1.751, 'hit_ms': 47.17, 'miss_ms': 38.81} | Expected={'hit_probes': 1.501, 'miss_probes': 1.751, 'hit_ms': 47.17, 'miss_ms': 38.81}
+
+--- Table III (alpha=0.80, C=4M, tau=0.10) ---
+[PASSED] lp-tomb          (var=base   ): Actual={'hit_probes': 3.162, 'miss_probes': 14.605, 'hit_ms': 58.89, 'miss_ms': 58.67} | Expected={'hit_probes': 3.162, 'miss_probes': 14.605, 'hit_ms': 58.89, 'miss_ms': 58.67}
+[PASSED] lp-backshift     (var=base   ): Actual={'hit_probes': 2.998, 'miss_probes': 12.933, 'hit_ms': 51.91, 'miss_ms': 35.45} | Expected={'hit_probes': 2.998, 'miss_probes': 12.933, 'hit_ms': 51.91, 'miss_ms': 35.45}
+[PASSED] rh-noearly       (var=noearly): Actual={'hit_probes': 2.998, 'miss_probes': 12.933, 'hit_ms': 67.47, 'miss_ms': 52.8} | Expected={'hit_probes': 2.998, 'miss_probes': 12.933, 'hit_ms': 67.47, 'miss_ms': 52.8}
+[PASSED] rh               (var=base   ): Actual={'hit_probes': 2.998, 'miss_probes': 3.398, 'hit_ms': 65.19, 'miss_ms': 43.38} | Expected={'hit_probes': 2.998, 'miss_probes': 3.398, 'hit_ms': 65.19, 'miss_ms': 43.38}
+
+===========================================================================
+>>> [4/4] KIỂM TRA CHÉO CÁC KHẲNG ĐỊNH ĐỊNH LƯỢNG TOÀN BÀI (ABSTRACT & CONCLUSION)
+===========================================================================
+[PASSED] Claim: 0.04% empty slots                             (Pattern: '0.04\%')
+[PASSED] Claim: 1,137.9x miss probe explosion                 (Pattern: '1,137.9\times')
+[PASSED] Claim: 233.3x miss latency surge                     (Pattern: '233.3\times')
+[PASSED] Claim: 73.8% miss probe reduction by early exit      (Pattern: '73.8\%')
+[PASSED] Claim: 83.7% reduction vs lp-tomb                    (Pattern: '83.7\%')
+[PASSED] Claim: 3.2x memory footprint advantage               (Pattern: '3.2\times')
+
+===========================================================================
+>>> TỔNG KẾT: 100% SỐ LIỆU TOÀN BÀI BÁO (RQ1, RQ2, RQ3) KHỚP CHÍNH XÁC VỚI CSV GỐC! <<<
+===========================================================================
+
+[OK] Log file successfully written to results/notes/verify_paper_all_numbers.log

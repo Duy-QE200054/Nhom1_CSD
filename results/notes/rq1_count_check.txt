@@ -12,7 +12,7 @@ Người thực hiện: Cặp 1 (C1) - Lớp SE20C - FPT University
 | results/raw/rq1_runner_results.csv | 44 dòng | 100% 'PC_LAB_01' | 44 ok | 21 cột (có build_ms) | FILE CHÍNH THỨC (Đồng bộ 100% với file lab gốc) |
 | results/raw/rq1_results_backup.csv | 44 dòng | 100% 'PC_LAB_01' | 44 ok | 21 cột (có build_ms) | BẢN SAO LƯU MỐC M5 (Đồng nhất với file lab chính) |
 | results/raw/rq1_runner_results_lab_backup.csv | 44 dòng | 100% 'PC_LAB_01' | 44 ok | 21 cột (có build_ms) | BẢN SAO LƯU DỰ PHÒNG LAB M5 (9,854 bytes) |
-| results/raw/rq1_runner_results_sandbox.csv | 88 dòng | 100% 'SANDBOX' | 88 ok | 20 cột (thiếu build_ms) | DỮ LIỆU SANDBOX CŨ (Lưu trữ riêng, không trộn vào lab) |
+| results/notes/rq1_runner_results_sandbox_archive.csv | 88 dòng | 100% 'SANDBOX' | 88 ok | 20 cột (thiếu build_ms) | DỮ LIỆU SANDBOX CŨ (Lưu trữ riêng, không trộn vào lab) |
 | results/raw/rq1_driver_results.csv | 20 dòng | PC_LAB_01 | 20 ok | 14 cột | Bảng tóm tắt đối chiếu Knuth, ns/op và bytes/key |
 
 --------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ Người thực hiện: Cặp 1 (C1) - Lớp SE20C - FPT University
 --------------------------------------------------------------------------------
 1. Thống nhất chọn Hướng (a):
    - Đưa dữ liệu chuẩn từ phòng lab ('rq1_runner_results_lab.csv', 44 dòng, 21 cột, 'PC_LAB_01') làm nội dung chính thức cho 'rq1_runner_results.csv'.
-   - File 'rq1_runner_results_sandbox.csv' (88 dòng) được lưu trữ riêng để đối chiếu lịch sử, KHÔNG đưa vào manifest nộp bài để tránh nhầm lẫn dữ liệu máy ảo với dữ liệu lab.
+   - File 'results/notes/rq1_runner_results_sandbox_archive.csv' (88 dòng): lưu tại results/notes/ làm bản lưu, có trong gói nhưng không dùng cho paper.
 2. Kiểm chéo Table I trong bài báo paper.tex:
    - 100% số liệu tra cứu trúng (Hit probes) khớp chính xác tuyệt đối với file lab 44 dòng 'rq1_runner_results_lab.csv'.
    - 100% số liệu tra cứu trượt (Miss probes) khớp với 'rq1_driver_results.csv'.
