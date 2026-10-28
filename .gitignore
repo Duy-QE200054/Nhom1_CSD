@@ -1,2 +1,5 @@
 /HashTableProject/nbproject/private/
 /HashTableProject/build/vscode-classes/
+__pycache__/
+*.pyc
+

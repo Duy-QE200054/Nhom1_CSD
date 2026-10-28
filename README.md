@@ -87,28 +87,61 @@ java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ1 --algo lp-t
 java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ2 --algo lp-tomb --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
 ```
 
-### RQ3: Robin Hood vs LP Backshift (M = 2^18, C = 65536, Tải 0.5)
+### RQ3: Robin Hood vs LP Backshift vs LP Tombstone (M = 2^18 hoặc 2^20)
+- Tải sống vừa $\alpha = 0.50$ (Ngưỡng rebuild $\tau = 0.20$ cho `lp-tomb`):
 ```bash
 java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo rh --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
 java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo rh-noearly --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
 java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo lp-backshift --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo lp-tomb --tau 0.2 --m 262144 --alpha 0.50 --c 65536 --seed 42 --mode time
+```
+
+- Tải sống cao $\alpha = 0.80$ (Chiến dịch ngày 25/10, ngưỡng rebuild $\tau = 0.10$ cho `lp-tomb`):
+```bash
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo rh --m 1048576 --alpha 0.80 --c 262144 --seed 42 --mode time
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo lp-backshift --m 1048576 --alpha 0.80 --c 262144 --seed 42 --mode time
+java -Xmx2g -jar HashTableProject/dist/HashTableProject.jar --rq RQ3 --algo lp-tomb --tau 0.1 --m 1048576 --alpha 0.80 --c 262144 --seed 42 --mode time
 ```
 
 *(Lưu ý: Dùng `--count` hoặc `--mode count` để chạy lượt đếm riêng; `--mode time` là lượt đo thời gian; có thể thêm `--query miss` để kiểm tra tra cứu trượt).*
 
 ### Điều Phối Toàn Bộ Kịch Bản Đo RQ3 (Bench Runner)
+- Chạy toàn bộ ma trận tải sống cao ngày 25/10 ($\alpha = 0.80$):
 ```bash
-python bench/run_all.py --rq RQ3
+python bench/run_all.py --rq RQ3 --m 1048576 --alpha 0.80 --cycles 0,262144,524288,1048576,2097152,4194304 --algorithms lp-tomb,lp-backshift,rh,rh-noearly --tau 0.1 --seeds 42,1337,20261019 --repeats 1 --output results/raw/rq3_20261025.csv
 ```
-*(Thêm cờ `--quick` để chạy thử nghiệm nhanh 12 cấu hình trong vài giây).*
+*(Thêm cờ `--quick` để chạy thử nghiệm nhanh trong vài giây).*
+
+### Kiểm Tra Tính Toàn Vẹn & Không Có Mốc Lỗi (Nhiệm vụ 26/10)
+```powershell
+# Bằng PowerShell
+powershell -ExecutionPolicy Bypass -File scratch/check_rq3.ps1
+
+# Hoặc bằng Python cross-platform
+python scratch/check_rq3.py
+```
+
+### Phân Tích Chuyên Sâu Khối 10⁴ Thao Tác & Bóc Tách Cơ Chế RQ3 (Nhiệm vụ 26/10)
+- Chạy toàn bộ workload profiling theo khối $10^4$ thao tác và ghi nhận độ đột biến Rebuild:
+```bash
+python bench/run_rq3_analysis.py
+```
+Dữ liệu khối được xuất tự động vào: `results/raw/rq3_block_profiling_alpha050.csv`, `results/raw/rq3_block_profiling_alpha080.csv`, và `results/raw/rq3_workload_summary.csv`.
 
 ### Tái Tạo Biểu Đồ Cho Bài Báo IEEE (Figures Generator)
+- Biểu đồ chiến dịch ngày 25/10 ($\alpha = 0.80$):
 ```bash
-python bench/plot_figures.py
+python bench/plot_figures.py --csv results/raw/rq3_20261025.csv --outdir results/figures/rq3_20261025
 ```
-Ảnh đồ thị chất lượng cao được lưu tại: `results/figures/`.
+
+- Biểu đồ chuyên sâu ngày 26/10 (Rebuild latency spikes, Max DIB evolution, và bóc tách 3 cơ chế):
+```bash
+python bench/plot_figures.py --plot-oct26
+```
+Ảnh đồ thị chất lượng cao được lưu tại: `results/figures/rq3_20261026/`.
 
 ---
+
 
 ## 5. Giải thích các trường dữ liệu CSV (Bảng 4)
 Mỗi dòng trong file CSV tại `results/raw/` tương ứng với một lượt đo độc lập:

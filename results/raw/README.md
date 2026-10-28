@@ -66,3 +66,67 @@ seed và loại truy vấn; giữ nguyên từng seed, số probe, latency, buil
 trạng thái. Cấu hình đo của campaign: Windows 11 Pro, Intel Core i5-11500H,
 RAM 32 GB, Java 24.0.2, heap tối đa 2 GB. CSV thô vẫn giữ `machine_id` để
 tương thích schema và truy vết; đây là nhãn máy `PC_LAB_01`, không phải số đo.
+
+## 4. RQ3 Campaign tải sống cao ngày 25/10/2026 (C3 - Stress Test)
+
+Chiến dịch hoàn tất dữ liệu ngày 25/10 thực hiện đo đạc 4 cấu hình tại tải sống cao $\alpha=0.80$ ($N=838861, M=2^{20}=1048576$), ngưỡng rebuild $\tau=0.10$ cho `lp-tomb` theo đúng đề bài:
+- 4 thuật toán: `lp-tomb` ($\tau=0.10$), `lp-backshift`, `rh`, `rh-noearly`.
+- 6 mốc churn: $C \in \{0, 262144, 524288, 1048576, 2097152, 4194304\}$ ($0, 0.25M, 0.5M, M, 2M, 4M$).
+- 3 hạt giống: `42, 1337, 20261019`, 1 repeat, 2 query (`hit, miss`), 2 mode (`count, time`).
+- Toàn bộ 288/288 lượt chạy đạt trạng thái `ok`, kiểm tra chéo `output_check` khớp chính xác 100% giữa tất cả các thuật toán cùng seed và mốc churn.
+- Kết quả lưu tại [rq3_20261025.csv](./rq3_20261025.csv). Bản sao lưu nguyên gốc đạt mốc M5 được lưu tại [rq3_results_backup_20261025.csv](./rq3_results_backup_20261025.csv).
+
+
+## 5. Dữ Liệu RQ2: Tích Tụ Tombstone & Clean Table (Cặp 2 - C2)
+
+File lưu trữ: [rq2_results.csv](./rq2_results.csv) (bản sao lưu nguyên gốc: [rq2_results_backup.csv](./rq2_results_backup.csv)).
+- **Mục tiêu nghiên cứu**: Câu hỏi RQ2 - Định lượng sự suy giảm hiệu năng do tích tụ tombstone khi không rebuild ($\tau = \infty$) so với bảng đối chứng sạch (*Clean Table*) qua các chu kỳ xóa-thêm (churn).
+- **Môi trường đo**:
+  - Dung lượng bảng: $M = 2^{20} = 1,048,576$ slots
+  - Hệ số tải sống: $\alpha = 0.50$ ($N = 524,288$ keys)
+  - Ngưỡng rebuild: $\tau = \infty$ (không tự động rebuild)
+  - 6 mốc churn: $C \in \{0, 262144, 524288, 1048576, 2097152, 4194304\}$ ($0, 0.25M, 0.5M, M, 2M, 4M$)
+  - Biến thể: `base` (bảng tích tụ tombstone) và `clean_table` (bảng sạch đối chứng chứa đúng tập khóa sống)
+  - Loại truy vấn: `hit` (tra cứu toàn bộ khóa sống) và `miss` (tra cứu khóa vắng mặt)
+  - Chế độ đo: `count` (đo số bước dò `ops_count`) và `time` (đo thời gian `elapsed_ms`)
+  - Tổng số cấu hình đo: $6 \text{ mốc } \times 2 \text{ biến thể } \times 2 \text{ query } \times 2 \text{ mode } = 48$ lượt chạy độc lập.
+
+- **Kết quả nghiệm thu nhiệm vụ [Cả nhóm] đối với RQ2 (Chủ Nhật 25/10/2026)**:
+  1. **Kiểm tra chéo `output_check`**:
+     - 100% khớp chính xác giữa `base` và `clean_table` cho tất cả các mốc churn $C$ ở cả truy vấn `hit` và `miss`.
+     - 100% khớp chính xác giữa chế độ `count` và `time`.
+     - Đối chiếu chéo với các thuật toán RQ3 (`lp-backshift`, `rh`, `rh-noearly`) cùng seed 42 và workload: `output_check` khớp hoàn toàn ở tất cả các mốc $C > 0$.
+  2. **Trạng thái mốc lỗi/timeout/ngoại lệ**:
+     - 48/48 lượt chạy đạt trạng thái `ok`.
+     - 0 lượt bị `timeout` (giới hạn 60s), 0 lượt bị `crash`, 0 lượt bị `oom`. Mốc tải nặng nhất ($C = 4M$, miss search) chỉ mất 5.85s. Không có mốc nào cần chạy lại.
+  3. **Mốc cứng sao lưu CSV gốc**:
+     - Bản gốc: `rq2_results.csv` (SHA-256: `1327c822969670835e30b8aae1b541488ef092d79b4c8646d00d6d70ac68d62b`)
+     - Bản sao lưu: `rq2_results_backup.csv` (SHA-256: `1327c822969670835e30b8aae1b541488ef092d79b4c8646d00d6d70ac68d62b`)
+     - Hai file đồng nhất 100% về mã băm và kích thước (12,109 bytes).
+
+---
+
+## 6. Dữ Liệu Phân Tích Chuyên Sâu Khối 10⁴ Thao Tác & Rebuild (Cặp 3 - C3, Ngày 26/10/2026)
+
+Theo đúng yêu cầu kế hoạch ngày 26/10 của Cặp 3 (`[C3] Phân tích RQ3: tổng thời gian, median/max khối, số lần rebuild; tách đóng góp của backshift, hoán đổi, dừng sớm`), toàn bộ dữ liệu micro-profiling theo khối $10^4$ thao tác xuyên suốt $C = 4M$ chu kỳ churn ($8.39 \times 10^6$ thao tác xóa-thêm) được lưu trữ tại:
+
+- **[rq3_block_profiling_alpha050.csv](./rq3_block_profiling_alpha050.csv)**: 3,356 bản ghi khối (839 khối $\times$ 4 thuật toán) tại $\alpha = 0.50$, $\tau = 0.20$ cho `lp-tomb`.
+- **[rq3_block_profiling_alpha080.csv](./rq3_block_profiling_alpha080.csv)**: 3,356 bản ghi khối (839 khối $\times$ 4 thuật toán) tại $\alpha = 0.80$, $\tau = 0.10$ cho `lp-tomb`.
+- **[rq3_workload_summary.csv](./rq3_workload_summary.csv)**: Bảng tổng hợp các chỉ số hiệu năng chính:
+  - Tổng thời gian churn (`total_churn_time_ms`)
+  - Độ trễ khối trung vị (`median_block_ms`)
+  - Độ trễ khối cực đại (`max_block_ms` - phản ánh đột biến do rebuild)
+  - Tổng số lần kích hoạt rebuild (`rebuild_count`)
+  - Khoảng cách dò trung bình (`average_dib`) và lớn nhất (`max_dib`)
+  - Tỷ lệ ô tombstone (`tombstone_ratio`) và ô trống (`empty_ratio`)
+
+### Schema của file block profiling (15 cột):
+```csv
+alpha,algorithm,block_index,start_cycle,end_cycle,ops_count,elapsed_ms,tombstone_count,tombstone_ratio,empty_count,empty_ratio,average_dib,max_dib,rebuild_count,rebuilds_in_block
+```
+
+### Kết quả kiểm định tính toàn vẹn và nghiệm thu không có mốc lỗi (26/10/2026):
+- Bộ script kiểm tra tính toàn vẹn: `scratch/check_rq3.ps1` và `scratch/check_rq3.py`.
+- **Xác nhận 100% đạt chuẩn**: 576/576 lượt chạy của 24/10 và 25/10 đều có `status = ok`, 0 timeout, 0 crash.
+- **Giá trị `output_check`**: Khớp chính xác 100% giữa tất cả các cài đặt cùng seed và workload.
+- **Mốc lỗi cần chạy lại**: **0 mốc**.
