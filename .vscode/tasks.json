@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "▶️ Chạy toàn bộ Test (TestRunner)",
+            "type": "shell",
+            "command": "java -cp build/classes;build/test/classes hashtable.test.TestRunner",
+            "options": {
+                "cwd": "${workspaceFolder}/HashTableProject"
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "▶️ Chạy riêng Cặp 2 (C2HashTableTest)",
+            "type": "shell",
+            "command": "java -cp build/classes;build/test/classes hashtable.test.C2HashTableTest",
+            "options": {
+                "cwd": "${workspaceFolder}/HashTableProject"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
