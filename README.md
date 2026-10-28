@@ -112,6 +112,13 @@ python bench/run_all.py --rq RQ3 --m 1048576 --alpha 0.80 --cycles 0,262144,5242
 ```
 *(Thêm cờ `--quick` để chạy thử nghiệm nhanh trong vài giây).*
 
+- Chạy bằng PowerShell với output UTF-8, kiểm tra CSV và bảng tổng kết:
+```powershell
+.\bench\run_rq3.ps1
+```
+Lệnh trên chạy quick check. Thêm `-Full` để chạy đủ 288 lượt của ma trận
+$\alpha = 0.80$; mỗi lần chạy lưu vào một CSV mới trong `results\raw\`.
+
 ### Kiểm Tra Tính Toàn Vẹn & Không Có Mốc Lỗi (Nhiệm vụ 26/10)
 ```powershell
 # Bằng PowerShell

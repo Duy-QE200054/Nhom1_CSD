@@ -86,7 +86,7 @@ def run_single_benchmark(jar_path, args, timeout_sec=60):
             jar_argument = os.path.relpath(jar_path, repository_root)
     except ValueError:
         pass
-    cmd = [JAVA_EXEC, "-Xmx2g", "-jar", jar_argument] + args
+    cmd = [JAVA_EXEC, "-Dfile.encoding=UTF-8", "-Xmx2g", "-jar", jar_argument] + args
     print(f"[RUNNING] {' '.join(cmd)}")
     try:
         proc = subprocess.run(
@@ -94,6 +94,8 @@ def run_single_benchmark(jar_path, args, timeout_sec=60):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout_sec,
             cwd=repository_root
         )
