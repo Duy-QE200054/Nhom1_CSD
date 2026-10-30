@@ -51,6 +51,7 @@ public class BenchmarkRunner {
         double tau = Double.parseDouble(getArg(args, "--tau", "Infinity"));
         int repeat = Integer.parseInt(getArg(args, "--repeat", "1"));
         String queryType = getArg(args, "--query", "hit");
+        int queriesArg = Integer.parseInt(getArg(args, "--queries", "-1"));
         String xmx = getArg(args, "--xmx", "2g");
         String machineId = getArg(args, "--machine-id", "PC_LAB_01");
         String gitCommit = getArg(args, "--git-commit", "8b19d6d");
@@ -142,16 +143,29 @@ public class BenchmarkRunner {
 
         // Tạo tập khóa truy vấn theo queryType
         long[] queryKeys;
+        int targetQueries = queriesArg > 0 ? queriesArg : keys.length;
         if ("miss".equalsIgnoreCase(queryType) || "absent".equalsIgnoreCase(queryType)) {
-            queryKeys = RQ1DataGenerator.generateAbsentKeys(keys.length, seed + 100_000L + repeat * 7L, keys);
+            queryKeys = RQ1DataGenerator.generateAbsentKeys(targetQueries, seed + 100_000L + repeat * 7L, keys);
         } else if ("mixed".equalsIgnoreCase(queryType)) {
-            int half = keys.length / 2;
-            long[] absent = RQ1DataGenerator.generateAbsentKeys(keys.length - half, seed + 100_000L + repeat * 7L, keys);
-            queryKeys = new long[keys.length];
-            System.arraycopy(keys, 0, queryKeys, 0, half);
-            System.arraycopy(absent, 0, queryKeys, half, absent.length);
+            int hitCount = targetQueries / 2;
+            int missCount = targetQueries - hitCount;
+            long[] absent = RQ1DataGenerator.generateAbsentKeys(missCount, seed + 100_000L + repeat * 7L, keys);
+            queryKeys = new long[targetQueries];
+            java.util.SplittableRandom queryRandom = new java.util.SplittableRandom(seed + 200_000L + repeat * 13L);
+            for (int i = 0; i < hitCount; i++) {
+                queryKeys[i] = keys[queryRandom.nextInt(keys.length)];
+            }
+            System.arraycopy(absent, 0, queryKeys, hitCount, missCount);
         } else {
-            queryKeys = keys;
+            if (targetQueries == keys.length) {
+                queryKeys = keys;
+            } else {
+                queryKeys = new long[targetQueries];
+                java.util.SplittableRandom queryRandom = new java.util.SplittableRandom(seed + 55_555L + repeat * 13L);
+                for (int i = 0; i < targetQueries; i++) {
+                    queryKeys[i] = keys[queryRandom.nextInt(keys.length)];
+                }
+            }
         }
 
         // 5. Đo đạc theo chế độ count hoặc time
@@ -361,7 +375,13 @@ public class BenchmarkRunner {
                 ? String.format(java.util.Locale.US, "M=%d;alpha=%.2f;c=%d;tau=%s", m, alpha, c, tauStr)
                 : String.format(java.util.Locale.US, "M=%d;alpha=%.2f;c=%d;tau=%s;query=%s", m, alpha, c, tauStr, queryType);
 
-        String runId = "RUN_" + rq + "_" + algo.toUpperCase().replace('-', '_') + "_" + (variant.equals("base") ? "" : variant.toUpperCase() + "_") + repeat;
+        String variantPart = variant.equals("base") ? "" : variant.toUpperCase() + "_";
+        String queryPart = "hit".equalsIgnoreCase(queryType) ? "HIT" : queryType.toUpperCase();
+        String mode = elapsed != null && !elapsed.toString().isEmpty() ? "TIME" : "COUNT";
+        String runId = String.format(java.util.Locale.US,
+                "RUN_%s_%s_%sM%d_A%.2f_C%d_S%d_R%d_%s_%s_%s",
+                rq, algo.toUpperCase().replace('-', '_'), variantPart, m, alpha, c, seed, repeat,
+                dataset.toUpperCase(), queryPart, mode);
         String line = String.format(java.util.Locale.US, "%s,%s,%s,%s,%s,%d,%s,%d,%s,%s,%d,%s,%.3f,%d,%d,%s,%d,%s,%s,%s,%s",
                 runId, rq, algo, variant, dataset, n, params, seed, sha, genVer, repeat,
                 elapsed, buildMs, heapBefore, heapPeak, opsCount, outputCheck, status, xmx, machineId, gitCommit);
