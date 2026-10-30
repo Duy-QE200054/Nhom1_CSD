@@ -13,6 +13,7 @@ import subprocess
 import time
 import argparse
 import math
+import csv
 
 # Đảm bảo UTF-8 trên Windows console
 if sys.platform == "win32":
@@ -78,7 +79,15 @@ def find_java():
 
 JAVA_EXEC = find_java()
 
-def run_single_benchmark(jar_path, args, timeout_sec=60):
+
+def get_option(args, name, default=""):
+    try:
+        return args[args.index(name) + 1]
+    except (ValueError, IndexError):
+        return default
+
+
+def run_single_benchmark(jar_path, args, timeout_sec=60, progress=None):
     repository_root = get_repository_root()
     jar_argument = jar_path
     try:
@@ -86,16 +95,27 @@ def run_single_benchmark(jar_path, args, timeout_sec=60):
             jar_argument = os.path.relpath(jar_path, repository_root)
     except ValueError:
         pass
-    cmd = [JAVA_EXEC, "-Dfile.encoding=UTF-8", "-Xmx2g", "-jar", jar_argument] + args
-    print(f"[RUNNING] {' '.join(cmd)}")
+    cmd = [JAVA_EXEC, "-Xmx2g", "-jar", jar_argument] + args
+    rq = get_option(args, "--rq", "RQ")
+    algo = get_option(args, "--algo", "unknown")
+    query = get_option(args, "--query", "hit")
+    mode = get_option(args, "--mode", "time")
+    query_label = {"hit": "có mặt", "miss": "vắng mặt"}.get(query, query)
+    mode_label = {"count": "đếm số lần dò", "time": "đo thời gian"}.get(mode, mode)
+    details = (
+        f"{rq} | thuật toán={algo} | truy vấn={query_label} | chế độ={mode_label} | "
+        f"dung lượng M={get_option(args, '--m')} | hệ số tải={get_option(args, '--alpha')} | "
+        f"số chu kỳ C={get_option(args, '--c')} | hạt giống={get_option(args, '--seed')} | "
+        f"lần lặp={get_option(args, '--repeat', '1')}"
+    )
+    run_prefix = f"{progress} " if progress else ""
+    print(f"[ĐANG CHẠY] {run_prefix}{details}")
     try:
         proc = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            encoding="utf-8",
-            errors="replace",
             timeout=timeout_sec,
             cwd=repository_root
         )
@@ -104,14 +124,26 @@ def run_single_benchmark(jar_path, args, timeout_sec=60):
             csv_lines = [l for l in lines if not l.startswith("run_id,") and l.count(",") >= 15]
             if csv_lines:
                 result_row = csv_lines[-1]
-                print(f"[COMPLETED] {result_row}")
+                fields = next(csv.reader([result_row]))
+                status = fields[17] if len(fields) > 17 else "không rõ"
+                status_label = {"ok": "thành công", "timeout": "quá thời gian", "crash": "lỗi"}.get(
+                    status, status
+                )
+                if mode == "count":
+                    metric = f"số lần dò trung bình={fields[15]}" if len(fields) > 15 else "số lần dò trung bình=không có"
+                else:
+                    metric = f"thời gian={fields[11]} ms" if len(fields) > 11 else "thời gian=không có"
+                print(f"[HOÀN TẤT] {run_prefix}trạng thái={status_label} | {metric}")
                 return 0, result_row
+            print(f"[HOÀN TẤT] {run_prefix}trạng thái=thành công | không có dòng kết quả dạng CSV")
             return 0, proc.stdout.strip()
         else:
-            print(f"[ERROR] Return code {proc.returncode}: {proc.stderr.strip()}")
+            print(f"[THẤT BẠI] {run_prefix}mã lỗi={proc.returncode}")
+            if proc.stderr.strip():
+                print(f"         {proc.stderr.strip()}")
             return proc.returncode, None
     except subprocess.TimeoutExpired:
-        print(f"[TIMEOUT] Process exceeded {timeout_sec}s! Destroying JVM process.")
+        print(f"[QUÁ THỜI GIAN] {run_prefix}vượt quá {timeout_sec} giây")
         return -1, "timeout"
 
 def run_rq3_benchmarks(
@@ -139,7 +171,7 @@ def run_rq3_benchmarks(
       C in [65536, 131072, 262144] (hoặc các mốc churn custom)
     """
     print("\n========================================================")
-    print("      RQ3 BENCHMARK SUITE - ROBIN HOOD MECHANISM       ")
+    print("      RQ3 - ĐO HIỆU NĂNG CƠ CHẾ ROBIN HOOD             ")
     print("========================================================")
 
     ensure_csv_header(output_csv)
@@ -153,7 +185,7 @@ def run_rq3_benchmarks(
         effective_tau = tombstone_tau
 
     if quick:
-        print("[MODE] Quick Trial Mode (1 seed, 1 repeat, C=65536)")
+        print("[CHẾ ĐỘ] Chạy thử nhanh (1 hạt giống, 1 lần lặp, C=65536)")
         seeds = custom_seeds or [42]
         churn_cycles = custom_cycles or [65536]
         repeats = [1]
@@ -164,7 +196,10 @@ def run_rq3_benchmarks(
         rep_count = repeats_count or 3
         repeats = list(range(1, rep_count + 1))
         queries = ["hit", "miss"]
-        print(f"[MODE] Matrix Mode ({len(seeds)} seeds, {len(repeats)} repeats, {len(churn_cycles)} churn cycles)")
+        print(
+            f"[CHẾ ĐỘ] Chạy ma trận "
+            f"({len(seeds)} hạt giống, {len(repeats)} lần lặp, {len(churn_cycles)} mốc chu kỳ)"
+        )
 
     total_configs = len(churn_cycles) * len(seeds) * len(repeats) * len(algos) * 2 * len(queries)
     current = 0
@@ -183,7 +218,6 @@ def run_rq3_benchmarks(
                         tau_arg = "Infinity" if tau == float("inf") else str(tau)
                         # 1. Lượt đo số bước dò (ops_count)
                         current += 1
-                        print(f"[{current}/{total_configs}] Count probe: algo={algo}, c={c}, seed={seed}, rep={rep}, query={query}")
                         args_count = [
                             "--rq", "RQ3",
                             "--algo", algo,
@@ -197,7 +231,10 @@ def run_rq3_benchmarks(
                             "--query", query,
                             "--mode", "count"
                         ]
-                        code, out = run_single_benchmark(jar_path, args_count, timeout_sec=timeout_sec)
+                        code, out = run_single_benchmark(
+                            jar_path, args_count, timeout_sec=timeout_sec,
+                            progress=f"{current}/{total_configs}"
+                        )
                         if code == 0:
                             out = identify_result(out or "", algo, c, seed, rep, query, "count")
                             if out is None:
@@ -222,7 +259,6 @@ def run_rq3_benchmarks(
 
                         # 2. Lượt đo thời gian (elapsed_ms)
                         current += 1
-                        print(f"[{current}/{total_configs}] Time elapsed: algo={algo}, c={c}, seed={seed}, rep={rep}, query={query}")
                         args_time = [
                             "--rq", "RQ3",
                             "--algo", algo,
@@ -236,7 +272,10 @@ def run_rq3_benchmarks(
                             "--query", query,
                             "--mode", "time"
                         ]
-                        code, out = run_single_benchmark(jar_path, args_time, timeout_sec=timeout_sec)
+                        code, out = run_single_benchmark(
+                            jar_path, args_time, timeout_sec=timeout_sec,
+                            progress=f"{current}/{total_configs}"
+                        )
                         if code == 0:
                             out = identify_result(out or "", algo, c, seed, rep, query, "time")
                             if out is None:
@@ -260,9 +299,9 @@ def run_rq3_benchmarks(
                                 f.write(timeout_row + "\n")
 
     print("\n--------------------------------------------------------")
-    print(f"ĐO ĐẠC HOÀN THÀNH: Thành công: {success_count}, Timeout: {timeout_count}")
-    print(f"Lượt lỗi khác: {failure_count}")
-    print(f"Kết quả CSV đã lưu tại: {output_csv}")
+    print(f"ĐO ĐẠC HOÀN TẤT: Thành công: {success_count}, Quá thời gian: {timeout_count}")
+    print(f"Số lượt gặp lỗi khác: {failure_count}")
+    print(f"Đã lưu kết quả CSV tại: {output_csv}")
     print("--------------------------------------------------------\n")
 
 def identify_result(output, algo, cycles, seed, repeat, query, mode):
