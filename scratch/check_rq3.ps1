@@ -106,7 +106,7 @@ Check-OutputCheck $f_2025 "25/10 (alpha = 0.80)"
 Write-Host "================================================================" -ForegroundColor Cyan
 Write-Host "      ĐỐI CHIẾU CHÉO VỚI BẢNG ĐỐI CHỨNG RQ2 (CLEAN_TABLE)       " -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Cyan
-$f_rq2 = "results\raw\rq2_results.csv"
+$f_rq2 = "results\raw\rq2_results_backup.csv"
 if ((Test-Path $f_rq2) -and (Test-Path $f_2024)) {
     $rq2_rows = Import-Csv $f_rq2 | Where-Object { $_.seed -eq "42" -and $_.variant -eq "clean_table" }
     $rq3_rows = Import-Csv $f_2024 | Where-Object { $_.seed -eq "42" }
