@@ -1,0 +1,19 @@
+Block time (ms / 104 ops)  120               =0.50, =0.20, M = 220                              LP Tombstone (periodic rebuild)
+                           100                                                                  Rebuild event (14 blocks, max=36.1 ms)
+                            80                                     LP Backshift
+                            60                                     Robin Hood (full)
+                            40
+Block time (ms / 104 ops)   20               =0.80, =0.10, M = 220                              LP Tombstone (periodic rebuild)
+                                                                                                Rebuild event (23 blocks, max=29.6 ms)
+                             0                                     LP Backshift
+                                                                   Robin Hood (full)
+                           120
+                           100          200  400                                      600       800
+                            80               Block index (1 block = 104 operations, C = 0..4M)
+                            60
+                            40
+                            20
+
+                             0
+                                     0
+

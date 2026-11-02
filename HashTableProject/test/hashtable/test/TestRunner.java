@@ -3,7 +3,7 @@ package hashtable.test;
 public class TestRunner {
     public static void main(String[] args) {
         System.out.println("=================================================");
-        System.out.println("      CSD201 TEST SUITE - NHÓM 1 (FA26)         ");
+        System.out.println("      CSD201 TEST SUITE - NHOM 1 (FA26)         ");
         System.out.println("=================================================\n");
 
         int failures = 0;
@@ -19,9 +19,9 @@ public class TestRunner {
         failures += runSuite("BenchmarkRunnerTest", BenchmarkRunnerTest::runAllTests);
 
         if (failures == 0) {
-            System.out.println(">>> TẤT CẢ CÁC BÀI TEST ĐÃ HOÀN THÀNH XUẤT SẮC! <<<");
+            System.out.println(">>> TAT CA CAC BAI TEST DA HOAN THANH XUAT SAC! <<<");
         } else {
-            System.err.println("!!! CÓ " + failures + " TEST SUITE THẤT BẠI !!!");
+            System.err.println("!!! CO " + failures + " TEST SUITE THAT BAI !!!");
             System.exit(1);
         }
     }
@@ -31,7 +31,7 @@ public class TestRunner {
             suite.run();
             return 0;
         } catch (Throwable t) {
-            System.err.println("!!! Test suite thất bại: " + name + " !!!");
+            System.err.println("!!! Test suite that bai: " + name + " !!!");
             t.printStackTrace();
             return 1;
         }

@@ -1,0 +1,5 @@
+[START] algo=lp-tomb, variant=base, mode=count, dataset=uniform, M=1048576, alpha=0.9, c=0, seed=42
+--- RESULT (CSV) ---
+run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version,repeat,elapsed_ms,build_ms,heap_before_bytes,heap_peak_bytes,ops_count,output_check,status,xmx,machine_id,git_commit
+RUN_RQ1_LP_TOMB_1,RQ1,lp-tomb,base,uniform,943718,M=1048576;alpha=0.90;c=0;tau=inf;query=miss,42,a7a94f9fd090853d062d9b77e63d1f4352507ebf0aa55365aee7b16765f64c7f,1.0.0,1,,55.077,10307256,183785200,50.0829,943718,ok,2g,PC_LAB_01,8b19d6d
+[DONE] Benchmark finished successfully (status=ok), saved to D:\csd1\Nhom1_CSD\results\raw\rq1_tmp\run_023.csv

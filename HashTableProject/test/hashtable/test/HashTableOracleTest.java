@@ -39,7 +39,7 @@ public final class HashTableOracleTest {
                 return new SeparateChaining(capacity);
             }
         });
-        runTestsFor("lp-tomb (không rebuild)", new TableFactory() {
+        runTestsFor("lp-tomb (khong rebuild)", new TableFactory() {
             @Override
             public HashTable create(int capacity) {
                 return new LinearProbingTombstone(capacity);
@@ -60,10 +60,10 @@ public final class HashTableOracleTest {
      */
     public static void runTestsFor(String implementation, TableFactory factory) {
         if (implementation == null || factory == null) {
-            throw new IllegalArgumentException("Tên cài đặt và factory không được null");
+            throw new IllegalArgumentException("Ten cai dat va factory khong duoc null");
         }
 
-        System.out.println("--- Oracle và 6 ca bắt buộc: " + implementation + " ---");
+        System.out.println("--- Oracle va 6 ca bat buoc: " + implementation + " ---");
         testCollisionOperations(factory);
         testRemoveFromCollisionChain(factory);
         testBoundaryKeysAndValues(factory);
@@ -80,13 +80,13 @@ public final class HashTableOracleTest {
         List<Long> keys = findCollidingKeys(16, -1, 3, 1L);
 
         for (int i = 0; i < keys.size(); i++) {
-            putAndCheck(table, oracle, keys.get(i), (i + 1) * 10, "Ca 1: put va chạm");
+            putAndCheck(table, oracle, keys.get(i), (i + 1) * 10, "Ca 1: put va cham");
         }
-        assertEquals(oracle.size(), table.size(), "Ca 1: size sau khi chèn va chạm");
+        assertEquals(oracle.size(), table.size(), "Ca 1: size sau khi chen va cham");
         for (long key : keys) {
-            assertGetMatches(table, oracle, key, "Ca 1: get khóa va chạm");
+            assertGetMatches(table, oracle, key, "Ca 1: get khoa va cham");
         }
-        putAndCheck(table, oracle, keys.get(1), -99, "Ca 1: cập nhật khóa va chạm");
+        putAndCheck(table, oracle, keys.get(1), -99, "Ca 1: cap nhat khoa va cham");
         assertAllEntriesMatch(table, oracle, "Ca 1");
     }
 
@@ -96,11 +96,11 @@ public final class HashTableOracleTest {
         List<Long> keys = findCollidingKeys(16, -1, 4, 2L);
 
         for (int i = 0; i < keys.size(); i++) {
-            putAndCheck(table, oracle, keys.get(i), i, "Ca 2: put va chạm");
+            putAndCheck(table, oracle, keys.get(i), i, "Ca 2: put va cham");
         }
-        removeAndCheck(table, oracle, keys.get(1), "Ca 2: remove khóa giữa");
+        removeAndCheck(table, oracle, keys.get(1), "Ca 2: remove khoa giua");
         for (int i = 0; i < keys.size(); i++) {
-            assertGetMatches(table, oracle, keys.get(i), "Ca 2: kiểm tra sau remove");
+            assertGetMatches(table, oracle, keys.get(i), "Ca 2: kiem tra sau remove");
         }
         assertAllEntriesMatch(table, oracle, "Ca 2");
     }
@@ -109,10 +109,10 @@ public final class HashTableOracleTest {
         HashTable table = factory.create(16);
         Map<Long, Integer> oracle = new HashMap<>();
 
-        putAndCheck(table, oracle, 0L, Integer.MIN_VALUE, "Ca 3: khóa 0 và giá trị nhỏ nhất");
+        putAndCheck(table, oracle, 0L, Integer.MIN_VALUE, "Ca 3: khoa 0 va gia tri nho nhat");
         putAndCheck(table, oracle, Long.MAX_VALUE, Integer.MAX_VALUE,
-                "Ca 3: khóa lớn nhất và giá trị lớn nhất");
-        putAndCheck(table, oracle, 1L, 0, "Ca 3: giá trị 0");
+                "Ca 3: khoa lon nhat va gia tri lon nhat");
+        putAndCheck(table, oracle, 1L, 0, "Ca 3: gia tri 0");
         assertAllEntriesMatch(table, oracle, "Ca 3");
     }
 
@@ -120,11 +120,11 @@ public final class HashTableOracleTest {
         HashTable table = factory.create(16);
         Map<Long, Integer> oracle = new HashMap<>();
 
-        assertGetMatches(table, oracle, 7L, "Ca 4: get khóa chưa tồn tại");
-        removeAndCheck(table, oracle, 7L, "Ca 4: remove khóa chưa tồn tại");
-        putAndCheck(table, oracle, 7L, 70, "Ca 4: chèn khóa");
-        removeAndCheck(table, oracle, 7L, "Ca 4: remove khóa đã có");
-        removeAndCheck(table, oracle, 7L, "Ca 4: remove lặp lại");
+        assertGetMatches(table, oracle, 7L, "Ca 4: get khoa chua ton tai");
+        removeAndCheck(table, oracle, 7L, "Ca 4: remove khoa chua ton tai");
+        putAndCheck(table, oracle, 7L, 70, "Ca 4: chen khoa");
+        removeAndCheck(table, oracle, 7L, "Ca 4: remove khoa da co");
+        removeAndCheck(table, oracle, 7L, "Ca 4: remove lap lai");
         assertAllEntriesMatch(table, oracle, "Ca 4");
     }
 
@@ -134,10 +134,10 @@ public final class HashTableOracleTest {
         List<Long> keys = findCollidingKeys(16, 15, 5, 5L);
 
         for (int i = 0; i < 4; i++) {
-            putAndCheck(table, oracle, keys.get(i), 100 + i, "Ca 5: put va chạm qua cuối mảng");
+            putAndCheck(table, oracle, keys.get(i), 100 + i, "Ca 5: put va cham qua cuoi mang");
         }
-        removeAndCheck(table, oracle, keys.get(1), "Ca 5: remove giữa cụm vòng");
-        putAndCheck(table, oracle, keys.get(4), 500, "Ca 5: tái sử dụng sau remove");
+        removeAndCheck(table, oracle, keys.get(1), "Ca 5: remove giua cum vong");
+        putAndCheck(table, oracle, keys.get(4), 500, "Ca 5: tai su dung sau remove");
         assertAllEntriesMatch(table, oracle, "Ca 5");
     }
 
@@ -150,11 +150,11 @@ public final class HashTableOracleTest {
             long key = random.nextLong(48);
             int action = random.nextInt(5);
             if (action < 2) {
-                putAndCheck(table, oracle, key, random.nextInt(), "Ca 6 bước " + i + ": put");
+                putAndCheck(table, oracle, key, random.nextInt(), "Ca 6 buoc " + i + ": put");
             } else if (action < 4) {
-                assertGetMatches(table, oracle, key, "Ca 6 bước " + i + ": get");
+                assertGetMatches(table, oracle, key, "Ca 6 buoc " + i + ": get");
             } else {
-                removeAndCheck(table, oracle, key, "Ca 6 bước " + i + ": remove");
+                removeAndCheck(table, oracle, key, "Ca 6 buoc " + i + ": remove");
             }
         }
         assertAllEntriesMatch(table, oracle, "Ca 6");
@@ -175,28 +175,28 @@ public final class HashTableOracleTest {
                 case PUT:
                     putCount++;
                     putAndCheck(table, oracle, key, random.nextInt(),
-                            implementation + " oracle bước " + i + ": put");
+                            implementation + " oracle buoc " + i + ": put");
                     break;
                 case GET:
                     getCount++;
                     assertGetMatches(table, oracle, key,
-                            implementation + " oracle bước " + i + ": get");
+                            implementation + " oracle buoc " + i + ": get");
                     break;
                 case REMOVE:
                     removeCount++;
                     removeAndCheck(table, oracle, key,
-                            implementation + " oracle bước " + i + ": remove");
+                            implementation + " oracle buoc " + i + ": remove");
                     break;
                 default:
-                    throw new AssertionError("Loại thao tác oracle không hợp lệ: " + actions[i]);
+                    throw new AssertionError("Loai thao tac oracle khong hop le: " + actions[i]);
             }
         }
 
-        assertEquals(400_000, putCount, implementation + ": phải có đúng 40% put");
-        assertEquals(400_000, getCount, implementation + ": phải có đúng 40% get");
-        assertEquals(200_000, removeCount, implementation + ": phải có đúng 20% remove");
-        assertAllEntriesMatch(table, oracle, implementation + " oracle cuối");
-        System.out.println("Oracle " + ORACLE_OPERATIONS + " thao tác (40/40/20), M="
+        assertEquals(400_000, putCount, implementation + ": phai co dung 40% put");
+        assertEquals(400_000, getCount, implementation + ": phai co dung 40% get");
+        assertEquals(200_000, removeCount, implementation + ": phai co dung 20% remove");
+        assertAllEntriesMatch(table, oracle, implementation + " oracle cuoi");
+        System.out.println("Oracle " + ORACLE_OPERATIONS + " thao tac (40/40/20), M="
                 + ORACLE_CAPACITY + ", seed=" + ORACLE_SEED + ": PASSED");
     }
 
@@ -243,8 +243,8 @@ public final class HashTableOracleTest {
                 }
             }
         }
-        throw new AssertionError("Không tìm được " + count + " khóa đụng độ trong M=" + capacity
-                + (targetBucket >= 0 ? " tại bucket " + targetBucket : "") + " bằng thử ngẫu nhiên");
+        throw new AssertionError("Khong tim duoc " + count + " khoa dung do trong M=" + capacity
+                + (targetBucket >= 0 ? " tai bucket " + targetBucket : "") + " bang thu ngau nhien");
     }
 
     private static void putAndCheck(HashTable table, Map<Long, Integer> oracle,
@@ -252,7 +252,7 @@ public final class HashTableOracleTest {
         boolean existed = oracle.containsKey(key);
         PutStatus expected = existed ? PutStatus.UPDATED : PutStatus.INSERTED;
         PutStatus actual = table.put(key, value);
-        assertEquals(expected, actual, message + ": trạng thái put");
+        assertEquals(expected, actual, message + ": trang thai put");
         oracle.put(key, value);
         assertEquals(oracle.size(), table.size(), message + ": size");
     }
@@ -278,23 +278,23 @@ public final class HashTableOracleTest {
         assertEquals(oracle.size(), table.size(), message + ": size");
         for (Map.Entry<Long, Integer> entry : oracle.entrySet()) {
             GetResult actual = table.get(entry.getKey());
-            assertEquals(true, actual.isFound(), message + ": thiếu key " + entry.getKey());
+            assertEquals(true, actual.isFound(), message + ": thieu key " + entry.getKey());
             assertEquals(entry.getValue().intValue(), actual.getValue(),
-                    message + ": sai value của key " + entry.getKey());
+                    message + ": sai value cua key " + entry.getKey());
         }
     }
 
     private static void assertEquals(Object expected, Object actual, String message) {
         if (expected == null ? actual != null : !expected.equals(actual)) {
-            throw new AssertionError("THẤT BẠI: " + message + " (mong đợi: "
-                    + expected + ", thực tế: " + actual + ")");
+            throw new AssertionError("THAT BAI: " + message + " (mong doi: "
+                    + expected + ", thuc te: " + actual + ")");
         }
     }
 
     private static void assertEquals(long expected, long actual, String message) {
         if (expected != actual) {
-            throw new AssertionError("THẤT BẠI: " + message + " (mong đợi: "
-                    + expected + ", thực tế: " + actual + ")");
+            throw new AssertionError("THAT BAI: " + message + " (mong doi: "
+                    + expected + ", thuc te: " + actual + ")");
         }
     }
 }

@@ -1,0 +1,21 @@
+                                (a) Hit queries                                    (b) Miss queries
+
+                       1.85                                         4.5     256K 512K 1024K 2048K 4096K
+                                                                    4.0
+Mean probes per query  1.80                                         3.5       Churn cycles C (N=524,288)
+                                                                    3.0
+                       1.75     LP Tombstone (rebuild)              2.5
+                                LP Backshift (Knuth R)              2.0
+                       1.70     Robin Hood (rh-noearly)
+                                Robin Hood (rh, early exit)
+                       1.65
+
+                       1.60
+
+                       1.55
+
+                       1.50
+
+                             0  256K 512K 1024K 2048K        4096K       0
+                                Churn cycles C (N=524,288)
+

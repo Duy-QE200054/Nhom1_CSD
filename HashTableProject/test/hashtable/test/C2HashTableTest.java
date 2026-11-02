@@ -25,7 +25,7 @@ public final class C2HashTableTest {
     private C2HashTableTest() {}
 
     public static void runAllTests() {
-        System.out.println("--- Bắt đầu 6 ca bắt buộc và Oracle cho lp-tomb (Cặp 2 - C2) ---");
+        System.out.println("--- Bat dau 6 ca bat buoc va Oracle cho lp-tomb (Cap 2 - C2) ---");
         testLinearProbingTombstoneRandomCollisions();
         testLinearProbingTombstoneRepeatedInsertDelete();
         testLinearProbingTombstoneWrapAroundWithTomb();
@@ -34,11 +34,11 @@ public final class C2HashTableTest {
         testLinearProbingTombstoneRebuildAndInvariant();
 
         // Oracle cho lp-tomb CÓ REBUILD
-        testOracle(new LinearProbingTombstone(16_384, 0.25), "lp-tomb (có rebuild)", 101L);
+        testOracle(new LinearProbingTombstone(16_384, 0.25), "lp-tomb (co rebuild)", 101L);
         // Oracle cho lp-tomb KHÔNG REBUILD
-        testOracle(new LinearProbingTombstone(16_384), "lp-tomb (không rebuild)", 202L);
+        testOracle(new LinearProbingTombstone(16_384), "lp-tomb (khong rebuild)", 202L);
 
-        System.out.println("--- TẤT CẢ 6 CA C2 VÀ ORACLE 1.000.000 THAO TÁC ĐÃ PASS ---\n");
+        System.out.println("--- TAT CA 6 CA C2 VA ORACLE 1.000.000 THAO TAC DA PASS ---\n");
     }
 
     /**
@@ -47,12 +47,12 @@ public final class C2HashTableTest {
      * xóa phần tử giữa chuỗi để tạo TOMB, kiểm tra bất biến cấu trúc và tính tìm kiếm được.
      */
     private static void testLinearProbingTombstoneRandomCollisions() {
-        System.out.print("[C2 Case 1] LP-tomb: M=16, khóa đụng độ ngẫu nhiên... ");
+        System.out.print("[C2 Case 1] LP-tomb: M=16, khoa dung do ngau nhien... ");
         LinearProbingTombstone table = new LinearProbingTombstone(CAPACITY);
         long[] keys = findCollidingKeys(CAPACITY, 5, 201L);
 
         for (int i = 0; i < keys.length; i++) {
-            assertEquals(PutStatus.INSERTED, table.put(keys[i], i * 10), "Chèn khóa đụng độ " + i);
+            assertEquals(PutStatus.INSERTED, table.put(keys[i], i * 10), "Chen khoa dung do " + i);
             table.validateInvariants();
         }
 
@@ -61,13 +61,13 @@ public final class C2HashTableTest {
         }
 
         // Xóa khóa ở giữa (keys[2]) -> biến thành TOMB
-        assertTrue(table.remove(keys[2]), "Xóa khóa ở giữa chuỗi đụng độ");
+        assertTrue(table.remove(keys[2]), "Xoa khoa o giua chuoi dung do");
         table.validateInvariants();
 
         // Kiểm tra các khóa còn lại vẫn tra cứu được xuyên qua ô TOMB
         for (int i = 0; i < keys.length; i++) {
             assertEquals(i != 2, table.get(keys[i]).isFound(),
-                    "Khóa " + keys[i] + " (i=" + i + ") phải duy trì đúng trạng thái sau khi xóa");
+                    "Khoa " + keys[i] + " (i=" + i + ") phai duy tri dung trang thai sau khi xoa");
         }
 
         table.validateInvariants();
@@ -79,20 +79,20 @@ public final class C2HashTableTest {
      * kiểm tra bất biến cấu trúc tại từng bước chèn/xóa.
      */
     private static void testLinearProbingTombstoneRepeatedInsertDelete() {
-        System.out.print("[C2 Case 2] LP-tomb: chèn/xóa liên tục... ");
+        System.out.print("[C2 Case 2] LP-tomb: chen/xoa lien tuc... ");
         LinearProbingTombstone table = new LinearProbingTombstone(CAPACITY);
         for (int round = 0; round < 20; round++) {
             for (int i = 0; i < 10; i++) {
                 long key = round * 100L + i;
-                assertEquals(PutStatus.INSERTED, table.put(key, i), "Chèn lặp lại round " + round);
+                assertEquals(PutStatus.INSERTED, table.put(key, i), "Chen lap lai round " + round);
                 table.validateInvariants();
             }
             for (int i = 9; i >= 0; i--) {
                 long key = round * 100L + i;
-                assertTrue(table.remove(key), "Xóa lặp lại round " + round);
+                assertTrue(table.remove(key), "Xoa lap lai round " + round);
                 table.validateInvariants();
             }
-            assertEquals(0, table.size(), "Table rỗng sau mỗi round");
+            assertEquals(0, table.size(), "Table rong sau moi round");
         }
         System.out.println("PASSED");
     }
@@ -101,7 +101,7 @@ public final class C2HashTableTest {
      * Ca 3: Khóa đụng độ tràn qua cuối mảng (wrap-around) với ô TOMB.
      */
     private static void testLinearProbingTombstoneWrapAroundWithTomb() {
-        System.out.print("[C2 Case 3] LP-tomb: wrap-around qua cuối mảng với TOMB... ");
+        System.out.print("[C2 Case 3] LP-tomb: wrap-around qua cuoi mang voi TOMB... ");
         LinearProbingTombstone table = new LinearProbingTombstone(CAPACITY);
         long[] keys = findCollidingKeysForHome(CAPACITY, CAPACITY - 2, 4, 303L);
 
@@ -111,7 +111,7 @@ public final class C2HashTableTest {
         }
 
         // Xóa phần tử tại ô wrap-around
-        assertTrue(table.remove(keys[1]), "Xóa phần tử trong cụm wrap-around");
+        assertTrue(table.remove(keys[1]), "Xoa phan tu trong cum wrap-around");
         table.validateInvariants();
 
         for (int i = 0; i < keys.length; i++) {
@@ -127,7 +127,7 @@ public final class C2HashTableTest {
      * Ca 4: Cập nhật khóa hiện có khi có ô TOMB đi trước (không ghi đè ô TOMB).
      */
     private static void testLinearProbingTombstoneUpdateWithPriorTomb() {
-        System.out.print("[C2 Case 4] LP-tomb: cập nhật khóa hiện có khi có ô TOMB đi trước... ");
+        System.out.print("[C2 Case 4] LP-tomb: cap nhat khoa hien co khi co o TOMB di truoc... ");
         LinearProbingTombstone table = new LinearProbingTombstone(CAPACITY);
         long[] keys = findCollidingKeys(CAPACITY, 3, 404L);
 
@@ -142,8 +142,8 @@ public final class C2HashTableTest {
 
         // Cập nhật keys[2] (nằm sau ô TOMB)
         PutStatus status = table.put(keys[2], 300);
-        assertEquals(PutStatus.UPDATED, status, "Phải trả về UPDATED");
-        assertEquals(300, table.get(keys[2]).getValue(), "Giá trị keys[2] phải là 300");
+        assertEquals(PutStatus.UPDATED, status, "Phai tra ve UPDATED");
+        assertEquals(300, table.get(keys[2]).getValue(), "Gia tri keys[2] phai la 300");
         table.validateInvariants();
         System.out.println("PASSED");
     }
@@ -154,7 +154,7 @@ public final class C2HashTableTest {
      * xác nhận thuật toán tái sử dụng đúng ô TOMB ĐẦU TIÊN gặp trên chuỗi dò.
      */
     private static void testLinearProbingTombstoneFirstTombReuseWithCollisions() {
-        System.out.print("[C2 Case 5] LP-tomb: M=16, khóa đụng độ ngẫu nhiên & tái sử dụng TOMB đầu... ");
+        System.out.print("[C2 Case 5] LP-tomb: M=16, khoa dung do ngau nhien & tai su dung TOMB dau... ");
         LinearProbingTombstone table = new LinearProbingTombstone(CAPACITY);
         long[] keys = findCollidingKeys(CAPACITY, 5, 505L);
 
@@ -169,11 +169,11 @@ public final class C2HashTableTest {
         table.remove(keys[2]);
         table.validateInvariants();
         int tombBefore = table.getTombstoneCount();
-        assertEquals(2, tombBefore, "Có 2 ô TOMB");
+        assertEquals(2, tombBefore, "Co 2 o TOMB");
 
         // Chèn keys[4] (cùng home hash) -> phải chiếm ô TOMB đầu tiên (vị trí keys[1] trước đó)
         table.put(keys[4], 5);
-        assertEquals(1, table.getTombstoneCount(), "Tombstone count giảm đi 1");
+        assertEquals(1, table.getTombstoneCount(), "Tombstone count giam di 1");
         assertValue(table, keys[4], 5);
         assertValue(table, keys[0], 1);
         assertValue(table, keys[3], 4);
@@ -185,7 +185,7 @@ public final class C2HashTableTest {
      * Ca 6: Kiểm tra cơ chế Rebuild theo ngưỡng tau*M và bất biến cấu trúc trước/sau Rebuild.
      */
     private static void testLinearProbingTombstoneRebuildAndInvariant() {
-        System.out.print("[C2 Case 6] LP-tomb: Rebuild theo ngưỡng tau*M và bảo toàn thứ tự ô... ");
+        System.out.print("[C2 Case 6] LP-tomb: Rebuild theo nguong tau*M va bao toan thu tu o... ");
         LinearProbingTombstone table = new LinearProbingTombstone(CAPACITY, 0.25);
         for (long i = 1; i <= 8; i++) {
             table.put(i, (int) i * 10);
@@ -197,12 +197,12 @@ public final class C2HashTableTest {
         table.remove(2L);
         table.remove(3L);
         table.validateInvariants();
-        assertEquals(0, table.getRebuildCount(), "Chưa rebuild khi mới có 3 tombstones");
+        assertEquals(0, table.getRebuildCount(), "Chua rebuild khi moi co 3 tombstones");
 
         table.remove(4L); // Chạm ngưỡng 4 -> tự động Rebuild
-        assertEquals(1, table.getRebuildCount(), "Đã kích hoạt 1 lần rebuild");
-        assertEquals(0, table.getTombstoneCount(), "Sau rebuild tombstoneCount phải về 0");
-        assertEquals(4, table.size(), "Còn lại 4 phần tử sống");
+        assertEquals(1, table.getRebuildCount(), "Da kich hoat 1 lan rebuild");
+        assertEquals(0, table.getTombstoneCount(), "Sau rebuild tombstoneCount phai ve 0");
+        assertEquals(4, table.size(), "Con lai 4 phan tu song");
 
         table.validateInvariants();
 
@@ -216,7 +216,7 @@ public final class C2HashTableTest {
      * Kiểm thử Oracle 1.000.000 thao tác (40% put, 40% get, 20% remove) đối chiếu java.util.HashMap.
      */
     private static void testOracle(LinearProbingTombstone table, String name, long seed) {
-        System.out.print("[C2 Oracle] " + name + ": 1.000.000 thao tác (40/40/20)... ");
+        System.out.print("[C2 Oracle] " + name + ": 1.000.000 thao tac (40/40/20)... ");
         Map<Long, Integer> oracle = new HashMap<>();
         SplittableRandom random = new SplittableRandom(seed);
         int puts = 0;
@@ -234,27 +234,27 @@ public final class C2HashTableTest {
                 boolean existed = oracle.containsKey(key);
                 PutStatus actual = table.put(key, value);
                 assertEquals(existed ? PutStatus.UPDATED : PutStatus.INSERTED, actual,
-                        name + " put tại thao tác " + op);
+                        name + " put tai thao tac " + op);
                 oracle.put(key, value);
             } else if (slot == 1 || slot == 3) {
                 // 40% get
                 gets++;
                 GetResult result = table.get(key);
                 Integer expected = oracle.get(key);
-                assertEquals(expected != null, result.isFound(), name + " get found tại thao tác " + op);
+                assertEquals(expected != null, result.isFound(), name + " get found tai thao tac " + op);
                 if (expected != null) {
                     assertEquals(expected.intValue(), result.getValue(),
-                            name + " get value tại thao tác " + op);
+                            name + " get value tai thao tac " + op);
                 }
             } else {
                 // 20% remove
                 removes++;
                 assertEquals(oracle.containsKey(key), table.remove(key),
-                        name + " remove tại thao tác " + op);
+                        name + " remove tai thao tac " + op);
                 oracle.remove(key);
             }
 
-            assertEquals(oracle.size(), table.size(), name + " size tại thao tác " + op);
+            assertEquals(oracle.size(), table.size(), name + " size tai thao tac " + op);
 
             // Kiểm tra bất biến cấu trúc định kỳ mỗi 100.000 thao tác để tối ưu thời gian
             if (op % 100_000 == 0) {
@@ -262,9 +262,9 @@ public final class C2HashTableTest {
             }
         }
 
-        assertEquals(400_000, puts, name + " tổng số put");
-        assertEquals(400_000, gets, name + " tổng số get");
-        assertEquals(200_000, removes, name + " tổng số remove");
+        assertEquals(400_000, puts, name + " tong so put");
+        assertEquals(400_000, gets, name + " tong so get");
+        assertEquals(200_000, removes, name + " tong so remove");
 
         // Kiểm tra bất biến cấu trúc cuối cùng
         table.validateInvariants();
@@ -313,25 +313,25 @@ public final class C2HashTableTest {
 
     private static void assertValue(LinearProbingTombstone table, long key, int expected) {
         GetResult result = table.get(key);
-        assertTrue(result.isFound(), "Khóa " + key + " phải tìm thấy");
-        assertEquals(expected, result.getValue(), "Giá trị cho khóa " + key);
+        assertTrue(result.isFound(), "Khoa " + key + " phai tim thay");
+        assertEquals(expected, result.getValue(), "Gia tri cho khoa " + key);
     }
 
     private static void assertTrue(boolean condition, String message) {
         if (!condition) {
-            throw new AssertionError("THẤT BẠI: " + message);
+            throw new AssertionError("THAT BAI: " + message);
         }
     }
 
     private static void assertEquals(long expected, long actual, String message) {
         if (expected != actual) {
-            throw new AssertionError("THẤT BẠI: " + message + " (mong đợi: " + expected + ", thực tế: " + actual + ")");
+            throw new AssertionError("THAT BAI: " + message + " (mong doi: " + expected + ", thuc te: " + actual + ")");
         }
     }
 
     private static void assertEquals(Object expected, Object actual, String message) {
         if (expected == null ? actual != null : !expected.equals(actual)) {
-            throw new AssertionError("THẤT BẠI: " + message + " (mong đợi: " + expected + ", thực tế: " + actual + ")");
+            throw new AssertionError("THAT BAI: " + message + " (mong doi: " + expected + ", thuc te: " + actual + ")");
         }
     }
 }

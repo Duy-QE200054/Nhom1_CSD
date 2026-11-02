@@ -1,0 +1,2 @@
+run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version,repeat,elapsed_ms,build_ms,heap_before_bytes,heap_peak_bytes,ops_count,output_check,status,xmx,machine_id,git_commit
+RUN_RQ1_LP_TOMB_1,RQ1,lp-tomb,base,uniform,786432,M=1048576;alpha=0.75;c=0;tau=inf;query=miss,42,3b24ec333810d85fa1f98656838ea0430814be632e79c86092a614259783d513,1.0.0,1,44.87,43.296,9258672,148566912,,786432,ok,2g,PC_LAB_01,8b19d6d

@@ -1,0 +1,1 @@
+[START] algo=lp-tomb, variant=base, mode=time, dataset=clustered, M=1048576, alpha=0.75, c=0, seed=42

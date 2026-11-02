@@ -24,7 +24,7 @@ import java.util.SplittableRandom;
 public class LinearProbingTombstoneTest {
 
     public static void runAllTests() {
-        System.out.println("--- Bắt đầu Unit Test cho LinearProbingTombstone (Cặp 2 - C2) ---");
+        System.out.println("--- Bat dau Unit Test cho LinearProbingTombstone (Cap 2 - C2) ---");
         testBasicOperations();
         testRememberFirstTombstoneOnPut();
         testUpdateKeyWithPriorTombstone();
@@ -37,24 +37,24 @@ public class LinearProbingTombstoneTest {
         testOracleWithHashMap(100_000, 42L);
         testWorkloadBlockProfiling();
         testMilestoneCMeasurementAndComparisonTable();
-        System.out.println("--- TẤT CẢ CÁC BÀI TEST CỦA C2 ĐÃ VƯỢT QUA THÀNH CÔNG! ---\n");
+        System.out.println("--- TAT CA CAC BAI TEST CUA C2 DA VUOT QUA THANH CONG! ---\n");
     }
 
     private static void assertTrue(boolean condition, String msg) {
         if (!condition) {
-            throw new AssertionError("THẤT BẠI: " + msg);
+            throw new AssertionError("THAT BAI: " + msg);
         }
     }
 
     private static void assertEquals(long expected, long actual, String msg) {
         if (expected != actual) {
-            throw new AssertionError("THẤT BẠI: " + msg + " (Mong đợi: " + expected + ", Thực tế: " + actual + ")");
+            throw new AssertionError("THAT BAI: " + msg + " (Mong doi: " + expected + ", Thuc te: " + actual + ")");
         }
     }
 
     private static void assertEquals(Object expected, Object actual, String msg) {
         if (!expected.equals(actual)) {
-            throw new AssertionError("THẤT BẠI: " + msg + " (Mong đợi: " + expected + ", Thực tế: " + actual + ")");
+            throw new AssertionError("THAT BAI: " + msg + " (Mong doi: " + expected + ", Thuc te: " + actual + ")");
         }
     }
 
@@ -62,40 +62,40 @@ public class LinearProbingTombstoneTest {
      * 1. Kiểm tra các thao tác cơ bản: put, get, remove
      */
     public static void testBasicOperations() {
-        System.out.print("[Test 1] Thao tác cơ bản (put, get, remove)... ");
+        System.out.print("[Test 1] Thao tac co ban (put, get, remove)... ");
         LinearProbingTombstone table = new LinearProbingTombstone(16);
-        assertEquals(16, table.capacity(), "Capacity phải là 16");
-        assertEquals(0, table.size(), "Size ban đầu phải là 0");
-        assertEquals(16, table.getEmptyCount(), "Empty ban đầu phải là 16");
-        assertEquals(0, table.getTombstoneCount(), "Tombstone ban đầu phải là 0");
+        assertEquals(16, table.capacity(), "Capacity phai la 16");
+        assertEquals(0, table.size(), "Size ban dau phai la 0");
+        assertEquals(16, table.getEmptyCount(), "Empty ban dau phai la 16");
+        assertEquals(0, table.getTombstoneCount(), "Tombstone ban dau phai la 0");
 
         // Put khóa
-        assertEquals(PutStatus.INSERTED, table.put(100L, 10), "Chèn 100L");
-        assertEquals(PutStatus.INSERTED, table.put(200L, 20), "Chèn 200L");
-        assertEquals(2, table.size(), "Size sau 2 lần chèn");
+        assertEquals(PutStatus.INSERTED, table.put(100L, 10), "Chen 100L");
+        assertEquals(PutStatus.INSERTED, table.put(200L, 20), "Chen 200L");
+        assertEquals(2, table.size(), "Size sau 2 lan chen");
         table.validateInvariants();
 
         // Get khóa
         GetResult r1 = table.get(100L);
-        assertTrue(r1.isFound(), "Phải tìm thấy 100L");
-        assertEquals(10, r1.getValue(), "Giá trị 100L");
+        assertTrue(r1.isFound(), "Phai tim thay 100L");
+        assertEquals(10, r1.getValue(), "Gia tri 100L");
 
         GetResult r2 = table.get(200L);
-        assertTrue(r2.isFound(), "Phải tìm thấy 200L");
-        assertEquals(20, r2.getValue(), "Giá trị 200L");
+        assertTrue(r2.isFound(), "Phai tim thay 200L");
+        assertEquals(20, r2.getValue(), "Gia tri 200L");
 
         GetResult rMiss = table.get(999L);
-        assertTrue(!rMiss.isFound(), "Không được tìm thấy 999L");
+        assertTrue(!rMiss.isFound(), "Khong duoc tim thay 999L");
 
         // Remove khóa
-        assertTrue(table.remove(100L), "Xóa 100L thành công");
-        assertEquals(1, table.size(), "Size sau khi xóa 1");
-        assertEquals(1, table.getTombstoneCount(), "Tombstone count phải là 1");
-        assertTrue(!table.get(100L).isFound(), "Không còn tìm thấy 100L sau khi xóa");
+        assertTrue(table.remove(100L), "Xoa 100L thanh cong");
+        assertEquals(1, table.size(), "Size sau khi xoa 1");
+        assertEquals(1, table.getTombstoneCount(), "Tombstone count phai la 1");
+        assertTrue(!table.get(100L).isFound(), "Khong con tim thay 100L sau khi xoa");
         table.validateInvariants();
 
         // Xóa lại khóa đã xóa
-        assertTrue(!table.remove(100L), "Xóa lại 100L phải trả về false");
+        assertTrue(!table.remove(100L), "Xoa lai 100L phai tra ve false");
         table.validateInvariants();
         System.out.println("PASSED");
     }
@@ -104,7 +104,7 @@ public class LinearProbingTombstoneTest {
      * 2. Kiểm tra logic cốt lõi: Ghi nhớ TOMB đầu tiên khi put khóa mới
      */
     public static void testRememberFirstTombstoneOnPut() {
-        System.out.print("[Test 2] Logic ghi nhớ TOMB đầu tiên khi put khóa mới... ");
+        System.out.print("[Test 2] Logic ghi nho TOMB dau tien khi put khoa moi... ");
         int M = 16;
         int p = Integer.numberOfTrailingZeros(M);
         LinearProbingTombstone table = new LinearProbingTombstone(M);
@@ -125,14 +125,14 @@ public class LinearProbingTombstoneTest {
         table.put(k1, 1);
         table.put(k2, 2);
         table.put(k3, 3);
-        assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH), "k1 tại targetH");
-        assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 1), "k2 tại targetH + 1");
-        assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 2), "k3 tại targetH + 2");
+        assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH), "k1 tai targetH");
+        assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 1), "k2 tai targetH + 1");
+        assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 2), "k3 tai targetH + 2");
         table.validateInvariants();
 
         // Xóa k2 -> ô targetH + 1 trở thành TOMB
         table.remove(k2);
-        assertEquals(LinearProbingTombstone.TOMB, table.getStateAt(targetH + 1), "Ô targetH + 1 phải là TOMB");
+        assertEquals(LinearProbingTombstone.TOMB, table.getStateAt(targetH + 1), "O targetH + 1 phai la TOMB");
         assertEquals(1, table.getTombstoneCount(), "Tombstone count = 1");
         table.validateInvariants();
 
@@ -140,16 +140,16 @@ public class LinearProbingTombstoneTest {
         // Dò từ targetH (k1: occupied khác) -> targetH+1 (TOMB: nhớ firstTomb) -> targetH+2 (k3: occupied khác) -> targetH+3 (EMPTY: dừng dò).
         // Chèn k4 vào firstTomb (targetH+1)!
         PutStatus status = table.put(k4, 4);
-        assertEquals(PutStatus.INSERTED, status, "k4 phải được chèn thành công");
-        assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 1), "targetH + 1 phải được tái sử dụng");
-        assertEquals(k4, table.getKeyAt(targetH + 1), "Khóa tại targetH + 1 phải là k4");
-        assertEquals(0, table.getTombstoneCount(), "Tombstone count phải giảm về 0");
+        assertEquals(PutStatus.INSERTED, status, "k4 phai duoc chen thanh cong");
+        assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 1), "targetH + 1 phai duoc tai su dung");
+        assertEquals(k4, table.getKeyAt(targetH + 1), "Khoa tai targetH + 1 phai la k4");
+        assertEquals(0, table.getTombstoneCount(), "Tombstone count phai giam ve 0");
         table.validateInvariants();
 
         // Kiểm tra k3 vẫn tra cứu được bình thường
         GetResult rK3 = table.get(k3);
-        assertTrue(rK3.isFound(), "k3 vẫn phải tìm thấy");
-        assertEquals(3, rK3.getValue(), "Giá trị của k3");
+        assertTrue(rK3.isFound(), "k3 van phai tim thay");
+        assertEquals(3, rK3.getValue(), "Gia tri cua k3");
         table.validateInvariants();
         System.out.println("PASSED");
     }
@@ -158,7 +158,7 @@ public class LinearProbingTombstoneTest {
      * 3. Kiểm tra: Khi cập nhật khóa đã tồn tại nằm sau TOMB, KHÔNG được ghi đè vào TOMB
      */
     public static void testUpdateKeyWithPriorTombstone() {
-        System.out.print("[Test 3] Cập nhật khóa hiện có (không ghi đè TOMB)... ");
+        System.out.print("[Test 3] Cap nhat khoa hien co (khong ghi de TOMB)... ");
         int M = 16;
         int p = Integer.numberOfTrailingZeros(M);
         LinearProbingTombstone table = new LinearProbingTombstone(M);
@@ -179,15 +179,15 @@ public class LinearProbingTombstoneTest {
 
         // Xóa k2
         table.remove(k2);
-        assertEquals(LinearProbingTombstone.TOMB, table.getStateAt(targetH + 1), "targetH + 1 là TOMB");
+        assertEquals(LinearProbingTombstone.TOMB, table.getStateAt(targetH + 1), "targetH + 1 la TOMB");
 
         // Cập nhật k3 (nằm sau ô TOMB)
         PutStatus updateStatus = table.put(k3, 300);
-        assertEquals(PutStatus.UPDATED, updateStatus, "Phải trả về UPDATED");
-        assertEquals(LinearProbingTombstone.TOMB, table.getStateAt(targetH + 1), "targetH + 1 vẫn phải là TOMB");
-        assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 2), "k3 vẫn nằm ở targetH + 2");
-        assertEquals(300, table.getValueAt(targetH + 2), "Giá trị k3 đã cập nhật thành 300");
-        assertEquals(1, table.getTombstoneCount(), "Tombstone count vẫn là 1");
+        assertEquals(PutStatus.UPDATED, updateStatus, "Phai tra ve UPDATED");
+        assertEquals(LinearProbingTombstone.TOMB, table.getStateAt(targetH + 1), "targetH + 1 van phai la TOMB");
+        assertEquals(LinearProbingTombstone.OCCUPIED, table.getStateAt(targetH + 2), "k3 van nam o targetH + 2");
+        assertEquals(300, table.getValueAt(targetH + 2), "Gia tri k3 da cap nhat thanh 300");
+        assertEquals(1, table.getTombstoneCount(), "Tombstone count van la 1");
         System.out.println("PASSED");
     }
 
@@ -195,7 +195,7 @@ public class LinearProbingTombstoneTest {
      * 4. Kiểm tra: Khi có nhiều ô TOMB, chọn đúng ô TOMB đầu tiên
      */
     public static void testMultipleTombstonesFirstSelection() {
-        System.out.print("[Test 4] Chọn đúng ô TOMB đầu tiên trong nhiều ô TOMB... ");
+        System.out.print("[Test 4] Chon dung o TOMB dau tien trong nhieu o TOMB... ");
         int M = 16;
         int p = Integer.numberOfTrailingZeros(M);
         LinearProbingTombstone table = new LinearProbingTombstone(M);
@@ -218,13 +218,13 @@ public class LinearProbingTombstoneTest {
         // Xóa cả k1 và k2 -> targetH và targetH + 1 đều là TOMB
         table.remove(k1);
         table.remove(k2);
-        assertEquals(2, table.getTombstoneCount(), "Có 2 tombstones");
+        assertEquals(2, table.getTombstoneCount(), "Co 2 tombstones");
 
         // Chèn k4 (cùng băm về targetH) -> phải rơi vào targetH (ô TOMB đầu tiên)
         table.put(k4, 4);
-        assertEquals(k4, table.getKeyAt(targetH), "k4 phải nằm tại targetH");
-        assertEquals(LinearProbingTombstone.TOMB, table.getStateAt(targetH + 1), "targetH + 1 vẫn là TOMB");
-        assertEquals(1, table.getTombstoneCount(), "Tombstone count giảm còn 1");
+        assertEquals(k4, table.getKeyAt(targetH), "k4 phai nam tai targetH");
+        assertEquals(LinearProbingTombstone.TOMB, table.getStateAt(targetH + 1), "targetH + 1 van la TOMB");
+        assertEquals(1, table.getTombstoneCount(), "Tombstone count giam con 1");
         System.out.println("PASSED");
     }
 
@@ -232,11 +232,11 @@ public class LinearProbingTombstoneTest {
      * 5. Kiểm tra tự động Rebuild khi tombstoneCount đạt ngưỡng tau * M
      */
     public static void testRebuildTriggeredByTau() {
-        System.out.print("[Test 5] Tự động Rebuild khi tombstoneCount >= tau * M... ");
+        System.out.print("[Test 5] Tu dong Rebuild khi tombstoneCount >= tau * M... ");
         int M = 16;
         double tau = 0.25; // 0.25 * 16 = 4 tombstones
         LinearProbingTombstone table = new LinearProbingTombstone(M, tau);
-        assertEquals(4, table.getTauThreshold(), "Ngưỡng rebuild là 4");
+        assertEquals(4, table.getTauThreshold(), "Nguong rebuild la 4");
 
         // Chèn 8 khóa
         for (long i = 1; i <= 8; i++) {
@@ -248,19 +248,19 @@ public class LinearProbingTombstoneTest {
         table.remove(2L);
         table.remove(3L);
         assertEquals(3, table.getTombstoneCount(), "Tombstone count = 3");
-        assertEquals(0, table.getRebuildCount(), "Chưa rebuild");
+        assertEquals(0, table.getRebuildCount(), "Chua rebuild");
 
         // Xóa khóa thứ 4: 4L -> tombstoneCount chạm 4 -> KÍCH HOẠT REBUILD
         table.remove(4L);
-        assertEquals(1, table.getRebuildCount(), "Đã kích hoạt 1 lần rebuild");
-        assertEquals(0, table.getTombstoneCount(), "Sau rebuild tombstoneCount phải về 0");
-        assertEquals(4, table.size(), "Còn lại đúng 4 phần tử sống");
+        assertEquals(1, table.getRebuildCount(), "Da kich hoat 1 lan rebuild");
+        assertEquals(0, table.getTombstoneCount(), "Sau rebuild tombstoneCount phai ve 0");
+        assertEquals(4, table.size(), "Con lai dung 4 phan tu song");
 
         // Xác nhận 4 phần tử sống (5, 6, 7, 8) vẫn tra cứu chính xác
         for (long i = 5; i <= 8; i++) {
             GetResult gr = table.get(i);
-            assertTrue(gr.isFound(), "Phần tử " + i + " phải còn");
-            assertEquals((int) i * 10, gr.getValue(), "Giá trị phần tử " + i);
+            assertTrue(gr.isFound(), "Phan tu " + i + " phai con");
+            assertEquals((int) i * 10, gr.getValue(), "Gia tri phan tu " + i);
         }
         System.out.println("PASSED");
     }
@@ -269,7 +269,7 @@ public class LinearProbingTombstoneTest {
      * 6. Kiểm tra Rebuild duyệt theo đúng THỨ TỰ CHỈ SỐ Ô từ 0 đến M - 1
      */
     public static void testRebuildOrderPreservation() {
-        System.out.print("[Test 6] Rebuild duyệt theo đúng thứ tự chỉ số ô (0..M-1)... ");
+        System.out.print("[Test 6] Rebuild duyet theo dung thu tu chi so o (0..M-1)... ");
         int M = 32;
         LinearProbingTombstone table = new LinearProbingTombstone(M);
         SplittableRandom sr = new SplittableRandom(12345L);
@@ -284,11 +284,11 @@ public class LinearProbingTombstoneTest {
                 deleted++;
             }
         }
-        assertTrue(table.getTombstoneCount() > 0, "Có tombstones");
+        assertTrue(table.getTombstoneCount() > 0, "Co tombstones");
 
         int sizeBefore = table.size();
         table.rebuild();
-        assertEquals(sizeBefore, table.size(), "Size giữ nguyên sau rebuild");
+        assertEquals(sizeBefore, table.size(), "Size giu nguyen sau rebuild");
         assertEquals(0, table.getTombstoneCount(), "Tombstone = 0 sau rebuild");
         assertEquals(M - sizeBefore, table.getEmptyCount(), "Empty = M - size");
         System.out.println("PASSED");
@@ -298,22 +298,22 @@ public class LinearProbingTombstoneTest {
      * 7. Kiểm tra trạng thái bảng đầy TABLE_FULL
      */
     public static void testTableFullCondition() {
-        System.out.print("[Test 7] Xử lý bảng đầy (TABLE_FULL)... ");
+        System.out.print("[Test 7] Xu ly bang day (TABLE_FULL)... ");
         int M = 8;
         LinearProbingTombstone table = new LinearProbingTombstone(M);
         for (long k = 1; k <= M; k++) {
-            assertEquals(PutStatus.INSERTED, table.put(k, (int) k), "Chèn phần tử " + k);
+            assertEquals(PutStatus.INSERTED, table.put(k, (int) k), "Chen phan tu " + k);
         }
-        assertEquals(M, table.size(), "Bảng đã đầy M phần tử");
-        assertEquals(0, table.getEmptyCount(), "Không còn ô EMPTY");
+        assertEquals(M, table.size(), "Bang da day M phan tu");
+        assertEquals(0, table.getEmptyCount(), "Khong con o EMPTY");
 
         // Chèn thêm khóa thứ M+1 phải trả về TABLE_FULL
         PutStatus overflow = table.put(999L, 999);
-        assertEquals(PutStatus.TABLE_FULL, overflow, "Phải trả về TABLE_FULL khi hết ô");
+        assertEquals(PutStatus.TABLE_FULL, overflow, "Phai tra ve TABLE_FULL khi het o");
 
         // Cập nhật khóa hiện có vẫn phải thành công
         PutStatus updateStatus = table.put(1L, 1000);
-        assertEquals(PutStatus.UPDATED, updateStatus, "Cập nhật khóa hiện có");
+        assertEquals(PutStatus.UPDATED, updateStatus, "Cap nhat khoa hien co");
         System.out.println("PASSED");
     }
 
@@ -321,7 +321,7 @@ public class LinearProbingTombstoneTest {
      * 8. Kiểm tra cơ chế đếm số bước dò (Probe Counting)
      */
     public static void testProbeCounting() {
-        System.out.print("[Test 8] Đếm số bước dò (Probe Counting)... ");
+        System.out.print("[Test 8] Dem so buoc do (Probe Counting)... ");
         int M = 16;
         int p = Integer.numberOfTrailingZeros(M);
         LinearProbingTombstone table = new LinearProbingTombstone(M);
@@ -331,19 +331,19 @@ public class LinearProbingTombstoneTest {
         long k1 = 10L;
         table.put(k1, 100);
         long probesAfterPut = table.getProbeCount();
-        assertTrue(probesAfterPut >= 1, "Phải có ít nhất 1 bước dò khi put");
+        assertTrue(probesAfterPut >= 1, "Phai co it nhat 1 buoc do khi put");
 
         table.resetProbeCount();
         GetResult rHit = table.get(k1);
-        assertTrue(rHit.isFound(), "Tìm thấy k1");
+        assertTrue(rHit.isFound(), "Tim thay k1");
         long probesHit = table.getProbeCount();
-        assertTrue(probesHit >= 1, "Bước dò khi hit >= 1");
+        assertTrue(probesHit >= 1, "Buoc do khi hit >= 1");
 
         table.resetProbeCount();
         // Tìm kiếm khóa không có trong bảng (rơi vào ô EMPTY)
         table.get(999_999L);
         long probesMiss = table.getProbeCount();
-        assertTrue(probesMiss >= 1, "Bước dò khi miss >= 1");
+        assertTrue(probesMiss >= 1, "Buoc do khi miss >= 1");
         System.out.println("PASSED");
     }
 
@@ -351,24 +351,24 @@ public class LinearProbingTombstoneTest {
      * 9. Kiểm tra tạo Clean Table đối chứng cho RQ2
      */
     public static void testCleanTableCreation() {
-        System.out.print("[Test 9] Tạo Bảng đối chứng Clean Table... ");
+        System.out.print("[Test 9] Tao Bang doi chung Clean Table... ");
         int M = 64;
         RQ2Workload workload = new RQ2Workload(M, 0.5, 42L);
         LinearProbingTombstone table = new LinearProbingTombstone(M);
 
         workload.populateInitialKeys(table);
-        assertEquals(32, table.size(), "Ban đầu có 32 phần tử");
+        assertEquals(32, table.size(), "Ban dau co 32 phan tu");
 
         // Chạy 20 chu kỳ churn tạo tombstones
         workload.runChurnCycles(table, 20);
-        assertTrue(table.getTombstoneCount() > 0, "Bảng sau churn phải có tombstones");
+        assertTrue(table.getTombstoneCount() > 0, "Bang sau churn phai co tombstones");
         table.validateInvariants();
 
         // Dựng bảng sạch đối chứng
         LinearProbingTombstone clean = workload.buildCleanTable(table);
-        assertEquals(table.size(), clean.size(), "Cùng số lượng phần tử sống");
-        assertEquals(0, clean.getTombstoneCount(), "Clean table không có tombstone");
-        assertEquals(M - clean.size(), clean.getEmptyCount(), "Clean table có số ô EMPTY chuẩn");
+        assertEquals(table.size(), clean.size(), "Cung so luong phan tu song");
+        assertEquals(0, clean.getTombstoneCount(), "Clean table khong co tombstone");
+        assertEquals(M - clean.size(), clean.getEmptyCount(), "Clean table co so o EMPTY chuan");
         clean.validateInvariants();
 
         // Kiểm tra mọi phần tử sống trong bảng gốc đều tồn tại trong clean table với cùng giá trị
@@ -377,8 +377,8 @@ public class LinearProbingTombstoneTest {
                 long k = table.getKeyAt(i);
                 GetResult rSrc = table.get(k);
                 GetResult rClean = clean.get(k);
-                assertTrue(rClean.isFound(), "Khóa " + k + " phải có trong clean table");
-                assertEquals(rSrc.getValue(), rClean.getValue(), "Giá trị khớp nhau");
+                assertTrue(rClean.isFound(), "Khoa " + k + " phai co trong clean table");
+                assertEquals(rSrc.getValue(), rClean.getValue(), "Gia tri khop nhau");
             }
         }
         System.out.println("PASSED");
@@ -388,7 +388,7 @@ public class LinearProbingTombstoneTest {
      * 10. Kiểm thử Oracle toàn diện với java.util.HashMap (Stress Test 100,000 ops)
      */
     public static void testOracleWithHashMap(int operations, long seed) {
-        System.out.print("[Test 10] Oracle Test đối chiếu với java.util.HashMap (" + operations + " ops)... ");
+        System.out.print("[Test 10] Oracle Test doi chieu voi java.util.HashMap (" + operations + " ops)... ");
         int M = 1024; // Dung lượng đủ lớn cho stress test
         LinearProbingTombstone table = new LinearProbingTombstone(M, 0.25); // Bật cả rebuild
         HashMap<Long, Integer> oracle = new HashMap<>();
@@ -407,29 +407,29 @@ public class LinearProbingTombstoneTest {
                     oracle.put(key, val);
 
                     if (existed) {
-                        assertEquals(PutStatus.UPDATED, status, "Phải báo UPDATED khi key đã tồn tại");
+                        assertEquals(PutStatus.UPDATED, status, "Phai bao UPDATED khi key da ton tai");
                     } else {
-                        assertEquals(PutStatus.INSERTED, status, "Phải báo INSERTED khi key mới");
+                        assertEquals(PutStatus.INSERTED, status, "Phai bao INSERTED khi key moi");
                     }
                 }
             } else if (action < 80) {
                 // 30% thao tác GET
                 GetResult res = table.get(key);
                 if (oracle.containsKey(key)) {
-                    assertTrue(res.isFound(), "Khóa " + key + " phải tìm thấy");
-                    assertEquals((int) oracle.get(key), res.getValue(), "Giá trị khóa " + key);
+                    assertTrue(res.isFound(), "Khoa " + key + " phai tim thay");
+                    assertEquals((int) oracle.get(key), res.getValue(), "Gia tri khoa " + key);
                 } else {
-                    assertTrue(!res.isFound(), "Khóa " + key + " không được tìm thấy");
+                    assertTrue(!res.isFound(), "Khoa " + key + " khong duoc tim thay");
                 }
             } else {
                 // 20% thao tác REMOVE
                 boolean removedTable = table.remove(key);
                 boolean existedOracle = oracle.containsKey(key);
                 oracle.remove(key);
-                assertEquals(existedOracle, removedTable, "Kết quả remove phải khớp với oracle");
+                assertEquals(existedOracle, removedTable, "Ket qua remove phai khop voi oracle");
             }
 
-            assertEquals(oracle.size(), table.size(), "Size phải luôn khớp với oracle tại bước " + op);
+            assertEquals(oracle.size(), table.size(), "Size phai luon khop voi oracle tai buoc " + op);
         }
         System.out.println("PASSED");
     }
@@ -438,36 +438,36 @@ public class LinearProbingTombstoneTest {
      * 11. Kiểm tra Workload xóa-thêm O(1) và đo đạc theo từng khối (Block Profiling)
      */
     public static void testWorkloadBlockProfiling() {
-        System.out.print("[Test 11] Workload O(1) và Block Profiling từng khối 10^4 thao tác... ");
+        System.out.print("[Test 11] Workload O(1) va Block Profiling tung khoi 10^4 thao tac... ");
         int M = 2048;
         RQ2Workload workload = new RQ2Workload(M, 0.5, 77L);
         LinearProbingTombstone table = new LinearProbingTombstone(M, 0.05);
 
         workload.populateInitialKeys(table);
-        assertEquals(1024, workload.getAliveCount(), "Khởi tạo đúng N = 1024");
-        assertEquals(1024, table.size(), "Bảng có đúng 1024 phần tử sống");
+        assertEquals(1024, workload.getAliveCount(), "Khoi tao dung N = 1024");
+        assertEquals(1024, table.size(), "Bang co dung 1024 phan tu song");
 
         // Chạy 5000 chu kỳ churn với khối 2000 thao tác (1000 chu kỳ/khối)
         java.util.List<RQ2Workload.BlockTiming> blocks =
                 workload.runChurnCyclesWithBlockProfiling(table, 5000, 2000, null);
 
-        assertTrue(blocks.size() >= 5, "Phải ghi nhận ít nhất 5 khối đo đạc");
+        assertTrue(blocks.size() >= 5, "Phai ghi nhan it nhat 5 khoi do dac");
         long reportedRebuilds = 0;
         for (RQ2Workload.BlockTiming b : blocks) {
-            assertTrue(b.elapsedMs >= 0.0, "Thời gian khối phải không âm");
-            assertTrue(b.tombstoneCount > 0, "Sau churn phải có tombstones");
-            assertTrue(b.averageDIB >= 0.0, "DIB trung bình của khối phải được đo");
-            assertTrue(b.maxDIB >= 0, "DIB lớn nhất của khối phải được đo");
-            assertTrue(b.rebuildCount >= 0, "Số lần rebuild tích lũy của khối phải được đo");
-            assertTrue(b.rebuildsInBlock >= 0, "Số rebuild trong khối phải được đo");
+            assertTrue(b.elapsedMs >= 0.0, "Thoi gian khoi phai khong am");
+            assertTrue(b.tombstoneCount > 0, "Sau churn phai co tombstones");
+            assertTrue(b.averageDIB >= 0.0, "DIB trung binh cua khoi phai duoc do");
+            assertTrue(b.maxDIB >= 0, "DIB lon nhat cua khoi phai duoc do");
+            assertTrue(b.rebuildCount >= 0, "So lan rebuild tich luy cua khoi phai duoc do");
+            assertTrue(b.rebuildsInBlock >= 0, "So rebuild trong khoi phai duoc do");
             reportedRebuilds += b.rebuildsInBlock;
         }
-        assertTrue(table.getRebuildCount() > 0, "Workload phải ghi nhận được rebuild thực tế");
-        assertEquals(table.getRebuildCount(), reportedRebuilds, "Tổng rebuild theo khối phải khớp bảng");
+        assertTrue(table.getRebuildCount() > 0, "Workload phai ghi nhan duoc rebuild thuc te");
+        assertEquals(table.getRebuildCount(), reportedRebuilds, "Tong rebuild theo khoi phai khop bang");
         RQ2Workload.BlockTiming lastBlock = blocks.get(blocks.size() - 1);
         assertTrue(Math.abs(lastBlock.averageDIB - table.computeActualAverageDIB()) < 1e-12,
-                "DIB trung bình khối cuối phải khớp bảng");
-        assertEquals(table.computeActualMaxDIB(), lastBlock.maxDIB, "DIB lớn nhất khối cuối phải khớp bảng");
+                "DIB trung binh khoi cuoi phai khop bang");
+        assertEquals(table.computeActualMaxDIB(), lastBlock.maxDIB, "DIB lon nhat khoi cuoi phai khop bang");
         table.validateInvariants();
         System.out.println("PASSED");
     }
@@ -476,7 +476,7 @@ public class LinearProbingTombstoneTest {
      * 12. Kiểm tra đo đạc tại mốc C và Bảng đối chứng RQ2 (Clean Table)
      */
     public static void testMilestoneCMeasurementAndComparisonTable() {
-        System.out.print("[Test 12] Đo mốc C (10^4 hit, 10^4 miss) & Bảng đối chứng RQ2... ");
+        System.out.print("[Test 12] Do moc C (10^4 hit, 10^4 miss) & Bang doi chung RQ2... ");
         int M = 1024;
         RQ2Workload workload = new RQ2Workload(M, 0.5, 999L);
         LinearProbingTombstone table = new LinearProbingTombstone(M);
@@ -489,33 +489,33 @@ public class LinearProbingTombstoneTest {
         RQ2Workload.MilestoneCMeasurement mHitMiss =
                 workload.measureAtMilestoneC(table, milestoneC, 1_000, 42L, "base");
 
-        assertEquals(1_000, mHitMiss.hitCount, "Số truy vấn hit đúng");
-        assertEquals(1_000, mHitMiss.missCount, "Số truy vấn miss đúng");
-        assertTrue(mHitMiss.hitAvgProbes >= 1.0, "Số lần dò hit >= 1.0");
-        assertTrue(mHitMiss.missAvgProbes >= 1.0, "Số lần dò miss >= 1.0");
-        assertTrue(mHitMiss.tombstoneCount > 0, "Số ô tombstone > 0");
-        assertTrue(mHitMiss.averageDIB >= 0.0, "Phải đo DIB trung bình ở mốc C");
-        assertTrue(mHitMiss.maxDIB >= 0, "Phải đo DIB lớn nhất ở mốc C");
-        assertEquals(table.getRebuildCount(), mHitMiss.rebuildCount, "Số lần rebuild ở mốc C phải chính xác");
+        assertEquals(1_000, mHitMiss.hitCount, "So truy van hit dung");
+        assertEquals(1_000, mHitMiss.missCount, "So truy van miss dung");
+        assertTrue(mHitMiss.hitAvgProbes >= 1.0, "So lan do hit >= 1.0");
+        assertTrue(mHitMiss.missAvgProbes >= 1.0, "So lan do miss >= 1.0");
+        assertTrue(mHitMiss.tombstoneCount > 0, "So o tombstone > 0");
+        assertTrue(mHitMiss.averageDIB >= 0.0, "Phai do DIB trung binh o moc C");
+        assertTrue(mHitMiss.maxDIB >= 0, "Phai do DIB lon nhat o moc C");
+        assertEquals(table.getRebuildCount(), mHitMiss.rebuildCount, "So lan rebuild o moc C phai chinh xac");
 
         // So sánh đối chứng với Clean Table
         RQ2Workload.RQ2ComparisonResult comp =
                 workload.compareWithCleanTable(table, milestoneC, 1_000, 42L);
 
-        assertEquals(0, comp.cleanTableResult.tombstoneCount, "Clean Table có 0 tombstone");
-        assertEquals(table.size(), comp.cleanTableResult.aliveCount, "Clean Table có cùng số khóa sống");
-        assertTrue(comp.cleanTableResult.averageDIB >= 0.0, "Clean Table phải có thống kê DIB");
-        assertEquals(0, comp.cleanTableResult.rebuildCount, "Clean Table không có rebuild tự động");
+        assertEquals(0, comp.cleanTableResult.tombstoneCount, "Clean Table co 0 tombstone");
+        assertEquals(table.size(), comp.cleanTableResult.aliveCount, "Clean Table co cung so khoa song");
+        assertTrue(comp.cleanTableResult.averageDIB >= 0.0, "Clean Table phai co thong ke DIB");
+        assertEquals(0, comp.cleanTableResult.rebuildCount, "Clean Table khong co rebuild tu dong");
         // Bảng tích tụ Tombstone phải có số lần dò khi miss cao hơn hoặc bằng Clean Table
         assertTrue(comp.tombTableResult.missAvgProbes >= comp.cleanTableResult.missAvgProbes,
-                "Bảng tích tụ tombstone phải có số lần dò miss >= Clean Table");
+                "Bang tich tu tombstone phai co so lan do miss >= Clean Table");
 
         String markdown = comp.toMarkdownTable();
-        assertTrue(markdown.contains("BẢNG ĐỐI CHỨNG RQ2"), "Markdown phải chứa tiêu đề bảng đối chứng");
-        assertTrue(markdown.contains("DIB trung bình"), "Markdown phải có DIB trung bình");
-        assertTrue(markdown.contains("DIB lớn nhất"), "Markdown phải có DIB lớn nhất");
-        assertTrue(markdown.contains("Số lần rebuild tích lũy"), "Markdown phải có thống kê rebuild");
-        assertTrue(markdown.contains("KHỚP 100%"), "Checksum phải khớp 100%");
+        assertTrue(markdown.contains("BẢNG ĐỐI CHỨNG RQ2"), "Markdown phai chua tieu de bang doi chung");
+        assertTrue(markdown.contains("DIB trung bình"), "Markdown phai co DIB trung binh");
+        assertTrue(markdown.contains("DIB lớn nhất"), "Markdown phai co DIB lon nhat");
+        assertTrue(markdown.contains("Số lần rebuild tích lũy"), "Markdown phai co thong ke rebuild");
+        assertTrue(markdown.contains("KHỚP 100%"), "Checksum phai khop 100%");
         System.out.println("PASSED");
     }
 }

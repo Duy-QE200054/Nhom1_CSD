@@ -1,0 +1,2 @@
+run_id,rq,algorithm,variant,dataset,n,params,seed,input_sha256,generator_version,repeat,elapsed_ms,build_ms,heap_before_bytes,heap_peak_bytes,ops_count,output_check,status,xmx,machine_id,git_commit
+RUN_RQ1_SC_1,RQ1,sc,base,uniform,6291456,M=8388608;alpha=0.75;c=0;tau=inf,42,185057c44ba95f46059d245ae3354661e707b5387ccecf0b74d3add3c7bba138,1.0.0,1,,486.667,53298832,353705632,1.3749,6291456,ok,2g,PC_LAB_01,8b19d6d

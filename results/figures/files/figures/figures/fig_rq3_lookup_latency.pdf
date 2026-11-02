@@ -1,0 +1,17 @@
+Lookup time (ms, median of 3 seeds)          (a) Hit lookups                                        (b) Miss lookups
+
+                                     120     LP Tombstone (rebuild)                           256K 512K 1024K 2048K 4096K
+                                             LP Backshift (Knuth R)
+                                             Robin Hood (rh-noearly)              35        Churn cycles C (N=524,288, M = 220)
+                                             Robin Hood (rh, early exit)          30
+                                     100                                          25
+                                                                                  20
+                                     80
+                                                                                         0
+                                     60
+
+                                     40
+
+                                          0  256K 512K 1024K 2048K 4096K
+                                             Churn cycles C (N=524,288, M = 220)
+

@@ -25,7 +25,7 @@ public class C1SeparateChainingTest {
     private static final int CAPACITY = 16;
 
     public static void runAllTests() {
-        System.out.println("--- Bắt đầu 6 ca bắt buộc và Oracle cho Separate Chaining (Cặp 1 - C1) ---");
+        System.out.println("--- Bat dau 6 ca bat buoc va Oracle cho Separate Chaining (Cap 1 - C1) ---");
         testSeparateChainingRandomCollisions();
         testSeparateChainingRepeatedInsertDelete();
         testSeparateChainingBoundaryBuckets();
@@ -37,7 +37,7 @@ public class C1SeparateChainingTest {
         testGeneratorReproducibilityAndUniqueness();
         testAbsentKeys();
         testClusteredKeys();
-        System.out.println("--- TẤT CẢ CÁC BÀI TEST CỦA C1 ĐÃ VƯỢT QUA THÀNH CÔNG! ---\n");
+        System.out.println("--- TAT CA CAC BAI TEST CUA C1 DA VUOT QUA THANH CONG! ---\n");
     }
 
     /**
@@ -46,37 +46,37 @@ public class C1SeparateChainingTest {
      * xóa node ở đầu, giữa và cuối danh sách liên kết.
      */
     private static void testSeparateChainingRandomCollisions() {
-        System.out.print("[C1 Case 1] SC: M=16, khóa đụng độ ngẫu nhiên... ");
+        System.out.print("[C1 Case 1] SC: M=16, khoa dung do ngau nhien... ");
         SeparateChaining table = new SeparateChaining(CAPACITY);
         long[] keys = findCollidingKeys(CAPACITY, 5, 111L);
 
         for (int i = 0; i < keys.length; i++) {
-            assertEquals(PutStatus.INSERTED, table.put(keys[i], i * 10), "Chèn khóa đụng độ " + i);
+            assertEquals(PutStatus.INSERTED, table.put(keys[i], i * 10), "Chen khoa dung do " + i);
         }
-        assertEquals(5, table.size(), "Size phải bằng 5");
-        assertEquals(CAPACITY - 1, table.getEmptyCount(), "Tất cả 5 khóa chung 1 bucket nên còn M-1 bucket rỗng");
+        assertEquals(5, table.size(), "Size phai bang 5");
+        assertEquals(CAPACITY - 1, table.getEmptyCount(), "Tat ca 5 khoa chung 1 bucket nen con M-1 bucket rong");
 
         for (int i = 0; i < keys.length; i++) {
             GetResult gr = table.get(keys[i]);
-            assertTrue(gr.isFound(), "Khóa " + keys[i] + " phải tìm thấy");
-            assertEquals(i * 10, gr.getValue(), "Giá trị khớp");
+            assertTrue(gr.isFound(), "Khoa " + keys[i] + " phai tim thay");
+            assertEquals(i * 10, gr.getValue(), "Gia tri khop");
         }
 
         // Xóa phần tử giữa (keys[2])
-        assertTrue(table.remove(keys[2]), "Xóa phần tử giữa chuỗi liên kết");
-        assertTrue(!table.get(keys[2]).isFound(), "Phần tử đã xóa không còn tồn tại");
+        assertTrue(table.remove(keys[2]), "Xoa phan tu giua chuoi lien ket");
+        assertTrue(!table.get(keys[2]).isFound(), "Phan tu da xoa khong con ton tai");
 
         // Các phần tử còn lại vẫn phải tìm thấy
         for (int i = 0; i < keys.length; i++) {
             if (i != 2) {
-                assertTrue(table.get(keys[i]).isFound(), "Khóa " + keys[i] + " vẫn phải còn");
+                assertTrue(table.get(keys[i]).isFound(), "Khoa " + keys[i] + " van phai con");
             }
         }
 
         // Xóa phần tử đầu chuỗi và cuối chuỗi
-        assertTrue(table.remove(keys[4]), "Xóa phần tử đầu chuỗi (chèn sau cùng)");
-        assertTrue(table.remove(keys[0]), "Xóa phần tử cuối chuỗi");
-        assertEquals(2, table.size(), "Size còn lại 2");
+        assertTrue(table.remove(keys[4]), "Xoa phan tu dau chuoi (chen sau cung)");
+        assertTrue(table.remove(keys[0]), "Xoa phan tu cuoi chuoi");
+        assertEquals(2, table.size(), "Size con lai 2");
         System.out.println("PASSED");
     }
 
@@ -84,21 +84,21 @@ public class C1SeparateChainingTest {
      * Ca 2: Chèn/xóa liên tục qua nhiều chu kỳ trên các bucket khác nhau.
      */
     private static void testSeparateChainingRepeatedInsertDelete() {
-        System.out.print("[C1 Case 2] SC: chèn/xóa liên tục... ");
+        System.out.print("[C1 Case 2] SC: chen/xoa lien tuc... ");
         SeparateChaining table = new SeparateChaining(CAPACITY);
         for (int round = 0; round < 20; round++) {
             for (int i = 0; i < 15; i++) {
                 long key = round * 1000L + i;
-                assertEquals(PutStatus.INSERTED, table.put(key, i), "Chèn round " + round);
+                assertEquals(PutStatus.INSERTED, table.put(key, i), "Chen round " + round);
             }
-            assertEquals(15, table.size(), "Size sau chèn");
+            assertEquals(15, table.size(), "Size sau chen");
 
             for (int i = 0; i < 15; i++) {
                 long key = round * 1000L + i;
-                assertTrue(table.remove(key), "Xóa round " + round);
+                assertTrue(table.remove(key), "Xoa round " + round);
             }
-            assertEquals(0, table.size(), "Size về 0 sau khi xóa hết");
-            assertEquals(CAPACITY, table.getEmptyCount(), "Mọi bucket đều rỗng");
+            assertEquals(0, table.size(), "Size ve 0 sau khi xoa het");
+            assertEquals(CAPACITY, table.getEmptyCount(), "Moi bucket deu rong");
         }
         System.out.println("PASSED");
     }
@@ -107,7 +107,7 @@ public class C1SeparateChainingTest {
      * Ca 3: Đụng độ tại các bucket biên (bucket 0 và bucket M - 1).
      */
     private static void testSeparateChainingBoundaryBuckets() {
-        System.out.print("[C1 Case 3] SC: đụng độ tại bucket biên (0 và M-1)... ");
+        System.out.print("[C1 Case 3] SC: dung do tai bucket bien (0 va M-1)... ");
         SeparateChaining table = new SeparateChaining(CAPACITY);
         long[] keys0 = findCollidingKeysForBucket(CAPACITY, 0, 3, 222L);
         long[] keysLast = findCollidingKeysForBucket(CAPACITY, CAPACITY - 1, 3, 333L);
@@ -116,12 +116,12 @@ public class C1SeparateChainingTest {
             table.put(keys0[i], i);
             table.put(keysLast[i], i + 10);
         }
-        assertEquals(6, table.size(), "Size bằng 6");
-        assertEquals(CAPACITY - 2, table.getEmptyCount(), "Chiếm đúng 2 bucket (0 và M-1)");
+        assertEquals(6, table.size(), "Size bang 6");
+        assertEquals(CAPACITY - 2, table.getEmptyCount(), "Chiem dung 2 bucket (0 va M-1)");
 
         for (int i = 0; i < 3; i++) {
-            assertEquals(i, table.get(keys0[i]).getValue(), "Giá trị bucket 0");
-            assertEquals(i + 10, table.get(keysLast[i]).getValue(), "Giá trị bucket M-1");
+            assertEquals(i, table.get(keys0[i]).getValue(), "Gia tri bucket 0");
+            assertEquals(i + 10, table.get(keysLast[i]).getValue(), "Gia tri bucket M-1");
         }
         System.out.println("PASSED");
     }
@@ -130,21 +130,21 @@ public class C1SeparateChainingTest {
      * Ca 4: Cập nhật giá trị khóa hiện có trong chuỗi va chạm.
      */
     private static void testSeparateChainingUpdateInChain() {
-        System.out.print("[C1 Case 4] SC: cập nhật khóa hiện có trong chuỗi va chạm... ");
+        System.out.print("[C1 Case 4] SC: cap nhat khoa hien co trong chuoi va cham... ");
         SeparateChaining table = new SeparateChaining(CAPACITY);
         long[] keys = findCollidingKeys(CAPACITY, 4, 444L);
 
         for (int i = 0; i < keys.length; i++) {
             table.put(keys[i], i * 5);
         }
-        assertEquals(4, table.size(), "Size trước cập nhật");
+        assertEquals(4, table.size(), "Size truoc cap nhat");
 
         // Cập nhật phần tử ở giữa chuỗi
         PutStatus status = table.put(keys[1], 999);
-        assertEquals(PutStatus.UPDATED, status, "Phải báo UPDATED");
-        assertEquals(4, table.size(), "Size không thay đổi khi cập nhật");
-        assertEquals(999, table.get(keys[1]).getValue(), "Giá trị đã cập nhật");
-        assertEquals(CAPACITY - 1, table.getEmptyCount(), "Số bucket rỗng không đổi");
+        assertEquals(PutStatus.UPDATED, status, "Phai bao UPDATED");
+        assertEquals(4, table.size(), "Size khong thay doi khi cap nhat");
+        assertEquals(999, table.get(keys[1]).getValue(), "Gia tri da cap nhat");
+        assertEquals(CAPACITY - 1, table.getEmptyCount(), "So bucket rong khong doi");
         System.out.println("PASSED");
     }
 
@@ -153,35 +153,35 @@ public class C1SeparateChainingTest {
      * Kiểm tra đếm số bước dò (probe counting) duyệt danh sách liên kết.
      */
     private static void testSeparateChainingHighLoadCollisions() {
-        System.out.print("[C1 Case 5] SC: M=16, khóa đụng độ ngẫu nhiên tải cao & đếm bước dò... ");
+        System.out.print("[C1 Case 5] SC: M=16, khoa dung do ngau nhien tai cao & dem buoc do... ");
         SeparateChaining table = new SeparateChaining(CAPACITY);
         long[] keys = findCollidingKeys(CAPACITY, 10, 555L);
 
         for (int i = 0; i < keys.length; i++) {
             table.put(keys[i], i);
         }
-        assertEquals(10, table.size(), "10 khóa cùng bucket");
+        assertEquals(10, table.size(), "10 khoa cung bucket");
 
         table.enableProbeCounting(true);
         table.resetProbeCount();
 
         // Khóa được chèn sau cùng nằm ở đầu danh sách liên kết -> probe count = 1
         GetResult rHead = table.get(keys[9]);
-        assertTrue(rHead.isFound(), "Tìm thấy node đầu");
-        assertEquals(1, table.getProbeCount(), "Node đầu chuỗi chỉ tốn 1 bước dò");
+        assertTrue(rHead.isFound(), "Tim thay node dau");
+        assertEquals(1, table.getProbeCount(), "Node dau chuoi chi ton 1 buoc do");
 
         // Khóa được chèn đầu tiên nằm ở cuối danh sách liên kết -> probe count = 10
         table.resetProbeCount();
         GetResult rTail = table.get(keys[0]);
-        assertTrue(rTail.isFound(), "Tìm thấy node cuối");
-        assertEquals(10, table.getProbeCount(), "Node cuối chuỗi tốn 10 bước dò");
+        assertTrue(rTail.isFound(), "Tim thay node cuoi");
+        assertEquals(10, table.getProbeCount(), "Node cuoi chuoi ton 10 buoc do");
 
         // Khóa vắng mặt trong cùng bucket -> duyệt hết chuỗi (10 bước) rồi trả về not found
         long absentKeyInSameBucket = findAbsentKeyInBucket(CAPACITY, keys, 777L);
         table.resetProbeCount();
         GetResult rMiss = table.get(absentKeyInSameBucket);
-        assertTrue(!rMiss.isFound(), "Khóa không tồn tại");
-        assertEquals(10, table.getProbeCount(), "Tìm trượt trong bucket có 10 phần tử phải dò đủ 10 bước");
+        assertTrue(!rMiss.isFound(), "Khoa khong ton tai");
+        assertEquals(10, table.getProbeCount(), "Tim truot trong bucket co 10 phan tu phai do du 10 buoc");
         System.out.println("PASSED");
     }
 
@@ -189,24 +189,24 @@ public class C1SeparateChainingTest {
      * Ca 6: Kiểm tra bảng rỗng, xóa khóa không tồn tại, đếm empty bucket.
      */
     private static void testSeparateChainingEmptyAndMissing() {
-        System.out.print("[C1 Case 6] SC: bảng rỗng, xóa không tồn tại, đếm empty bucket... ");
+        System.out.print("[C1 Case 6] SC: bang rong, xoa khong ton tai, dem empty bucket... ");
         SeparateChaining table = new SeparateChaining(CAPACITY);
-        assertEquals(0, table.size(), "Size ban đầu = 0");
-        assertEquals(CAPACITY, table.getEmptyCount(), "EmptyCount ban đầu = M");
+        assertEquals(0, table.size(), "Size ban dau = 0");
+        assertEquals(CAPACITY, table.getEmptyCount(), "EmptyCount ban dau = M");
 
-        assertTrue(!table.get(12345L).isFound(), "Get trên bảng rỗng phải trả về NOT_FOUND");
-        assertTrue(!table.remove(12345L), "Remove trên bảng rỗng phải trả về false");
+        assertTrue(!table.get(12345L).isFound(), "Get tren bang rong phai tra ve NOT_FOUND");
+        assertTrue(!table.remove(12345L), "Remove tren bang rong phai tra ve false");
 
         table.put(100L, 1);
         assertEquals(1, table.size(), "Size = 1");
         assertEquals(CAPACITY - 1, table.getEmptyCount(), "EmptyCount = M - 1");
 
-        assertTrue(!table.remove(999L), "Xóa khóa không có mặt phải trả về false");
-        assertEquals(1, table.size(), "Size không đổi sau khi xóa trượt");
+        assertTrue(!table.remove(999L), "Xoa khoa khong co mat phai tra ve false");
+        assertEquals(1, table.size(), "Size khong doi sau khi xoa truot");
 
-        assertTrue(table.remove(100L), "Xóa khóa có mặt trả về true");
-        assertEquals(0, table.size(), "Size về 0");
-        assertEquals(CAPACITY, table.getEmptyCount(), "EmptyCount quay về M");
+        assertTrue(table.remove(100L), "Xoa khoa co mat tra ve true");
+        assertEquals(0, table.size(), "Size ve 0");
+        assertEquals(CAPACITY, table.getEmptyCount(), "EmptyCount quay ve M");
         System.out.println("PASSED");
     }
 
@@ -214,7 +214,7 @@ public class C1SeparateChainingTest {
      * Oracle Test 1.000.000 thao tác (40% put, 40% get, 20% remove) đối chiếu với java.util.HashMap.
      */
     private static void testOracle() {
-        System.out.print("[C1 Oracle] sc: 1.000.000 thao tác (40/40/20)... ");
+        System.out.print("[C1 Oracle] sc: 1.000.000 thao tac (40/40/20)... ");
         SeparateChaining table = new SeparateChaining(16_384);
         Map<Long, Integer> oracle = new HashMap<>();
         SplittableRandom random = new SplittableRandom(42L);
@@ -233,32 +233,32 @@ public class C1SeparateChainingTest {
                 boolean existed = oracle.containsKey(key);
                 PutStatus actual = table.put(key, value);
                 assertEquals(existed ? PutStatus.UPDATED : PutStatus.INSERTED, actual,
-                        "sc put tại thao tác " + op);
+                        "sc put tai thao tac " + op);
                 oracle.put(key, value);
             } else if (slot == 1 || slot == 3) {
                 // 40% get
                 gets++;
                 GetResult result = table.get(key);
                 Integer expected = oracle.get(key);
-                assertEquals(expected != null, result.isFound(), "sc get found tại thao tác " + op);
+                assertEquals(expected != null, result.isFound(), "sc get found tai thao tac " + op);
                 if (expected != null) {
                     assertEquals(expected.intValue(), result.getValue(),
-                            "sc get value tại thao tác " + op);
+                            "sc get value tai thao tac " + op);
                 }
             } else {
                 // 20% remove
                 removes++;
                 assertEquals(oracle.containsKey(key), table.remove(key),
-                        "sc remove tại thao tác " + op);
+                        "sc remove tai thao tac " + op);
                 oracle.remove(key);
             }
 
-            assertEquals(oracle.size(), table.size(), "sc size tại thao tác " + op);
+            assertEquals(oracle.size(), table.size(), "sc size tai thao tac " + op);
         }
 
-        assertEquals(400_000, puts, "sc tổng số put");
-        assertEquals(400_000, gets, "sc tổng số get");
-        assertEquals(200_000, removes, "sc tổng số remove");
+        assertEquals(400_000, puts, "sc tong so put");
+        assertEquals(400_000, gets, "sc tong so get");
+        assertEquals(200_000, removes, "sc tong so remove");
         System.out.println("PASSED");
     }
     private static void testGeneratorReproducibilityAndUniqueness() {
@@ -266,11 +266,11 @@ public class C1SeparateChainingTest {
         long[] secondRun = RQ1DataGenerator.generatePresentKeys(1_000, 42L);
         Set<Long> unique = new HashSet<>();
         for (int i = 0; i < firstRun.length; i++) {
-            assertEquals(firstRun[i], secondRun[i], "Generator phải tái lập theo seed");
-            assertTrue(firstRun[i] >= 0, "Khóa phải không âm");
+            assertEquals(firstRun[i], secondRun[i], "Generator phai tai lap theo seed");
+            assertTrue(firstRun[i] >= 0, "Khoa phai khong am");
             unique.add(firstRun[i]);
         }
-        assertEquals(firstRun.length, unique.size(), "Present keys phải duy nhất");
+        assertEquals(firstRun.length, unique.size(), "Present keys phai duy nhat");
     }
 
     private static void testAbsentKeys() {
@@ -282,10 +282,10 @@ public class C1SeparateChainingTest {
             presentSet.add(key);
         }
         for (long key : absent) {
-            assertTrue(!presentSet.contains(key), "Absent key không được nằm trong present set");
+            assertTrue(!presentSet.contains(key), "Absent key khong duoc nam trong present set");
             absentSet.add(key);
         }
-        assertEquals(absent.length, absentSet.size(), "Absent keys phải duy nhất");
+        assertEquals(absent.length, absentSet.size(), "Absent keys phai duy nhat");
     }
 
     private static void testClusteredKeys() {
@@ -297,10 +297,10 @@ public class C1SeparateChainingTest {
         int expectedClusterCount = (int) Math.round(count * 0.10);
         Set<Long> unique = new HashSet<>();
         for (int i = 0; i < keys.length; i++) {
-            assertTrue(unique.add(keys[i]), "Clustered keys phải duy nhất");
+            assertTrue(unique.add(keys[i]), "Clustered keys phai duy nhat");
             if (i < expectedClusterCount) {
                 assertTrue(FibonacciHash.hash(keys[i], p) < clusterLimit,
-                        "10% đầu tiên phải thỏa h(k) < M/64");
+                        "10% dau tien phai thoa h(k) < M/64");
             }
         }
     }
@@ -360,21 +360,21 @@ public class C1SeparateChainingTest {
 
     private static void assertTrue(boolean condition, String message) {
         if (!condition) {
-            throw new AssertionError("THẤT BẠI: " + message);
+            throw new AssertionError("THAT BAI: " + message);
         }
     }
 
     private static void assertEquals(Object expected, Object actual, String message) {
         if (expected == null ? actual != null : !expected.equals(actual)) {
-            throw new AssertionError("THẤT BẠI: " + message + " (mong đợi: "
-                    + expected + ", thực tế: " + actual + ")");
+            throw new AssertionError("THAT BAI: " + message + " (mong doi: "
+                    + expected + ", thuc te: " + actual + ")");
         }
     }
 
     private static void assertEquals(long expected, long actual, String message) {
         if (expected != actual) {
-            throw new AssertionError("THẤT BẠI: " + message + " (mong đợi: "
-                    + expected + ", thực tế: " + actual + ")");
+            throw new AssertionError("THAT BAI: " + message + " (mong doi: "
+                    + expected + ", thuc te: " + actual + ")");
         }
     }
 }
